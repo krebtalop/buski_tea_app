@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "948669478076",
+    "project_id": "buski-tea-app-139ec",
+    "storage_bucket": "buski-tea-app-139ec.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:948669478076:android:c70bff8fe43568c73f4cb9",
+        "android_client_info": {
+          "package_name": "com.berk.buski"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC4LJAcUxNX_ojPKw3wfBFyYjDuUsA1VYk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:948669478076:android:8c4c1419ae74d7963f4cb9",
+        "android_client_info": {
+          "package_name": "com.berk.buski_tea_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC4LJAcUxNX_ojPKw3wfBFyYjDuUsA1VYk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
