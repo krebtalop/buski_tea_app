@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'home_page.dart';
+import 'register_page.dart'; // Kayıt sayfasını ekledik
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -69,7 +70,9 @@ class _LoginPageState extends State<LoginPage> {
             ),
             TextButton(
               onPressed: () {
-                // Kayıt ekranına yönlendirme
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const RegisterPage()),
+                );
               },
               child: const Text('Hesabınız yok mu? Kayıt Ol'),
             ),
@@ -78,4 +81,4 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
-} 
+}

@@ -49,6 +49,9 @@ class _OrderPageState extends State<OrderPage> {
     return total;
   }
 
+  final Color cardColor = const Color(0xFFB3D9F3); // Tatlı bir mavi tonu
+  final Color buttonColor = const Color(0xFFB497D6); // Açık tatlı mor
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,6 +65,7 @@ class _OrderPageState extends State<OrderPage> {
                 final item = menu[index];
                 final qty = quantities[index] ?? 0;
                 return Card(
+                  color: cardColor,
                   margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   child: ListTile(
                     title: Text(item.name),
@@ -104,7 +108,18 @@ class _OrderPageState extends State<OrderPage> {
                 const SizedBox(height: 12),
                 ElevatedButton(
                   onPressed: totalPrice > 0 ? () {} : null,
-                  child: const Text('Siparişi Onayla'),
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.resolveWith<Color?>((states) {
+                      if (states.contains(MaterialState.disabled)) {
+                        return null;
+                      }
+                      return buttonColor; // Açık tatlı mor
+                    }),
+                  ),
+                  child: const Text(
+                    'Siparişi Onayla',
+                    style: TextStyle(color: Colors.white), // Beyaz yazı
+                  ),
                 ),
               ],
             ),
@@ -113,4 +128,4 @@ class _OrderPageState extends State<OrderPage> {
       ),
     );
   }
-} 
+}
