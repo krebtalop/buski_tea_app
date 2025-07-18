@@ -2,12 +2,12 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Çay Ocağı Sipariş Paneli</title>
+  <title>Buski Çay Ocağı Sipariş Paneli</title>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
     import {
       getFirestore, collection, query, orderBy,
-      onSnapshot, updateDoc, doc
+      onSnapshot, updateDoc, doc, deleteDoc
     } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
 
     //  Senin kendi Firebase config'inle değiştir
@@ -41,11 +41,19 @@
           <p><strong>İçecek:</strong> ${data.icecek} (${data.adet} adet)</p>
           <p><strong>Not:</strong> ${data.not}</p>
           <p><strong>Durum:</strong> ${durum}</p>
-          ${durum !== "hazırlandı" ? `
-            <button class="bg-green-500 text-white px-2 py-1 mt-2 rounded"
-              onclick="markReady('${docId}')">
-              Hazırlandı
-            </button>` : `<span class="text-green-600 font-semibold">✅ Hazırlandı</span>`}
+          <div style="display: flex; gap: 8px; align-items: center;">
+            ${durum !== "hazırlandı" ? `
+              <button class="bg-green-500 text-white px-2 py-1 mt-2 rounded"
+                onclick="markReady('${docId}')">
+                Hazırlandı
+              </button>
+            ` : `<span class="text-green-600 font-semibold">✅ Hazırlandı</span>`}
+            <button class="bg-red-500 text-white px-2 py-1 mt-2 rounded"
+              style="font-size: 0.9em; padding: 2px 8px; margin-left: auto;"
+              onclick="deleteOrder('${docId}', this)">
+              Sil
+            </button>
+          </div>
         `;
         listDiv.appendChild(div);
       });
@@ -55,12 +63,20 @@
       const ref = doc(db, "siparisler", id);
       await updateDoc(ref, { status: "hazırlandı" });
     };
+
+    window.deleteOrder = async function(id, btn) {
+      if (!confirm('Bu siparişi silmek istediğine emin misin?')) return;
+      const ref = doc(db, "siparisler", id);
+      await deleteDoc(ref);
+      // Ekrandan kaldırmak için:
+      btn.closest('.border').remove();
+    };
   </script>
 
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-6">
   <h1 class="text-2xl font-bold mb-4">Çay Ocağı Sipariş Paneli</h1>
-  <div id="order-list"></div>
+  <div id="order-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
 </body>
 </html>
