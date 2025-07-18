@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:buski_tea_app/screens/order_screen.dart';
+import 'package:animated_text_kit/animated_text_kit.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -29,12 +30,48 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 24),
+                  Center(
+                    child: Column(
+                      children: [
+                        Image.asset('assets/images/logo.png', width: 180),
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          width: 300,
+                          child: DefaultTextStyle(
+                            style: const TextStyle(
+                              fontSize: 18.0,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
+                            child: AnimatedTextKit(
+                              repeatForever: true,
+                              animatedTexts: [
+                                TyperAnimatedText(
+                                  'Çayınız demli mi olsun, demsiz mi?',
+                                ),
+                                TyperAnimatedText(
+                                  'Çalışırken bi kahve molası fena mı olur?',
+                                ),
+                                TyperAnimatedText(
+                                  'Yoğun tempoya küçük bir tebessüm molası.',
+                                ),
+                                TyperAnimatedText(
+                                  'Mesain en güzel demlikçisi taze demlenmiş bir bardak çay.',
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+                    ),
+                  ),
                   Text(
                     'Giriş Yap',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue[800],
-                        ),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue[800],
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 32),
@@ -49,7 +86,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       border: OutlineInputBorder(),
                       counterText: '',
                     ),
-                    style: const TextStyle(letterSpacing: 4, fontWeight: FontWeight.w500),
+                    style: const TextStyle(
+                      letterSpacing: 4,
+                      fontWeight: FontWeight.w500,
+                    ),
                     textAlign: TextAlign.center,
                     validator: (value) {
                       if (value == null || value.length != 4) {
@@ -101,6 +141,11 @@ class _LoginScreenState extends State<LoginScreen> {
                               const SnackBar(content: Text('Giriş başarılı!')),
                             );
                             // TODO: Ana sayfaya yönlendirme burada yapılacak
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(
+                                builder: (context) => const OrderScreen(),
+                              ),
+                            );
                           } on FirebaseAuthException catch (e) {
                             String msg = 'Giriş başarısız';
                             if (e.code == 'user-not-found' ||
@@ -119,7 +164,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                       child: const Text(
                         'Giriş Yap',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
