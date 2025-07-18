@@ -38,11 +38,15 @@
         const durum = data.status ?? "beklemede";
 
         div.innerHTML = `
-          <p><strong>İçecek:</strong> ${data.icecek} (${data.adet} adet)</p>
+          <p><strong>İçecek:</strong> ${data.icecek} - ${data.adet} adet </p>
           <p><strong>Not:</strong> ${data.not}</p>
+          <p><strong>Tarih:</strong> ${data.tarih?.toDate().toLocaleString()}</p>
+          <p><strong>Ad:</strong> ${data.ad}</p>
+          <p><strong>Telefon:</strong> ${data.telefon}</p>
+          <p><strong>Lokasyon:</strong> ${data.lokasyon}</p>
           <p><strong>Durum:</strong> ${durum}</p>
           <div style="display: flex; gap: 8px; align-items: center;">
-            ${durum !== "hazırlandı" ? `
+            ${durum !== "hazırlanıyor ⌛ " ? `
               <button class="bg-green-500 text-white px-2 py-1 mt-2 rounded"
                 onclick="markReady('${docId}')">
                 Hazırlandı
@@ -65,10 +69,8 @@
     };
 
     window.deleteOrder = async function(id, btn) {
-      if (!confirm('Bu siparişi silmek istediğine emin misin?')) return;
       const ref = doc(db, "siparisler", id);
       await deleteDoc(ref);
-      // Ekrandan kaldırmak için:
       btn.closest('.border').remove();
     };
   </script>
