@@ -50,7 +50,6 @@ class _OrderPageState extends State<OrderPage> {
       await FirebaseFirestore.instance.collection('siparisler').add({
         'icecek': 'Çay',
         'adet': 2,
-        'not': 'Şekersiz',
         'tarih': Timestamp.now(),
       });
       print("✅ SİPARİŞ BAŞARIYLA GÖNDERİLDİ!");

@@ -13,6 +13,7 @@ class OrderScreen extends StatefulWidget {
 class _OrderScreenState extends State<OrderScreen> {
   int _selectedIndex = 0;
   final List<Map<String, dynamic>> _cartItems = [];
+  bool _cartDropdownOpen = false;
 
   // Menüdeki ürünler ve fiyatlar
   final List<Map<String, dynamic>> _menu = [
@@ -97,6 +98,12 @@ class _OrderScreenState extends State<OrderScreen> {
     });
   }
 
+  void _removeFromCart(int index) {
+    setState(() {
+      _cartItems.removeAt(index);
+    });
+  }
+
   Future<void> _submitAllOrders() async {
     if (_cartItems.isEmpty) return;
     setState(() {
@@ -120,19 +127,46 @@ class _OrderScreenState extends State<OrderScreen> {
         return;
       }
 
+      // Kullanıcı bilgilerini Firestore'dan çek
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      if (!userDoc.exists) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Kullanıcı profili bulunamadı!')),
+        );
+        print('Firestore: Kullanıcı profili bulunamadı! UID: \'${user.uid}\'');
+        return;
+      }
+
+      final userData = userDoc.data();
+      final ad = userData?['name'] ?? '';
+      final telefon = userData?['phoneCode'] ?? '';
+      final departman = userData?['department'] ?? '';
+      final floor = userData?['floor'] ?? '';
+
       final orderRef = FirebaseFirestore.instance
           .collection('siparisler')
           .doc();
 
-      final newOrder = OrderModel(
-        id: orderRef.id,
-        userId: user.uid,
-        tarih: Timestamp.now(),
-        toplamFiyat: totalPrice,
-        items: _cartItems,
-      );
+      final newOrder = {
+        'id': orderRef.id,
+        'userId': user.uid,
+        'tarih': Timestamp.now(),
+        'toplamFiyat': totalPrice,
+        'items': _cartItems,
+        'ad': ad,
+        'telefon': telefon,
+        'departman': departman,
+        'floor': floor,
+      };
 
-      await orderRef.set(newOrder.toMap());
+      await orderRef.set(newOrder);
 
       setState(() {
         _cartItems.clear();
@@ -140,7 +174,9 @@ class _OrderScreenState extends State<OrderScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Tüm siparişleriniz başarıyla alındı!')),
       );
-    } catch (e) {
+    } catch (e, stack) {
+      print('Sipariş gönderme hatası: $e');
+      print(stack);
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Siparişler gönderilemedi: $e')));
@@ -149,6 +185,12 @@ class _OrderScreenState extends State<OrderScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  void _toggleCartDropdown() {
+    setState(() {
+      _cartDropdownOpen = !_cartDropdownOpen;
+    });
   }
 
   @override
@@ -203,7 +245,7 @@ class _OrderScreenState extends State<OrderScreen> {
               ),
             ),
             child: ListView.builder(
-              padding: const EdgeInsets.all(8), // daha kompakt
+              padding: const EdgeInsets.all(8),
               itemCount: _menu.length,
               itemBuilder: (context, index) {
                 final item = _menu[index];
@@ -214,21 +256,19 @@ class _OrderScreenState extends State<OrderScreen> {
                 return Card(
                   color: Colors.white.withOpacity(0.85),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(
-                      6,
-                    ), // daha sivri ama tam köşe değil
+                    borderRadius: BorderRadius.circular(6),
                     side: BorderSide(color: Colors.blue[100]!, width: 1.0),
                   ),
                   elevation: 4,
                   margin: const EdgeInsets.symmetric(
                     vertical: 4,
                     horizontal: 1,
-                  ), // daha kompakt
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
                       vertical: 6,
-                    ), // daha kompakt
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -408,43 +448,123 @@ class _OrderScreenState extends State<OrderScreen> {
       0,
       (sum, item) => sum + (item['price'] * item['adet']),
     );
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GestureDetector(
+          onTap: _toggleCartDropdown,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.blue[900]?.withOpacity(0.9),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  spreadRadius: 2,
+                  blurRadius: 5,
+                ),
+              ],
+              borderRadius: BorderRadius.vertical(
+                top: Radius.circular(_cartDropdownOpen ? 12 : 12),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Toplam: ${totalPrice.toStringAsFixed(2)} TL',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Row(
+                  children: [
+                    Icon(
+                      _cartDropdownOpen
+                          ? Icons.keyboard_arrow_up
+                          : Icons.keyboard_arrow_down,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.blue[800],
+                      ),
+                      onPressed: _isLoading ? null : _submitAllOrders,
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(),
+                            )
+                          : const Text('Tüm Siparişleri Ver'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        AnimatedCrossFade(
+          firstChild: const SizedBox.shrink(),
+          secondChild: _buildCartDropdown(),
+          crossFadeState: _cartDropdownOpen
+              ? CrossFadeState.showSecond
+              : CrossFadeState.showFirst,
+          duration: const Duration(milliseconds: 300),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCartDropdown() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.blue[900]?.withOpacity(0.9),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            spreadRadius: 2,
-            blurRadius: 5,
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      width: double.infinity,
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            'Toplam: ${totalPrice.toStringAsFixed(2)} TL',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+          for (int i = 0; i < _cartItems.length; i++)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '${_cartItems[i]['name']} x${_cartItems[i]['adet']} ${_cartItems[i]['option'] != '' ? '(${_cartItems[i]['option']})' : ''}',
+                      style: const TextStyle(
+                        fontSize: 15,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${(_cartItems[i]['price'] * _cartItems[i]['adet']).toStringAsFixed(2)} TL',
+                    style: const TextStyle(fontSize: 15, color: Colors.black54),
+                  ),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.delete,
+                      color: Colors.redAccent,
+                      size: 22,
+                    ),
+                    onPressed: () => _removeFromCart(i),
+                  ),
+                ],
+              ),
             ),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.blue[800],
+          if (_cartItems.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.0),
+              child: Text(
+                'Sepetiniz boş',
+                style: TextStyle(color: Colors.black54),
+              ),
             ),
-            onPressed: _isLoading ? null : _submitAllOrders,
-            child: _isLoading
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(),
-                  )
-                : const Text('Tüm Siparişleri Ver'),
-          ),
         ],
       ),
     );

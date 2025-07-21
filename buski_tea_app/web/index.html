@@ -45,14 +45,29 @@
 
         const durum = data.status ?? "beklemede";
 
+        // Ürünler dizisi desteği (items)
+        const urunlerHtml = Array.isArray(data.items)
+          ? data.items.map(u => `${u.name}${u.option ? ' (' + u.option + ')' : ''} - ${u.adet} adet`).join("<br>")
+          : "-";
+
         div.innerHTML = `
-          <p><strong>İçecek:</strong> ${data.icecek} - ${data.adet} adet </p>
-          <p><strong>Not:</strong> ${data.not}</p>
-          <p><strong>Tarih:</strong> ${data.tarih?.toDate().toLocaleString()}</p>
-          <p><strong>Ad:</strong> ${data.ad}</p>
-          <p><strong>Telefon:</strong> ${data.telefon}</p>
-          <p><strong>Lokasyon:</strong> ${data.lokasyon}</p>
-          <p><strong>Durum:</strong> ${durum}</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 24px; margin-bottom: 8px;">
+            <div><strong>Ad:</strong> ${data.ad ?? ''}</div>
+            <div><strong>Departman:</strong> ${data.departman ?? ''}${(data.floor !== undefined && data.floor !== '' && data.floor !== null) ? ' / Kat ' + data.floor : ''}</div>
+            <div><strong>Tarih:</strong> ${data.tarih?.toDate ? data.tarih.toDate().toLocaleString() : ''}</div>
+            <div><strong>Telefon:</strong> ${data.telefon ?? ''}</div>
+          </div>
+          <hr style="margin: 8px 0; border: none; border-top: 1.5px solid #e5e7eb;" />
+          <div style="margin-bottom: 8px;">
+            <strong>Sipariş İçeriği</strong>
+            <div style="margin-left: 12px; margin-top: 4px;">
+              ${urunlerHtml}
+            </div>
+            <div style="margin-left: 12px; margin-top: 8px; font-weight: bold;">
+              Toplam Tutar: ${data.toplamFiyat ?? ''} ₺
+            </div>
+          </div>
+          <hr style="margin: 8px 0; border: none; border-top: 1.5px solid #e5e7eb;" />
           <div style="display: flex; gap: 8px; align-items: center;">
             ${durum !== "hazırlanıyor ⌛ " ? `
               <button class="bg-green-500 text-white px-2 py-1 mt-2 rounded"
@@ -98,6 +113,6 @@
 <body class="bg-gray-100 p-6">
   <audio id="order-notification-sound" src="assets/sounds/notification.mp3" preload="auto"></audio>
   <h1 class="text-2xl font-bold mb-4">Çay Ocağı Sipariş Paneli</h1>
-  <div id="order-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+  <div id="order-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 items-start" style="align-items: start;"></div>
 </body>
 </html>
