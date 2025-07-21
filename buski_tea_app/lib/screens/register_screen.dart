@@ -15,10 +15,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _surnameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _repeatPasswordController = TextEditingController();
+  final TextEditingController _repeatPasswordController =
+      TextEditingController();
   final TextEditingController _departmentController = TextEditingController();
-  final TextEditingController _codeController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
   int? _selectedFloor;
+
+  bool _obscurePassword = true;
+  bool _obscureRepeatPassword = true;
 
   String? _validatePassword(String? value) {
     if (value == null || value.length < 6) {
@@ -32,6 +36,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final blueBorder = OutlineInputBorder(
+      borderSide: BorderSide(color: Colors.blue[800]!, width: 2),
+    );
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -55,46 +63,51 @@ class _RegisterScreenState extends State<RegisterScreen> {
               children: [
                 TextFormField(
                   controller: _nameController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'İsim',
-                    border: OutlineInputBorder(),
+                    border: blueBorder,
+                    focusedBorder: blueBorder,
+                    enabledBorder: blueBorder,
                   ),
                   style: const TextStyle(fontWeight: FontWeight.w500),
-                  validator: (value) => value == null || value.isEmpty ? 'İsim giriniz' : null,
+                  validator: (value) =>
+                      value == null || value.isEmpty ? 'İsim giriniz' : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _surnameController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Soyisim',
-                    border: OutlineInputBorder(),
+                    border: blueBorder,
+                    focusedBorder: blueBorder,
+                    enabledBorder: blueBorder,
                   ),
                   style: const TextStyle(fontWeight: FontWeight.w500),
-                  validator: (value) => value == null || value.isEmpty ? 'Soyisim giriniz' : null,
+                  validator: (value) =>
+                      value == null || value.isEmpty ? 'Soyisim giriniz' : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Şifre',
-                    border: OutlineInputBorder(),
+                  controller: _phoneController,
+                  keyboardType: TextInputType.number,
+                  maxLength: 11,
+                  decoration: InputDecoration(
+                    labelText: 'Telefon Numarası',
+                    hintText: 'örn: 05XXXXXXXXX',
+                    helperText: '11 haneli cep telefonu numaranızı giriniz',
+                    border: blueBorder,
+                    focusedBorder: blueBorder,
+                    enabledBorder: blueBorder,
+                    counterText: '',
                   ),
-                  style: const TextStyle(fontWeight: FontWeight.w500),
-                  validator: _validatePassword,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _repeatPasswordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Şifre Tekrar',
-                    border: OutlineInputBorder(),
+                  style: const TextStyle(
+                    letterSpacing: 2,
+                    fontWeight: FontWeight.w500,
                   ),
-                  style: const TextStyle(fontWeight: FontWeight.w500),
+                  textAlign: TextAlign.center,
                   validator: (value) {
-                    if (value != _passwordController.text) {
-                      return 'Şifreler eşleşmiyor';
+                    if (value == null || value.length != 11) {
+                      return 'Eksik telefon numarası';
                     }
                     return null;
                   },
@@ -102,9 +115,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 16),
                 DropdownButtonFormField<int>(
                   value: _selectedFloor,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Bulunduğunuz Kat',
-                    border: OutlineInputBorder(),
+                    border: blueBorder,
+                    focusedBorder: blueBorder,
+                    enabledBorder: blueBorder,
                   ),
                   items: List.generate(10, (index) => index + 1)
                       .map(
@@ -120,30 +135,73 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _departmentController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Departman',
-                    border: OutlineInputBorder(),
+                    border: blueBorder,
+                    focusedBorder: blueBorder,
+                    enabledBorder: blueBorder,
                   ),
                   style: const TextStyle(fontWeight: FontWeight.w500),
-                  validator: (value) => value == null || value.isEmpty ? 'Departman giriniz' : null,
+                  validator: (value) => value == null || value.isEmpty
+                      ? 'Departman giriniz'
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _codeController,
-                  keyboardType: TextInputType.number,
-                  maxLength: 4,
-                  decoration: const InputDecoration(
-                    labelText: 'BUSKİ telefon kodu',
-                    hintText: 'örn: 1234',
-                    helperText: '4 haneli BUSKİ telefon kodunuzu giriniz',
-                    border: OutlineInputBorder(),
-                    counterText: '',
+                  controller: _passwordController,
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: 'Şifre',
+                    border: blueBorder,
+                    focusedBorder: blueBorder,
+                    enabledBorder: blueBorder,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: Colors.grey,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
                   ),
-                  style: const TextStyle(letterSpacing: 4, fontWeight: FontWeight.w500),
-                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontWeight: FontWeight.w500),
+                  validator: _validatePassword,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _repeatPasswordController,
+                  obscureText: _obscureRepeatPassword,
+                  decoration: InputDecoration(
+                    labelText: 'Şifre Tekrar',
+                    border: blueBorder,
+                    focusedBorder: blueBorder,
+                    enabledBorder: blueBorder,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureRepeatPassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: Colors.grey,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscureRepeatPassword = !_obscureRepeatPassword;
+                        });
+                      },
+                    ),
+                  ),
+                  style: const TextStyle(fontWeight: FontWeight.w500),
                   validator: (value) {
-                    if (value == null || value.length != 4) {
-                      return '4 haneli kod giriniz';
+                    if (value == null || value.isEmpty) {
+                      return 'Şifreyi tekrar giriniz.';
+                    }
+                    if (value != _passwordController.text) {
+                      return 'Şifreler eşleşmiyor';
                     }
                     return null;
                   },
@@ -163,40 +221,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     onPressed: () async {
                       if (_formKey.currentState!.validate()) {
                         final firestore = FirebaseFirestore.instance;
-                        final code = _codeController.text;
-                        final email = '$code@buski.com';
+                        final phone = _phoneController.text;
+                        final email = '$phone@buski.com';
                         final password = _passwordController.text;
                         try {
-                          // Firebase Auth ile kullanıcı kaydı
                           final auth = FirebaseAuth.instance;
-                          final userCredential = await auth.createUserWithEmailAndPassword(
-                            email: email,
-                            password: password,
-                          );
-                          // Firestore'a kullanıcı bilgilerini kaydet
+                          final userCredential = await auth
+                              .createUserWithEmailAndPassword(
+                                email: email,
+                                password: password,
+                              );
                           final user = UserModel(
                             name: _nameController.text,
                             surname: _surnameController.text,
                             password: password,
                             floor: _selectedFloor!,
                             department: _departmentController.text,
-                            phoneCode: code,
+                            phoneCode: phone,
                           );
-                          await firestore.collection('users').doc(userCredential.user!.uid).set(user.toMap());
+                          await firestore
+                              .collection('users')
+                              .doc(userCredential.user!.uid)
+                              .set(user.toMap());
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Kayıt başarılı! Giriş yapabilirsiniz.'),
+                              content: Text(
+                                'Kayıt başarılı! Giriş yapabilirsiniz.',
+                              ),
                             ),
                           );
                           Navigator.of(context).pop();
                         } on FirebaseAuthException catch (e) {
                           String msg = 'Kayıt başarısız';
                           if (e.code == 'email-already-in-use') {
-                            msg = 'Bu telefon kodu ile zaten kayıtlı kullanıcı var!';
+                            msg =
+                                'Bu telefon numarası ile zaten kayıtlı kullanıcı var!';
                           } else if (e.code == 'weak-password') {
                             msg = 'Şifre çok zayıf!';
                           }
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(SnackBar(content: Text(msg)));
                         } catch (e) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Bir hata oluştu!')),
@@ -206,7 +271,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     },
                     child: const Text(
                       'Kayıt Ol',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),

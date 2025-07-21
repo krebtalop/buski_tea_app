@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:buski_tea_app/screens/order_screen.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
+import 'dart:math';
+import 'package:buski_tea_app/screens/forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -15,6 +17,21 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _codeController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  final List<String> _sentences = [
+    'Çayınız demli mi olsun, demsiz mi?',
+    'Çalışırken bi kahve molası fena mı olur?',
+    'Yoğun tempoya küçük bir tebessüm molası.',
+    'Mesain en güzel demlikçisi taze demlenmiş bir bardak çay.',
+    'Hayat kısa, çaylar demli!',
+  ];
+  late final String _randomSentence;
+
+  @override
+  void initState() {
+    super.initState();
+    _randomSentence = _sentences[Random().nextInt(_sentences.length)];
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,50 +39,64 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Center(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 28.0, vertical: 16),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 18.0,
+              vertical: 4,
+            ), // 28 ve 16 yerine daha az
             child: Form(
               key: _formKey,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisAlignment: MainAxisAlignment.start, // üstte başlasın
                 children: [
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 0), // üstte boşluk bırakma
                   Center(
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Image.asset('assets/images/logo.png', width: 180),
-                        const SizedBox(height: 24),
-                        SizedBox(
-                          width: 300,
+                        Image.asset(
+                          'assets/images/logo.png',
+                          width: 160,
+                        ), // 120 yerine 160
+                        const SizedBox(height: 6), // 12 yerine 6
+                        // AnimatedTextKit ile animasyonlu yazı
+                        Container(
+                          constraints: const BoxConstraints(
+                            maxWidth: 320,
+                            minHeight: 40,
+                          ),
+                          alignment: Alignment.center,
                           child: DefaultTextStyle(
                             style: const TextStyle(
-                              fontSize: 18.0,
+                              fontSize: 15.0,
                               fontWeight: FontWeight.w600,
                               color: Colors.black87,
                             ),
                             child: AnimatedTextKit(
-                              repeatForever: true,
+                              isRepeatingAnimation: false,
+                              totalRepeatCount: 1,
                               animatedTexts: [
                                 TyperAnimatedText(
-                                  'Çayınız demli mi olsun, demsiz mi?',
-                                ),
-                                TyperAnimatedText(
-                                  'Çalışırken bi kahve molası fena mı olur?',
-                                ),
-                                TyperAnimatedText(
-                                  'Yoğun tempoya küçük bir tebessüm molası.',
-                                ),
-                                TyperAnimatedText(
-                                  'Mesain en güzel demlikçisi taze demlenmiş bir bardak çay.',
+                                  _randomSentence,
+                                  speed: const Duration(milliseconds: 90),
+                                  textAlign: TextAlign.center,
                                 ),
                               ],
+                              displayFullTextOnTap: true,
+                              pause: Duration.zero,
                             ),
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 10), // 18 yerine 10
                       ],
                     ),
                   ),
+                  // Logo ve animasyonlu yazıdan sonra
+                  const SizedBox(
+                    height: 40,
+                  ), // Logo ve animasyonlu yazıdan sonra daha fazla boşluk
                   Text(
                     'Giriş Yap',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -74,15 +105,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(
+                    height: 12,
+                  ), // Giriş Yap ile telefon kodu arası daha yakın
                   TextFormField(
                     controller: _codeController,
                     keyboardType: TextInputType.number,
-                    maxLength: 4,
+                    maxLength: 11,
                     decoration: const InputDecoration(
-                      labelText: 'BUSKİ telefon kodu',
-                      hintText: 'örn: 1234',
-                      helperText: '4 haneli BUSKİ telefon kodunuzu giriniz',
+                      labelText: 'Telefon numaranızı giriniz.',
+                      hintText: 'örn: 05XXXXXXXXX',
                       border: OutlineInputBorder(),
                       counterText: '',
                     ),
@@ -92,8 +124,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     textAlign: TextAlign.center,
                     validator: (value) {
-                      if (value == null || value.length != 4) {
-                        return '4 haneli kod giriniz';
+                      if (value == null || value.length != 11) {
+                        return 'Telefon Numaranızı giriniz';
                       }
                       return null;
                     },
@@ -181,6 +213,20 @@ class _LoginScreenState extends State<LoginScreen> {
                       textStyle: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                     child: const Text('Üye değil misiniz? Kayıt olun'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const ForgotPasswordScreen(),
+                        ),
+                      );
+                    },
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.blue[800],
+                      textStyle: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    child: const Text('Şifreni mi unuttun?'),
                   ),
                   const SizedBox(height: 18),
                 ],

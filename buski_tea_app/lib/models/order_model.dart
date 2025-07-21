@@ -3,28 +3,25 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class OrderModel {
   final String id;
   final String userId;
-  final String icecek;
-  final int adet;
-  final String not;
   final Timestamp tarih;
+  final double toplamFiyat;
+  final List<Map<String, dynamic>> items;
 
   OrderModel({
     required this.id,
     required this.userId,
-    required this.icecek,
-    required this.adet,
-    required this.not,
     required this.tarih,
+    required this.toplamFiyat,
+    required this.items,
   });
 
   Map<String, dynamic> toMap() {
     return {
       'id': id,
       'userId': userId,
-      'icecek': icecek,
-      'adet': adet,
-      'not': not,
       'tarih': tarih,
+      'toplamFiyat': toplamFiyat,
+      'items': items,
     };
   }
 
@@ -32,10 +29,9 @@ class OrderModel {
     return OrderModel(
       id: map['id'] ?? '',
       userId: map['userId'] ?? '',
-      icecek: map['icecek'] ?? '',
-      adet: map['adet'] ?? 0,
-      not: map['not'] ?? '',
       tarih: map['tarih'] ?? Timestamp.now(),
+      toplamFiyat: (map['toplamFiyat'] ?? 0.0).toDouble(),
+      items: List<Map<String, dynamic>>.from(map['items'] ?? []),
     );
   }
 }
