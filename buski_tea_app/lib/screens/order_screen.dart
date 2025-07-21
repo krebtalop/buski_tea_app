@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/order_model.dart';
+import 'profile_screen.dart';
 
 class OrderScreen extends StatefulWidget {
   const OrderScreen({Key? key}) : super(key: key);
@@ -204,7 +205,7 @@ class _OrderScreenState extends State<OrderScreen> {
       ),
       body: Stack(
         children: [
-          _selectedIndex == 0 ? _buildOrderMenu() : _buildProfile(),
+          _selectedIndex == 0 ? _buildOrderMenu() : const ProfileScreen(),
           _buildTopNotification(),
         ],
       ),
@@ -566,27 +567,6 @@ class _OrderScreenState extends State<OrderScreen> {
               ),
             ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildProfile() {
-    return Container(
-      alignment: Alignment.center,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF1565C0), Color(0xFF42A5F5), Color(0xFFB3E5FC)],
-        ),
-      ),
-      child: const Text(
-        'Profil Sayfası (Yakında)',
-        style: TextStyle(
-          fontSize: 18,
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-        ),
       ),
     );
   }

@@ -23,9 +23,49 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const q = query(collection(db, "siparisler"), orderBy("tarih", "desc"));
-    const listDiv = document.getElementById("order-list");
+    // Kat grupları
+    const groups = [
+      { name: "Kat 1-2-3", floors: [1, 2, 3] },
+      { name: "Kat 4-5-6", floors: [4, 5, 6] },
+      { name: "Kat 7-8-9-10", floors: [7, 8, 9, 10] }
+    ];
+    let selectedGroupIdx = 0;
+    let showTeslimEdildi = false;
 
+    // Butonları ve sütunları oluşturmak için referanslar
+    const groupButtonsDiv = document.getElementById("group-buttons");
+    const columnsDiv = document.getElementById("columns-container");
+
+    // Grup butonlarını oluştur
+    function renderGroupButtons() {
+      groupButtonsDiv.innerHTML = "";
+      groups.forEach((group, idx) => {
+        const btn = document.createElement("button");
+        btn.textContent = group.name;
+        btn.className = `px-4 py-2 rounded mr-2 mb-2 font-semibold ${selectedGroupIdx === idx && !showTeslimEdildi ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'}`;
+        btn.onclick = () => {
+          selectedGroupIdx = idx;
+          showTeslimEdildi = false;
+          renderGroupButtons();
+          renderColumns();
+        };
+        groupButtonsDiv.appendChild(btn);
+      });
+      // TESLİM EDİLDİ butonu
+      const teslimBtn = document.createElement("button");
+      teslimBtn.textContent = "TESLİM EDİLDİ";
+      teslimBtn.className = `px-4 py-2 rounded mr-2 mb-2 font-semibold ${showTeslimEdildi ? 'bg-green-700 text-white' : 'bg-gray-200 text-gray-800'}`;
+      teslimBtn.onclick = () => {
+        showTeslimEdildi = true;
+        renderGroupButtons();
+        renderTeslimEdildiGroups();
+      };
+      groupButtonsDiv.appendChild(teslimBtn);
+    }
+
+    // Siparişleri Firestore'dan çek
+    let allOrders = [];
+    const q = query(collection(db, "siparisler"), orderBy("tarih", "desc"));
     let lastOrderIds = [];
 
     onSnapshot(q, (snapshot) => {
@@ -35,56 +75,178 @@
         playOrderNotification();
       }
       lastOrderIds = currentOrderIds;
-      listDiv.innerHTML = "";
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const docId = docSnap.id;
-
-        const div = document.createElement("div");
-        div.className = "border p-4 rounded bg-white mb-2";
-
-        const durum = data.status ?? "beklemede";
-
-        // Ürünler dizisi desteği (items)
-        const urunlerHtml = Array.isArray(data.items)
-          ? data.items.map(u => `${u.name}${u.option ? ' (' + u.option + ')' : ''} - ${u.adet} adet`).join("<br>")
-          : "-";
-
-        div.innerHTML = `
-          <div style="display: flex; flex-wrap: wrap; gap: 24px; margin-bottom: 8px;">
-            <div><strong>Ad:</strong> ${data.ad ?? ''}</div>
-            <div><strong>Departman:</strong> ${data.departman ?? ''}${(data.floor !== undefined && data.floor !== '' && data.floor !== null) ? ' / Kat ' + data.floor : ''}</div>
-            <div><strong>Tarih:</strong> ${data.tarih?.toDate ? data.tarih.toDate().toLocaleString() : ''}</div>
-            <div><strong>Telefon:</strong> ${data.telefon ?? ''}</div>
-          </div>
-          <hr style="margin: 8px 0; border: none; border-top: 1.5px solid #e5e7eb;" />
-          <div style="margin-bottom: 8px;">
-            <strong>Sipariş İçeriği</strong>
-            <div style="margin-left: 12px; margin-top: 4px;">
-              ${urunlerHtml}
-            </div>
-            <div style="margin-left: 12px; margin-top: 8px; font-weight: bold;">
-              Toplam Tutar: ${data.toplamFiyat ?? ''} ₺
-            </div>
-          </div>
-          <hr style="margin: 8px 0; border: none; border-top: 1.5px solid #e5e7eb;" />
-          <div style="display: flex; gap: 8px; align-items: center;">
-            ${durum !== "hazırlanıyor ⌛ " ? `
-              <button class="bg-green-500 text-white px-2 py-1 mt-2 rounded"
-                onclick="markReady('${docId}')">
-                Hazırlandı
-              </button>
-            ` : `<span class="text-green-600 font-semibold">✅ Hazırlandı</span>`}
-            <button class="bg-red-500 text-white px-2 py-1 mt-2 rounded"
-              style="font-size: 0.9em; padding: 2px 8px; margin-left: auto;"
-              onclick="deleteOrder('${docId}', this)">
-              Sil
-            </button>
-          </div>
-        `;
-        listDiv.appendChild(div);
-      });
+      allOrders = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
+      if (showTeslimEdildi) {
+        renderTeslimEdildiGroups();
+      } else {
+        renderColumns();
+      }
     });
+
+    // Sütunları ve siparişleri oluştur
+    function renderColumns() {
+      columnsDiv.innerHTML = "";
+      const group = groups[selectedGroupIdx];
+      // Her kat için bir sütun
+      group.floors.forEach(floor => {
+        const col = document.createElement("div");
+        col.className = "bg-white rounded shadow p-2 min-h-[200px] flex-1 mx-1";
+        col.style.minWidth = "320px";
+        const title = document.createElement("div");
+        title.className = "font-bold text-lg mb-2 text-center";
+        title.textContent = `Kat ${floor}`;
+        col.appendChild(title);
+        // O kata ait siparişleri bul
+        const orders = allOrders.filter(order => Number(order.floor) === floor && (order.status !== "teslim edildi"));
+        if (orders.length === 0) {
+          const empty = document.createElement("div");
+          empty.className = "text-gray-400 text-center py-8";
+          empty.textContent = "Sipariş yok";
+          col.appendChild(empty);
+        } else {
+          orders.forEach(order => {
+            const div = document.createElement("div");
+            div.className = "border p-4 rounded bg-white mb-2";
+            const durum = order.status ?? "hazırlanıyor";
+            // Ürünler dizisi desteği (items)
+            const urunlerHtml = Array.isArray(order.items)
+              ? order.items.map(u => `${u.name}${u.option ? ' (' + u.option + ')' : ''} - ${u.adet} adet`).join("<br>")
+              : "-";
+            // Buton metni ve rengi
+            let buttonText = "Hazırlanıyor...";
+            let buttonClass = "bg-yellow-500 hover:bg-yellow-600";
+            let disabled = false;
+            if (durum === "hazırlandı") {
+              buttonText = "Hazırlandı";
+              buttonClass = "bg-green-500 hover:bg-green-600";
+            } else if (durum === "teslim edildi") {
+              buttonText = "Teslim Edildi";
+              buttonClass = "bg-gray-400 cursor-not-allowed";
+              disabled = true;
+            }
+            div.innerHTML = `
+              <div style="display: flex; flex-wrap: wrap; gap: 24px; margin-bottom: 8px;">
+                <div><strong>Ad:</strong> ${order.ad ?? ''}</div>
+                <div><strong>Departman:</strong> ${order.departman ?? ''}${(order.floor !== undefined && order.floor !== '' && order.floor !== null) ? ' / Kat ' + order.floor : ''}</div>
+                <div><strong>Tarih:</strong> ${order.tarih?.toDate ? order.tarih.toDate().toLocaleString() : ''}</div>
+                <div><strong>Telefon:</strong> ${order.telefon ?? ''}</div>
+              </div>
+              <hr style="margin: 8px 0; border: none; border-top: 1.5px solid #e5e7eb;" />
+              <div style="margin-bottom: 8px;">
+                <strong>Sipariş İçeriği</strong>
+                <div style="margin-left: 12px; margin-top: 4px;">
+                  ${urunlerHtml}
+                </div>
+                <div style="margin-left: 12px; margin-top: 8px; font-weight: bold;">
+                  Toplam Tutar: ${order.toplamFiyat ?? ''} ₺
+                </div>
+              </div>
+              <hr style="margin: 8px 0; border: none; border-top: 1.5px solid #e5e7eb;" />
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <button class="${buttonClass} text-white px-2 py-1 mt-2 rounded" style="min-width: 110px;" onclick="cycleStatus('${order.id}', this)" ${disabled ? 'disabled' : ''}>
+                  ${buttonText}
+                </button>
+                <button class="bg-red-500 text-white px-2 py-1 mt-2 rounded"
+                  style="font-size: 0.9em; padding: 2px 8px; margin-left: auto;"
+                  onclick="deleteOrder('${order.id}', this)">
+                  Sil
+                </button>
+              </div>
+            `;
+            col.appendChild(div);
+          });
+        }
+        columnsDiv.appendChild(col);
+      });
+      // Sütunları yatayda düzgün dizmek için flex
+      columnsDiv.style.display = "flex";
+      columnsDiv.style.gap = "16px";
+      columnsDiv.style.alignItems = "flex-start";
+      columnsDiv.style.marginTop = "16px";
+    }
+
+    // TESLİM EDİLDİ görünümü
+    function renderTeslimEdildiGroups() {
+      columnsDiv.innerHTML = "";
+      // Alt grup butonları
+      const subGroupDiv = document.createElement("div");
+      subGroupDiv.className = "mb-4 flex flex-wrap";
+      groups.forEach((group, idx) => {
+        const btn = document.createElement("button");
+        btn.textContent = group.name;
+        btn.className = `px-4 py-2 rounded mr-2 mb-2 font-semibold ${selectedGroupIdx === idx ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-800'}`;
+        btn.onclick = () => {
+          selectedGroupIdx = idx;
+          renderGroupButtons();
+          renderTeslimEdildiGroups();
+        };
+        subGroupDiv.appendChild(btn);
+      });
+      columnsDiv.appendChild(subGroupDiv);
+      // Sütunlar
+      const group = groups[selectedGroupIdx];
+      const columnsRow = document.createElement("div");
+      columnsRow.style.display = "flex";
+      columnsRow.style.gap = "16px";
+      columnsRow.style.alignItems = "flex-start";
+      columnsRow.style.marginTop = "16px";
+      group.floors.forEach(floor => {
+        const col = document.createElement("div");
+        col.className = "bg-white rounded shadow p-2 min-h-[200px] flex-1 mx-1";
+        col.style.minWidth = "320px";
+        const title = document.createElement("div");
+        title.className = "font-bold text-lg mb-2 text-center";
+        title.textContent = `Kat ${floor}`;
+        col.appendChild(title);
+        // O kata ait TESLİM EDİLDİ siparişleri bul
+        const orders = allOrders.filter(order => Number(order.floor) === floor && order.status === "teslim edildi");
+        if (orders.length === 0) {
+          const empty = document.createElement("div");
+          empty.className = "text-gray-400 text-center py-8";
+          empty.textContent = "Teslim edilen sipariş yok";
+          col.appendChild(empty);
+        } else {
+          orders.forEach(order => {
+            const div = document.createElement("div");
+            div.className = "border p-4 rounded bg-white mb-2";
+            // Ürünler dizisi desteği (items)
+            const urunlerHtml = Array.isArray(order.items)
+              ? order.items.map(u => `${u.name}${u.option ? ' (' + u.option + ')' : ''} - ${u.adet} adet`).join("<br>")
+              : "-";
+            div.innerHTML = `
+              <div style="display: flex; flex-wrap: wrap; gap: 24px; margin-bottom: 8px;">
+                <div><strong>Ad:</strong> ${order.ad ?? ''}</div>
+                <div><strong>Departman:</strong> ${order.departman ?? ''}${(order.floor !== undefined && order.floor !== '' && order.floor !== null) ? ' / Kat ' + order.floor : ''}</div>
+                <div><strong>Tarih:</strong> ${order.tarih?.toDate ? order.tarih.toDate().toLocaleString() : ''}</div>
+                <div><strong>Telefon:</strong> ${order.telefon ?? ''}</div>
+              </div>
+              <hr style="margin: 8px 0; border: none; border-top: 1.5px solid #e5e7eb;" />
+              <div style="margin-bottom: 8px;">
+                <strong>Sipariş İçeriği</strong>
+                <div style="margin-left: 12px; margin-top: 4px;">
+                  ${urunlerHtml}
+                </div>
+                <div style="margin-left: 12px; margin-top: 8px; font-weight: bold;">
+                  Toplam Tutar: ${order.toplamFiyat ?? ''} ₺
+                </div>
+              </div>
+              <hr style="margin: 8px 0; border: none; border-top: 1.5px solid #e5e7eb;" />
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <span class="text-gray-600 font-semibold">Teslim Edildi</span>
+                <button class="bg-red-500 text-white px-2 py-1 mt-2 rounded"
+                  style="font-size: 0.9em; padding: 2px 8px; margin-left: auto;"
+                  onclick="deleteOrder('${order.id}', this)">
+                  Sil
+                </button>
+              </div>
+            `;
+            col.appendChild(div);
+          });
+        }
+        columnsRow.appendChild(col);
+      });
+      columnsDiv.appendChild(columnsRow);
+    }
 
     window.markReady = async function (id) {
       const ref = doc(db, "siparisler", id);
@@ -96,6 +258,25 @@
       await deleteDoc(ref);
       btn.closest('.border').remove();
     };
+
+    window.cycleStatus = async function (id, btn) {
+      const ref = doc(db, "siparisler", id);
+      // Mevcut durumu bulmak için siparişi bul
+      const order = allOrders.find(o => o.id === id);
+      let nextStatus = "hazırlandı";
+      if (!order || !order.status || order.status === "hazırlanıyor") {
+        nextStatus = "hazırlandı";
+      } else if (order.status === "hazırlandı") {
+        nextStatus = "teslim edildi";
+      } else if (order.status === "teslim edildi") {
+        nextStatus = "teslim edildi";
+      }
+      await updateDoc(ref, { status: nextStatus });
+    };
+
+    // İlk render
+    renderGroupButtons();
+    renderColumns();
   </script>
 
   <script>
@@ -113,6 +294,7 @@
 <body class="bg-gray-100 p-6">
   <audio id="order-notification-sound" src="assets/sounds/notification.mp3" preload="auto"></audio>
   <h1 class="text-2xl font-bold mb-4">Çay Ocağı Sipariş Paneli</h1>
-  <div id="order-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 items-start" style="align-items: start;"></div>
+  <div id="group-buttons" class="mb-4 flex flex-wrap"></div>
+  <div id="columns-container"></div>
 </body>
 </html>
