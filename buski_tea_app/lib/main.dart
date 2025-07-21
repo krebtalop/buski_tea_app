@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
+import 'screens/order_screen.dart';
+import 'screens/profile_screen.dart';
 // TODO: Ana sayfa için HomeScreen eklenince import edilecek
 
 void main() async {
@@ -26,11 +29,37 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       debugShowCheckedModeBanner: false,
-      initialRoute: '/login',
+      home: const AuthGate(),
       routes: {
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
-        // '/home': (context) => HomeScreen(), // Ana sayfa eklenince açılacak
+        '/order': (context) => const OrderScreen(),
+        '/profile': (context) => const ProfileScreen(),
+      },
+    );
+  }
+}
+
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snapshot.hasData) {
+          // Kullanıcı giriş yapmışsa ana ekrana yönlendir
+          return const OrderScreen();
+        } else {
+          // Giriş yoksa login ekranına yönlendir
+          return const LoginScreen();
+        }
       },
     );
   }
