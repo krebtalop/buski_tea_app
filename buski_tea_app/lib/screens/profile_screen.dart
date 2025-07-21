@@ -120,13 +120,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profil'),
-        backgroundColor: Colors.blue[800],
-        foregroundColor: Colors.white,
-        elevation: 0,
-        automaticallyImplyLeading: false, // Geri butonunu kaldır
-      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
