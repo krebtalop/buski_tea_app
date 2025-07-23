@@ -1,3 +1,4 @@
+import 'package:buski_tea_app/screens/forgot_password_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -30,6 +31,10 @@ class MyApp extends StatelessWidget {
       routes: {
         '/uygulama': (context) => const OrderScreen(),
         '/panel': (context) => OrderPanelScreen(),
+        '/register': (context) => RegisterScreen(),
+        '/login': (context) => LoginScreen(),
+        '/profile': (context) => ProfileScreen(),
+        '/forgot_password': (context) => ForgotPasswordScreen(),
       },
     );
   }

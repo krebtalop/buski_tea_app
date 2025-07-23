@@ -1,4 +1,5 @@
 import 'package:buski_tea_app/screens/login_screen.dart';
+import 'package:buski_tea_app/screens/change_password_screen.dart'; // ✅ Şifremi değiştir sayfası eklendi
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -151,7 +152,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   text: 'Şifremi Değiştir',
                   icon: Icons.lock_outline,
                   onPressed: () {
-                    // TODO: Şifre değiştirme sayfasına yönlendirme eklenecek
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ChangePasswordScreen(),
+                      ),
+                    );
                   },
                 ),
                 const SizedBox(height: 16),
