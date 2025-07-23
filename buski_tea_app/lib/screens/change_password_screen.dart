@@ -31,30 +31,32 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
   Future<void> _changePassword() async {
     final newPassword = _newPasswordController.text.trim();
+    final currentPassword = _currentPasswordController.text.trim();
     final currentUser = FirebaseAuth.instance.currentUser;
 
     if (currentUser == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Kullanıcı oturumu yok!')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Kullanıcı oturumu yok!')));
       return;
     }
 
     try {
+      // Kullanıcıyı tekrar doğrula
+      final cred = EmailAuthProvider.credential(
+        email: currentUser.email!,
+        password: currentPassword,
+      );
+      await currentUser.reauthenticateWithCredential(cred);
+
+      // Şifreyi güncelle
       await currentUser.updatePassword(newPassword);
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(currentUser.uid)
-          .update({'password': newPassword});
+      await FirebaseFirestore.instance.collection('users').doc(currentUser.uid).update({'password': newPassword});
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Şifre başarıyla güncellendi.')),
       );
       Navigator.of(context).pop();
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Şifre güncellenemedi!')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Şifre güncellenemedi! Mevcut şifrenizi doğru girdiğinizden emin olun.')));
     }
   }
 
