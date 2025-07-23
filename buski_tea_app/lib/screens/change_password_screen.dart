@@ -12,11 +12,12 @@ class ChangePasswordScreen extends StatefulWidget {
 class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _newPasswordController = TextEditingController();
-  final TextEditingController _repeatPasswordController =
-      TextEditingController();
+  final TextEditingController _repeatPasswordController = TextEditingController();
+  final TextEditingController _currentPasswordController = TextEditingController();
 
   bool _obscurePassword = true;
   bool _obscureRepeatPassword = true;
+  bool _obscureCurrentPassword = true;
 
   String? _validatePassword(String? value) {
     if (value == null || value.length < 6) {
@@ -64,105 +65,163 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     );
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text('Şifremi Değiştir'),
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        foregroundColor: Colors.blue,
+        foregroundColor: Colors.white,
         centerTitle: true,
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 28.0, vertical: 16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                TextFormField(
-                  controller: _newPasswordController,
-                  obscureText: _obscurePassword,
-                  decoration: InputDecoration(
-                    labelText: 'Yeni Şifre',
-                    border: blueBorder,
-                    focusedBorder: blueBorder,
-                    enabledBorder: blueBorder,
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                        color: Colors.grey,
-                      ),
-                      onPressed: () {
-                        setState(() => _obscurePassword = !_obscurePassword);
-                      },
-                    ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF1565C0), Color(0xFF42A5F5), Color(0xFFB3E5FC)],
+          ),
+        ),
+        width: double.infinity,
+        height: double.infinity,
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 24,
+                    spreadRadius: 2,
+                    offset: const Offset(0, 8),
                   ),
-                  validator: _validatePassword,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _repeatPasswordController,
-                  obscureText: _obscureRepeatPassword,
-                  decoration: InputDecoration(
-                    labelText: 'Yeni Şifre (Tekrar)',
-                    border: blueBorder,
-                    focusedBorder: blueBorder,
-                    enabledBorder: blueBorder,
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscureRepeatPassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                        color: Colors.grey,
-                      ),
-                      onPressed: () {
-                        setState(
-                          () =>
-                              _obscureRepeatPassword = !_obscureRepeatPassword,
-                        );
-                      },
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Şifreyi tekrar giriniz';
-                    }
-                    if (value != _newPasswordController.text) {
-                      return 'Şifreler eşleşmiyor';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 28),
-                SizedBox(
-                  height: 48,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue[800],
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 0,
-                    ),
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        _changePassword();
-                      }
-                    },
-                    child: const Text(
-                      'Şifre Değiştir',
+                ],
+              ),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text(
+                      'Şifrenizi Değiştirin',
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
+                        color: Color(0xFF1565C0),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    TextFormField(
+                      controller: _currentPasswordController,
+                      obscureText: _obscureCurrentPassword,
+                      decoration: InputDecoration(
+                        labelText: 'Mevcut Şifreniz',
+                        border: blueBorder,
+                        focusedBorder: blueBorder,
+                        enabledBorder: blueBorder,
+                        prefixIcon: const Icon(Icons.lock_outline_rounded, color: Color(0xFF1565C0)),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscureCurrentPassword ? Icons.visibility_off : Icons.visibility,
+                            color: Colors.grey,
+                          ),
+                          onPressed: () {
+                            setState(() => _obscureCurrentPassword = !_obscureCurrentPassword);
+                          },
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Mevcut şifrenizi giriniz';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _newPasswordController,
+                      obscureText: _obscurePassword,
+                      decoration: InputDecoration(
+                        labelText: 'Yeni Şifre',
+                        border: blueBorder,
+                        focusedBorder: blueBorder,
+                        enabledBorder: blueBorder,
+                        prefixIcon: const Icon(Icons.lock, color: Color(0xFF1565C0)),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                            color: Colors.grey,
+                          ),
+                          onPressed: () {
+                            setState(() => _obscurePassword = !_obscurePassword);
+                          },
+                        ),
+                      ),
+                      validator: _validatePassword,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _repeatPasswordController,
+                      obscureText: _obscureRepeatPassword,
+                      decoration: InputDecoration(
+                        labelText: 'Yeni Şifre (Tekrar)',
+                        border: blueBorder,
+                        focusedBorder: blueBorder,
+                        enabledBorder: blueBorder,
+                        prefixIcon: const Icon(Icons.lock, color: Color(0xFF1565C0)),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscureRepeatPassword ? Icons.visibility_off : Icons.visibility,
+                            color: Colors.grey,
+                          ),
+                          onPressed: () {
+                            setState(() => _obscureRepeatPassword = !_obscureRepeatPassword);
+                          },
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Şifreyi tekrar giriniz';
+                        }
+                        if (value != _newPasswordController.text) {
+                          return 'Şifreler eşleşmiyor';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 28),
+                    SizedBox(
+                      height: 48,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue[800],
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 2,
+                        ),
+                        onPressed: () {
+                          if (_formKey.currentState!.validate()) {
+                            _changePassword();
+                          }
+                        },
+                        child: const Text(
+                          'Şifre Değiştir',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
