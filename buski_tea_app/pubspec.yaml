@@ -41,6 +41,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   shared_preferences: ^2.5.3
   animated_text_kit: ^4.2.3
+  image_picker: ^1.0.7
+  fl_chart: ^0.66.2
 
 dev_dependencies:
   flutter_test:
@@ -67,6 +69,13 @@ flutter:
   assets:
     - assets/images/logo.png
     - assets/images/logo1.png
+
+  fonts:
+    - family: SourceSansPro
+      fonts:
+        - asset: assets/fonts/SourceSansPro-Regular.ttf
+        - asset: assets/fonts/SourceSansPro-Bold.ttf
+          weight: 700
 
   # To add assets to your application, add an assets section, like this:
   # assets:

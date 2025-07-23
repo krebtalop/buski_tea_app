@@ -3,6 +3,9 @@ import 'package:buski_tea_app/screens/change_password_screen.dart'; // ✅ Şifr
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:buski_tea_app/screens/gecmis_siparisler_screen.dart'; // GecmisSiparislerScreen eklendi
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -14,6 +17,9 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  File? _profileImage;
+  String? _profileImageUrl;
+  final ImagePicker _picker = ImagePicker();
 
   // Çıkış yapma fonksiyonu
   Future<void> _logout() async {
@@ -75,6 +81,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _pickProfileImage() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    final picked = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    if (picked != null) {
+      setState(() {
+        _profileImage = File(picked.path);
+      });
+      // Firebase Storage entegrasyonu yoksa sadece local göster, varsa yükle ve url kaydet
+      // Şimdilik Firestore'a path kaydedelim
+      await _firestore.collection('users').doc(user.uid).update({'profileImage': picked.path});
+    }
+  }
+
   // Onay dialogu gösterme
   Future<bool?> _showConfirmationDialog({
     required String title,
@@ -120,7 +140,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = _auth.currentUser;
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -129,49 +151,159 @@ class _ProfileScreenState extends State<ProfileScreen> {
             colors: [Color(0xFF1565C0), Color(0xFF42A5F5), Color(0xFFB3E5FC)],
           ),
         ),
+        width: double.infinity,
+        height: double.infinity,
         child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32.0),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset(
-                  'assets/images/logo.png',
-                  width: MediaQuery.of(context).size.width * 0.4,
-                ),
-                const SizedBox(height: 50),
-                _buildProfileButton(
-                  text: 'Geçmiş Siparişlerim',
-                  icon: Icons.history,
-                  onPressed: () {
-                    // TODO: Geçmiş siparişler sayfasına yönlendirme eklenecek
-                  },
-                ),
-                const SizedBox(height: 16),
-                _buildProfileButton(
-                  text: 'Şifremi Değiştir',
-                  icon: Icons.lock_outline,
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ChangePasswordScreen(),
-                      ),
+                // Profil Fotoğrafı + Ekle Butonu
+                FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                  future: _firestore.collection('users').doc(user?.uid).get(),
+                  builder: (context, snapshot) {
+                    String? imagePath;
+                    if (snapshot.hasData) {
+                      final data = snapshot.data!.data();
+                      imagePath = data?['profileImage'] as String?;
+                    }
+                    return Stack(
+                      alignment: Alignment.bottomRight,
+                      children: [
+                        CircleAvatar(
+                          radius: 54,
+                          backgroundColor: Colors.white,
+                          backgroundImage: _profileImage != null
+                              ? FileImage(_profileImage!)
+                              : (imagePath != null && imagePath.isNotEmpty)
+                                  ? FileImage(File(imagePath))
+                                  : null,
+                          child: (_profileImage == null && (imagePath == null || imagePath.isEmpty))
+                              ? const Icon(Icons.account_circle, size: 70, color: Color(0xFF1565C0))
+                              : null,
+                        ),
+                        Positioned(
+                          bottom: 4,
+                          right: 4,
+                          child: GestureDetector(
+                            onTap: _pickProfileImage,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.blue[700],
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white, width: 2),
+                              ),
+                              padding: const EdgeInsets.all(6),
+                              child: const Icon(Icons.add, color: Colors.white, size: 22),
+                            ),
+                          ),
+                        ),
+                      ],
                     );
                   },
                 ),
-                const SizedBox(height: 16),
-                _buildProfileButton(
-                  text: 'Çıkış Yap',
-                  icon: Icons.exit_to_app,
-                  onPressed: _logout,
+                const SizedBox(height: 18),
+                // Kullanıcı Bilgileri Kartı
+                Card(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                  elevation: 6,
+                  margin: const EdgeInsets.only(bottom: 28),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                    child: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                      future: _firestore.collection('users').doc(user?.uid).get(),
+                      builder: (context, snapshot) {
+                        final data = snapshot.data?.data();
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              user?.email ?? 'Kullanıcı',
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1565C0)),
+                              textAlign: TextAlign.center,
+                            ),
+                            if (data != null && data['name'] != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2.0, bottom: 8),
+                                child: Text('${data['name']}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                              ),
+                            Divider(height: 18, thickness: 1, color: Colors.blue[50]),
+                            if (data != null && data['phoneCode'] != null)
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.phone, size: 18, color: Colors.grey),
+                                  const SizedBox(width: 6),
+                                  Text('${data['phoneCode']}', style: const TextStyle(fontSize: 15, color: Colors.black87)),
+                                ],
+                              ),
+                            if (data != null && data['department'] != null)
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.business, size: 18, color: Colors.grey),
+                                  const SizedBox(width: 6),
+                                  Text('${data['department']}', style: const TextStyle(fontSize: 15, color: Colors.black87)),
+                                ],
+                              ),
+                            if (data != null && data['floor'] != null)
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.location_on, size: 18, color: Colors.grey),
+                                  const SizedBox(width: 6),
+                                  Text('Kat: ${data['floor']}', style: const TextStyle(fontSize: 15, color: Colors.black87)),
+                                ],
+                              ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 16),
-                _buildProfileButton(
-                  text: 'Hesabı Sil',
-                  icon: Icons.delete_forever,
-                  onPressed: _deleteAccount,
-                  isDestructive: true,
+                // Butonlar
+                Column(
+                  children: [
+                    _buildProfileButton(
+                      text: 'Geçmiş Siparişlerim',
+                      icon: Icons.history,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const GecmisSiparislerScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 14),
+                    _buildProfileButton(
+                      text: 'Şifremi Değiştir',
+                      icon: Icons.lock_outline,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ChangePasswordScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 14),
+                    _buildProfileButton(
+                      text: 'Çıkış Yap',
+                      icon: Icons.exit_to_app,
+                      onPressed: _logout,
+                    ),
+                    const SizedBox(height: 14),
+                    _buildProfileButton(
+                      text: 'Hesabı Sil',
+                      icon: Icons.delete_forever,
+                      onPressed: _deleteAccount,
+                      isDestructive: true,
+                    ),
+                  ],
                 ),
               ],
             ),

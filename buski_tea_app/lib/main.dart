@@ -36,6 +36,9 @@ class MyApp extends StatelessWidget {
         '/profile': (context) => ProfileScreen(),
         '/forgot_password': (context) => ForgotPasswordScreen(),
       },
+      theme: ThemeData(
+        fontFamily: 'SourceSansPro',
+      ),
     );
   }
 }

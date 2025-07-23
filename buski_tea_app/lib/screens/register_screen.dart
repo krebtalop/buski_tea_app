@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -23,6 +24,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   bool _obscurePassword = true;
   bool _obscureRepeatPassword = true;
+  bool _isLoading = false;
 
   String? _validatePassword(String? value) {
     if (value == null || value.length < 6) {
@@ -92,9 +94,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   keyboardType: TextInputType.number,
                   maxLength: 11,
                   decoration: InputDecoration(
-                    labelText: 'Telefon Numarası',
+                    labelText: '11 haneli cep telefonu numaranızı giriniz',
                     hintText: 'örn: 05XXXXXXXXX',
-                    helperText: '11 haneli cep telefonu numaranızı giriniz',
                     border: blueBorder,
                     focusedBorder: blueBorder,
                     enabledBorder: blueBorder,
@@ -222,15 +223,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       if (_formKey.currentState!.validate()) {
                         final firestore = FirebaseFirestore.instance;
                         final phone = _phoneController.text;
-                        final email = '$phone@buski.com';
                         final password = _passwordController.text;
                         try {
-                          final auth = FirebaseAuth.instance;
-                          final userCredential = await auth
-                              .createUserWithEmailAndPassword(
-                                email: email,
-                                password: password,
-                              );
+                          // Telefon numarasının daha önce kayıtlı olup olmadığını kontrol et
+                          final query = await firestore.collection('users').where('phoneCode', isEqualTo: phone).get();
+                          if (query.docs.isNotEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Bu telefon numarası ile zaten kayıtlı kullanıcı var!')),
+                            );
+                            return;
+                          }
                           final user = UserModel(
                             name: _nameController.text,
                             surname: _surnameController.text,
@@ -239,29 +241,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             department: _departmentController.text,
                             phoneCode: phone,
                           );
-                          await firestore
-                              .collection('users')
-                              .doc(userCredential.user!.uid)
-                              .set(user.toMap());
+                          await firestore.collection('users').add(user.toMap());
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text(
-                                'Kayıt başarılı! Giriş yapabilirsiniz.',
-                              ),
+                              content: Text('Kayıt başarılı! Giriş yapabilirsiniz.'),
                             ),
                           );
                           Navigator.of(context).pop();
-                        } on FirebaseAuthException catch (e) {
-                          String msg = 'Kayıt başarısız';
-                          if (e.code == 'email-already-in-use') {
-                            msg =
-                                'Bu telefon numarası ile zaten kayıtlı kullanıcı var!';
-                          } else if (e.code == 'weak-password') {
-                            msg = 'Şifre çok zayıf!';
-                          }
-                          ScaffoldMessenger.of(
-                            context,
-                          ).showSnackBar(SnackBar(content: Text(msg)));
                         } catch (e) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Bir hata oluştu!')),

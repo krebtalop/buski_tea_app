@@ -165,7 +165,7 @@ class _OrderScreenState extends State<OrderScreen> {
                               ),
                               child: Text(
                                 '$price TL',
-                                style: const TextStyle(fontSize: 12, color: Color(0xFF1976D2), fontWeight: FontWeight.w600),
+                                style: const TextStyle(fontSize: 18, color: Color(0xFF1976D2), fontWeight: FontWeight.w700),
                               ),
                             ),
                           ],
@@ -343,6 +343,7 @@ Widget _buildCartSummary() {
         backgroundColor: Colors.blue[800],
         foregroundColor: Colors.white,
         elevation: 0,
+        centerTitle: true,
       ),
       body: Stack(
         children: [

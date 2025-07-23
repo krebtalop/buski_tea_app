@@ -4,6 +4,7 @@ import 'package:buski_tea_app/screens/order_screen.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'dart:math';
 import 'package:buski_tea_app/screens/forgot_password_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -174,33 +175,24 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       onPressed: () async {
                         if (_formKey.currentState!.validate()) {
-                          final code = _codeController.text;
-                          final email = '$code@buski.com';
+                          final phone = _codeController.text;
                           final password = _passwordController.text;
                           try {
-                            final auth = FirebaseAuth.instance;
-                            await auth.signInWithEmailAndPassword(
-                              email: email,
-                              password: password,
-                            );
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Giriş başarılı!')),
-                            );
-                            // TODO: Ana sayfaya yönlendirme burada yapılacak
-                            Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(
-                                builder: (context) => const OrderScreen(),
-                              ),
-                            );
-                          } on FirebaseAuthException catch (e) {
-                            String msg = 'Giriş başarısız';
-                            if (e.code == 'user-not-found' ||
-                                e.code == 'wrong-password') {
-                              msg = 'Telefon kodu veya şifre hatalı!';
+                            final firestore = FirebaseFirestore.instance;
+                            final query = await firestore.collection('users')
+                                .where('phoneCode', isEqualTo: phone)
+                                .where('password', isEqualTo: password)
+                                .get();
+                            if (query.docs.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Telefon numarası veya şifre yanlış!')),
+                              );
+                              return;
                             }
-                            ScaffoldMessenger.of(
-                              context,
-                            ).showSnackBar(SnackBar(content: Text(msg)));
+                            // Giriş başarılı, ana ekrana yönlendir
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(builder: (context) => const OrderScreen()),
+                            );
                           } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Bir hata oluştu!')),
