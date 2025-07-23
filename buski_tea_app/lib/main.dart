@@ -1,4 +1,3 @@
-import 'package:buski_tea_app/screens/forgot_password_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,6 +8,7 @@ import 'screens/register_screen.dart';
 import 'screens/order_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/order_panel_screen.dart';
+import 'screens/forgot_password_screen.dart';
 // TODO: Ana sayfa için HomeScreen eklenince import edilecek
 
 void main() async {
@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Çay Ocağı',
       debugShowCheckedModeBanner: false,
-      initialRoute: '/panel', // '/panel' veya '/uygulama' olarak değiştir
+      initialRoute: '/uygulama', // '/panel' veya '/uygulama' olarak değiştir
       routes: {
         '/uygulama': (context) => const OrderScreen(),
         '/panel': (context) => OrderPanelScreen(),
