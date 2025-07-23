@@ -24,18 +24,25 @@ class _OrderScreenState extends State<OrderScreen> {
       'options': ['Şekersiz', 'Şekerli'],
       'defaultOption': 'Şekersiz',
     },
-    {
-      'name': 'Çiçek, Oralet vb.',
-      'price': 2,
-      'options': ['Çiçek', 'Oralet'],
-      'defaultOption': 'Oralet',
-    },
-    {
-      'name': 'Çay (Su Bardağı)',
+     {
+      'name': 'Büyük Çay (Su Bardağı)',
       'price': 4,
-      'options': ['Şekersiz', 'Az Şekerli', 'Orta Şekerli', 'Şekerli'],
+      'options': ['Şekersiz','Şekerli'],
       'defaultOption': 'Şekersiz',
     },
+    {
+      'name': 'Bitki Çayı',
+      'price': 2,
+      'options': ['Çiçek', 'Adaçayı', 'Kuşburnu'],
+      'defaultOption': 'Çiçek',
+    },
+    {
+      'name': 'Oralet',
+      'price': 2,
+      'options': [],
+      'defaultOption': '',
+    },
+   
     {'name': 'Nescafe', 'price': 8, 'options': [], 'defaultOption': ''},
     {
       'name': 'Türk Kahvesi',
