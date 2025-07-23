@@ -7,6 +7,7 @@ import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/order_screen.dart';
 import 'screens/profile_screen.dart';
+import 'screens/order_panel_screen.dart';
 // TODO: Ana sayfa için HomeScreen eklenince import edilecek
 
 void main() async {
@@ -23,18 +24,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'BUSKİ Çay Sipariş',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
-        useMaterial3: true,
-      ),
+      title: 'Çay Ocağı',
       debugShowCheckedModeBanner: false,
-      home: const AuthGate(),
+      initialRoute: '/panel', // '/panel' veya '/uygulama' olarak değiştir
       routes: {
-        '/login': (context) => const LoginScreen(),
-        '/register': (context) => const RegisterScreen(),
-        '/order': (context) => const OrderScreen(),
-        '/profile': (context) => const ProfileScreen(),
+        '/uygulama': (context) => const OrderScreen(),
+        '/panel': (context) => OrderPanelScreen(),
       },
     );
   }
