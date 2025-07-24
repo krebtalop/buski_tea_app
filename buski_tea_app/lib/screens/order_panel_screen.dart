@@ -116,7 +116,6 @@ class OrderPanelScreen extends StatelessWidget {
                                       Text(
                                         'Departman: ${data['departman'] ?? ''}',
                                       ),
-                                      Text('Telefon: ${data['telefon'] ?? ''}'),
                                       Text(
                                         'Tarih: '
                                         '${data['tarih'] is Timestamp ? (data['tarih'] as Timestamp).toDate().toString() : (data['tarih']?.toString() ?? '')}',

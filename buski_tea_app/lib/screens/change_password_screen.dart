@@ -49,7 +49,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
       // Şifreyi güncelle
       await currentUser.updatePassword(newPassword);
-      await FirebaseFirestore.instance.collection('users').doc(currentUser.uid).update({'password': newPassword});
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Şifre başarıyla güncellendi.')),

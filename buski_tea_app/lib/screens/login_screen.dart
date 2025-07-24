@@ -15,7 +15,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _codeController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
@@ -111,23 +111,20 @@ class _LoginScreenState extends State<LoginScreen> {
                     height: 12,
                   ), // Giriş Yap ile telefon kodu arası daha yakın
                   TextFormField(
-                    controller: _codeController,
-                    keyboardType: TextInputType.number,
-                    maxLength: 11,
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
                     decoration: const InputDecoration(
-                      labelText: 'Telefon numaranızı giriniz.',
-                      hintText: 'örn: 05XXXXXXXXX',
+                      labelText: 'E-posta adresinizi giriniz.',
+                      hintText: 'örn: ornek@mail.com',
                       border: OutlineInputBorder(),
-                      counterText: '',
                     ),
                     style: const TextStyle(
-                      letterSpacing: 4,
                       fontWeight: FontWeight.w500,
                     ),
                     textAlign: TextAlign.center,
                     validator: (value) {
-                      if (value == null || value.length != 11) {
-                        return 'Telefon Numaranızı giriniz';
+                      if (value == null || value.isEmpty || !value.contains('@')) {
+                        return 'Geçerli bir e-posta giriniz';
                       }
                       return null;
                     },
@@ -175,27 +172,19 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       onPressed: () async {
                         if (_formKey.currentState!.validate()) {
-                          final phone = _codeController.text;
+                          final email = _emailController.text.trim();
                           final password = _passwordController.text;
                           try {
-                            final firestore = FirebaseFirestore.instance;
-                            final query = await firestore.collection('users')
-                                .where('phoneCode', isEqualTo: phone)
-                                .where('password', isEqualTo: password)
-                                .get();
-                            if (query.docs.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Telefon numarası veya şifre yanlış!')),
-                              );
-                              return;
-                            }
-                            // Giriş başarılı, ana ekrana yönlendir
+                            await FirebaseAuth.instance.signInWithEmailAndPassword(
+                              email: email,
+                              password: password,
+                            );
                             Navigator.of(context).pushReplacement(
                               MaterialPageRoute(builder: (context) => const OrderScreen()),
                             );
                           } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Bir hata oluştu!')),
+                              const SnackBar(content: Text('E-posta veya şifre yanlış!')),
                             );
                           }
                         }

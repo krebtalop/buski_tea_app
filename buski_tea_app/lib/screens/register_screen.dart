@@ -15,11 +15,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _surnameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _repeatPasswordController =
-      TextEditingController();
+  final TextEditingController _repeatPasswordController = TextEditingController();
   final TextEditingController _departmentController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
   int? _selectedFloor;
 
   bool _obscurePassword = true;
@@ -90,28 +89,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _phoneController,
-                  keyboardType: TextInputType.number,
-                  maxLength: 11,
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
-                    labelText: '11 haneli cep telefonu numaranızı giriniz',
-                    hintText: 'örn: 05XXXXXXXXX',
+                    labelText: 'E-posta',
                     border: blueBorder,
                     focusedBorder: blueBorder,
                     enabledBorder: blueBorder,
-                    counterText: '',
                   ),
-                  style: const TextStyle(
-                    letterSpacing: 2,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  textAlign: TextAlign.center,
-                  validator: (value) {
-                    if (value == null || value.length != 11) {
-                      return 'Eksik telefon numarası';
-                    }
-                    return null;
-                  },
+                  style: const TextStyle(fontWeight: FontWeight.w500),
+                  validator: (value) =>
+                      value == null || value.isEmpty || !value.contains('@') ? 'Geçerli bir e-posta giriniz' : null,
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<int>(
@@ -221,27 +209,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     onPressed: () async {
                       if (_formKey.currentState!.validate()) {
-                        final firestore = FirebaseFirestore.instance;
-                        final phone = _phoneController.text;
+                        final email = _emailController.text.trim();
                         final password = _passwordController.text;
+                        setState(() => _isLoading = true);
                         try {
-                          // Telefon numarasının daha önce kayıtlı olup olmadığını kontrol et
-                          final query = await firestore.collection('users').where('phoneCode', isEqualTo: phone).get();
-                          if (query.docs.isNotEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Bu telefon numarası ile zaten kayıtlı kullanıcı var!')),
-                            );
-                            return;
-                          }
-                          final user = UserModel(
-                            name: _nameController.text,
-                            surname: _surnameController.text,
+                          // Önce Authentication'a kayıt
+                          final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+                            email: email,
                             password: password,
-                            floor: _selectedFloor!,
-                            department: _departmentController.text,
-                            phoneCode: phone,
                           );
-                          await firestore.collection('users').add(user.toMap());
+                          // Sonra Firestore'a profil bilgilerini kaydet
+                          final user = userCredential.user;
+                          if (user != null) {
+                            await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+                              'name': _nameController.text,
+                              'surname': _surnameController.text,
+                              'department': _departmentController.text,
+                              'floor': _selectedFloor,
+                              'email': email,
+                            });
+                          }
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('Kayıt başarılı! Giriş yapabilirsiniz.'),
@@ -250,18 +237,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           Navigator.of(context).pop();
                         } catch (e) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Bir hata oluştu!')),
+                            SnackBar(content: Text('Bir hata oluştu: $e')),
                           );
+                        } finally {
+                          setState(() => _isLoading = false);
                         }
                       }
                     },
-                    child: const Text(
-                      'Kayıt Ol',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    child: _isLoading
+                        ? const CircularProgressIndicator()
+                        : const Text(
+                            'Kayıt Ol',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ),
                 const SizedBox(height: 18),

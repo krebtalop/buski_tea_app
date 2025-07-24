@@ -73,33 +73,26 @@ class _OrderScreenState extends State<OrderScreen> {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Kullanıcı oturumu yok!')));
         return;
       }
-
+      // Kullanıcı profil bilgilerini Firestore'dan çek
       final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-      if (!userDoc.exists) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Kullanıcı profili bulunamadı!')));
-        return;
-      }
-
-      final userData = userDoc.data();
-      final ad = userData?['name'] ?? '';
-      final telefon = userData?['phoneCode'] ?? '';
-      final departman = userData?['department'] ?? '';
-      final floor = userData?['floor'] ?? '';
-
+      final userData = userDoc.data() ?? {};
+      final ad = userData['name'] ?? '';
+      final soyad = userData['surname'] ?? '';
+      final departman = userData['department'] ?? '';
+      final floor = userData['floor'] ?? '';
       final orderRef = FirebaseFirestore.instance.collection('siparisler').doc();
       final newOrder = {
         'id': orderRef.id,
         'userId': user.uid,
+        'email': user.email,
+        'ad': ad,
+        'soyad': soyad,
+        'departman': departman,
+        'floor': floor,
         'tarih': Timestamp.now(),
         'toplamFiyat': totalPrice,
         'items': _cartItems,
-        'ad': ad,
-        'telefon': telefon,
-        'departman': departman,
-        'floor': floor,
       };
-
       await orderRef.set(newOrder);
       setState(() => _cartItems.clear());
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Tüm siparişleriniz başarıyla alındı!')));
