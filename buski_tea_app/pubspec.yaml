@@ -69,6 +69,7 @@ flutter:
   assets:
     - assets/images/logo.png
     - assets/images/logo1.png
+    - assets/images/cloud.png
 
   fonts:
     - family: SourceSansPro

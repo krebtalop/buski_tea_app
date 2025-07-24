@@ -204,13 +204,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   },
                 ),
                 const SizedBox(height: 18),
-                // Kullanıcı Bilgileri Kartı
+                // Kullanıcı Bilgileri Kartı (modern ve yumuşak)
                 Card(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                  elevation: 6,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+                  elevation: 10,
                   margin: const EdgeInsets.only(bottom: 28),
+                  color: Colors.white.withOpacity(0.96),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 26),
                     child: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
                       future: _firestore.collection('users').doc(user?.uid).get(),
                       builder: (context, snapshot) {
@@ -220,7 +221,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           children: [
                             Text(
                               user?.email ?? 'Kullanıcı',
-                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1565C0)),
+                              style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: Color(0xFF1565C0)),
                               textAlign: TextAlign.center,
                             ),
                             if (data != null && data['name'] != null)
@@ -228,13 +229,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 padding: const EdgeInsets.only(top: 2.0, bottom: 8),
                                 child: Text('${data['name']}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                               ),
-                            Divider(height: 18, thickness: 1, color: Colors.blue[50]),
+                            Divider(height: 22, thickness: 1, color: Colors.blue[50]),
                             if (data != null && data['phoneCode'] != null)
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   const Icon(Icons.phone, size: 18, color: Colors.grey),
-                                  const SizedBox(width: 6),
+                                  const SizedBox(width: 8),
                                   Text('${data['phoneCode']}', style: const TextStyle(fontSize: 15, color: Colors.black87)),
                                 ],
                               ),
@@ -243,7 +244,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   const Icon(Icons.business, size: 18, color: Colors.grey),
-                                  const SizedBox(width: 6),
+                                  const SizedBox(width: 8),
                                   Text('${data['department']}', style: const TextStyle(fontSize: 15, color: Colors.black87)),
                                 ],
                               ),
@@ -252,7 +253,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   const Icon(Icons.location_on, size: 18, color: Colors.grey),
-                                  const SizedBox(width: 6),
+                                  const SizedBox(width: 8),
                                   Text('Kat: ${data['floor']}', style: const TextStyle(fontSize: 15, color: Colors.black87)),
                                 ],
                               ),

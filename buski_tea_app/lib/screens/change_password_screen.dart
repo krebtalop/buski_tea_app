@@ -23,9 +23,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     if (value == null || value.length < 6) {
       return 'Şifre en az 6 karakter olmalı';
     }
-    if (!RegExp(r'[^A-Za-z0-9]').hasMatch(value)) {
-      return 'Şifre en az 1 özel karakter içermeli';
-    }
     return null;
   }
 

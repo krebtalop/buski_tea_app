@@ -29,9 +29,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (value == null || value.length < 6) {
       return 'Şifre en az 6 karakter olmalı';
     }
-    if (!RegExp(r'[^A-Za-z0-9]').hasMatch(value)) {
-      return 'Şifre en az 1 özel karakter içermeli';
-    }
     return null;
   }
 
@@ -213,12 +210,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         final password = _passwordController.text;
                         setState(() => _isLoading = true);
                         try {
-                          // Önce Authentication'a kayıt
+                          // Önce bu e-posta ile kullanıcı var mı kontrol et
+                          final existingMethods =
+                              await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
+                          if (existingMethods.isNotEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Bu e-posta ile kayıtlı kullanıcı var.'),
+                              ),
+                            );
+                            setState(() => _isLoading = false);
+                            return;
+                          }
+
+                          // Authentication'a kayıt
                           final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
                             email: email,
                             password: password,
                           );
-                          // Sonra Firestore'a profil bilgilerini kaydet
+                          // Firestore'a profil bilgilerini kaydet
                           final user = userCredential.user;
                           if (user != null) {
                             await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
@@ -236,8 +246,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           );
                           Navigator.of(context).pop();
                         } catch (e) {
+                          String errorMessage = 'Bir hata oluştu: $e';
+                          final msg = e.toString();
+                          if (msg.contains('email-already-in-use')) {
+                            errorMessage = 'Bu e-posta ile kayıtlı kullanıcı var.';
+                          }
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Bir hata oluştu: $e')),
+                            SnackBar(content: Text(errorMessage)),
                           );
                         } finally {
                           setState(() => _isLoading = false);

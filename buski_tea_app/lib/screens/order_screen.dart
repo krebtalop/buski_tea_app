@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/order_model.dart';
 import 'profile_screen.dart';
+import 'dart:math';
+import 'dart:async';
 
 class OrderScreen extends StatefulWidget {
   const OrderScreen({Key? key}) : super(key: key);
@@ -11,7 +13,7 @@ class OrderScreen extends StatefulWidget {
   State<OrderScreen> createState() => _OrderScreenState();
 }
 
-class _OrderScreenState extends State<OrderScreen> {
+class _OrderScreenState extends State<OrderScreen> with SingleTickerProviderStateMixin {
   int _selectedIndex = 0;
   final List<Map<String, dynamic>> _cartItems = [];
   bool _cartDropdownOpen = false;
@@ -35,12 +37,71 @@ class _OrderScreenState extends State<OrderScreen> {
   bool _showTopNotification = false;
   String _notificationMessage = '';
 
+  // Animasyon için
+  List<bool> _cardVisible = [];
+  AnimationController? _cloudController;
+  Animation<double>? _cloudAnim1;
+  Animation<double>? _cloudAnim2;
+  Animation<double>? _cloudAnim3;
+  Animation<double>? _cloudAnim4;
+  Animation<double>? _cloudAnim5;
+
+  // Bulut animasyonları için bulut sayısı ve boyutları
+  final int _cloudCount = 3;
+  List<_CloudAnim>? _cloudAnims;
+  List<double>? _cloudPositions;
+  Timer? _cloudTimer;
+
   @override
   void initState() {
     super.initState();
     for (var item in _menu) {
       _quantities[item['name']] = 1;
       _selectedOptions[item['name']] = item['defaultOption'] ?? '';
+    }
+    _cardVisible = List.generate(_menu.length, (index) => false);
+    if (_menu.isNotEmpty) {
+      // Kartları animasyonlu şekilde aç
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showCardsAnimated();
+      });
+    }
+    _cloudAnims = List.generate(_cloudCount, (i) => _CloudAnim.random());
+    _cloudPositions = List.generate(_cloudCount, (i) => 0.1 + i * 0.15); // Ekrana yakın başlasınlar
+    _startCloudLoop();
+  }
+
+  @override
+  void dispose() {
+    _cloudTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startCloudLoop() {
+    _cloudTimer?.cancel();
+    _cloudTimer = Timer.periodic(const Duration(milliseconds: 24), (_) {
+      if (!mounted || _cloudAnims == null || _cloudPositions == null) return;
+      setState(() {
+        final width = MediaQuery.of(context).size.width;
+        for (int i = 0; i < _cloudCount; i++) {
+          _cloudPositions![i] -= _cloudAnims![i].speed * 0.0012; // Optimize hız
+          if (_cloudPositions![i] < -(_cloudAnims![i].size / width)) {
+            _cloudPositions![i] = 1.1 + (Random().nextDouble() * 0.2);
+            _cloudAnims![i] = _CloudAnim.random();
+          }
+        }
+      });
+    });
+  }
+
+  void _showCardsAnimated() async {
+    for (int i = 0; i < _menu.length; i++) {
+      await Future.delayed(const Duration(milliseconds: 80));
+      if (mounted) {
+        setState(() {
+          _cardVisible[i] = true;
+        });
+      }
     }
   }
 
@@ -117,100 +178,115 @@ class _OrderScreenState extends State<OrderScreen> {
                 colors: [Color(0xFF1565C0), Color(0xFF42A5F5), Color(0xFFB3E5FC)],
               ),
             ),
-            child: ListView.builder(
-              padding: const EdgeInsets.all(8),
-              itemCount: _menu.length,
-              itemBuilder: (context, index) {
-                final item = _menu[index];
-                final name = item['name'] as String;
-                final price = item['price'] as int;
-                final options = List<String>.from(item['options']);
-                final hasOptions = options.isNotEmpty;
+            child: _menu.isEmpty
+                ? const Center(child: Text('Menü bulunamadı', style: TextStyle(fontSize: 18, color: Colors.white)))
+                : ListView.builder(
+                    padding: const EdgeInsets.all(8),
+                    itemCount: _menu.length,
+                    itemBuilder: (context, index) {
+                      final item = _menu[index];
+                      final name = item['name'] as String;
+                      final price = item['price'] as int;
+                      final options = List<String>.from(item['options']);
+                      final hasOptions = options.isNotEmpty;
 
-                return Card(
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                    side: BorderSide(color: Colors.blue[100]!, width: 1.0),
-                  ),
-                  elevation: 4,
-                  margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 1),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Flexible(
-                              child: Text(
-                                name,
-                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black),
-                                overflow: TextOverflow.ellipsis,
+                      // _cardVisible güvenli erişim
+                      final visible = index < _cardVisible.length ? _cardVisible[index] : true;
+
+                      return AnimatedOpacity(
+                        opacity: visible ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 500),
+                        curve: Curves.easeOut,
+                        child: AnimatedSlide(
+                          offset: visible ? Offset.zero : const Offset(0, 0.15),
+                          duration: const Duration(milliseconds: 500),
+                          curve: Curves.easeOut,
+                          child: Card(
+                            color: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(6),
+                              side: BorderSide(color: Colors.blue[100]!, width: 1.0),
+                            ),
+                            elevation: 4,
+                            margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 1),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Flexible(
+                                        child: Text(
+                                          name,
+                                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.blue[50],
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          '$price TL',
+                                          style: const TextStyle(fontSize: 18, color: Color(0xFF1976D2), fontWeight: FontWeight.w700),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      const Text('Adet:', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500, fontSize: 13)),
+                                      IconButton(
+                                        icon: const Icon(Icons.remove, color: Colors.black, size: 18),
+                                        onPressed: _quantities[name]! > 1 ? () => setState(() => _quantities[name] = _quantities[name]! - 1) : null,
+                                      ),
+                                      Text(
+                                        _quantities[name].toString(),
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.add, color: Colors.black, size: 18),
+                                        onPressed: () => setState(() => _quantities[name] = _quantities[name]! + 1),
+                                      ),
+                                      if (hasOptions)
+                                        DropdownButton<String>(
+                                          value: _selectedOptions[name],
+                                          dropdownColor: Colors.white,
+                                          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w600, fontSize: 14),
+                                          items: options.map((opt) => DropdownMenuItem(value: opt, child: Text(opt))).toList(),
+                                          onChanged: (val) => setState(() => _selectedOptions[name] = val!),
+                                          underline: const SizedBox(),
+                                          iconSize: 22,
+                                        ),
+                                      const Spacer(),
+                                      ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(0xFF1976D2),
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                        ),
+                                        onPressed: _isLoading
+                                            ? null
+                                            : () => _addToCart(name, _quantities[name]!, hasOptions ? _selectedOptions[name]! : '', price),
+                                        child: _isLoading
+                                            ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                            : const Text('Sepete Ekle'),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: Colors.blue[50],
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                '$price TL',
-                                style: const TextStyle(fontSize: 18, color: Color(0xFF1976D2), fontWeight: FontWeight.w700),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            const Text('Adet:', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500, fontSize: 13)),
-                            IconButton(
-                              icon: const Icon(Icons.remove, color: Colors.black, size: 18),
-                              onPressed: _quantities[name]! > 1 ? () => setState(() => _quantities[name] = _quantities[name]! - 1) : null,
-                            ),
-                            Text(
-                              _quantities[name].toString(),
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.add, color: Colors.black, size: 18),
-                              onPressed: () => setState(() => _quantities[name] = _quantities[name]! + 1),
-                            ),
-                            if (hasOptions)
-                              DropdownButton<String>(
-                                value: _selectedOptions[name],
-                                dropdownColor: Colors.white,
-                                style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w600, fontSize: 14),
-                                items: options.map((opt) => DropdownMenuItem(value: opt, child: Text(opt))).toList(),
-                                onChanged: (val) => setState(() => _selectedOptions[name] = val!),
-                                underline: const SizedBox(),
-                                iconSize: 22,
-                              ),
-                            const Spacer(),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF1976D2),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                              ),
-                              onPressed: _isLoading
-                                  ? null
-                                  : () => _addToCart(name, _quantities[name]!, hasOptions ? _selectedOptions[name]! : '', price),
-                              child: _isLoading
-                                  ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                  : const Text('Sepete Ekle'),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
         ),
         if (_cartItems.isNotEmpty) _buildCartSummary(),
@@ -331,12 +407,79 @@ Widget _buildCartSummary() {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_selectedIndex == 0 ? 'Buski Çay Ocağı Menüsü' : 'Profil'),
-        backgroundColor: Colors.blue[800],
-        foregroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: Stack(
+          children: [
+            // Degrade arka plan
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF1565C0), Color(0xFF42A5F5), Color(0xFFB3E5FC)],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(0x331976D2),
+                    blurRadius: 18,
+                    offset: Offset(0, 6),
+                  ),
+                ],
+              ),
+            ),
+            // Animasyonlu bulutlar başlıkla aynı hizada
+            if (_cloudAnims != null && _cloudPositions != null)
+              Stack(
+                children: List.generate(_cloudAnims!.length, (i) {
+                  final anim = _cloudAnims![i];
+                  final width = MediaQuery.of(context).size.width;
+                  final double left = _cloudPositions![i] * width;
+                  if (left + anim.size < 0 || left > width) {
+                    return const SizedBox.shrink();
+                  }
+                  return Positioned(
+                    top: anim.top,
+                    left: left,
+                    child: Opacity(
+                      opacity: anim.opacity,
+                      child: Image.asset(
+                        'assets/images/cloud.png',
+                        width: anim.size,
+                        height: anim.size * 0.6,
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            // Başlık
+            SafeArea(
+              child: Center(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 350),
+                  child: Text(
+                    _selectedIndex == 0 ? 'Buski Çay Ocağı Menüsü' : 'Profil',
+                    key: ValueKey(_selectedIndex),
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black26,
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
       body: Stack(
         children: [
@@ -344,16 +487,121 @@ Widget _buildCartSummary() {
           _buildTopNotification(),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) => setState(() => _selectedIndex = index),
-        selectedItemColor: Colors.blue[800],
-        unselectedItemColor: Colors.blue[200],
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'Sipariş'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
-        ],
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 16,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _NavBarItem(
+                icon: Icons.shopping_cart,
+                label: 'Sipariş',
+                selected: _selectedIndex == 0,
+                onTap: () => setState(() => _selectedIndex = 0),
+              ),
+              _NavBarItem(
+                icon: Icons.person,
+                label: 'Profil',
+                selected: _selectedIndex == 1,
+                onTap: () => setState(() => _selectedIndex = 1),
+              ),
+            ],
+          ),
+        ),
       ),
+    );
+  }
+}
+
+// Modern alt navigasyon bar item widget'ı
+class _NavBarItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _NavBarItem({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: selected ? Colors.blue[50] : Colors.transparent,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                color: selected ? Colors.blue[800] : Colors.grey[400],
+                size: selected ? 28 : 24,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: TextStyle(
+                  color: selected ? Colors.blue[800] : Colors.grey[500],
+                  fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                  fontSize: selected ? 15 : 13,
+                ),
+              ),
+              if (selected)
+                Container(
+                  margin: const EdgeInsets.only(top: 4),
+                  height: 3,
+                  width: 24,
+                  decoration: BoxDecoration(
+                    color: Colors.blue[800],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Bulut animasyonu modeli
+class _CloudAnim {
+  final double speed; // 0.2-0.6 arası hız
+  final double size; // 60-120 px
+  final double top; // 8-28 arası dikey konum
+  final double opacity; // 0.7-1.0 arası
+  final double offset; // başlangıç fazı
+
+  _CloudAnim(this.speed, this.size, this.top, this.opacity, this.offset);
+
+  factory _CloudAnim.random() {
+    final rand = Random();
+    return _CloudAnim(
+      rand.nextDouble() * 0.4 + 0.2, // speed
+      rand.nextDouble() * 60 + 80, // size
+      rand.nextDouble() * 20 + 8, // top (başlık hizasında)
+      rand.nextDouble() * 0.3 + 0.7, // opacity
+      rand.nextDouble(), // offset
     );
   }
 }
