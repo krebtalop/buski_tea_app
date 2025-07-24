@@ -13,99 +13,51 @@ class ForgotPasswordScreen extends StatefulWidget {
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _repeatPasswordController =
-      TextEditingController();
+  final TextEditingController _codeController = TextEditingController();
+  final TextEditingController _newPasswordController = TextEditingController();
+  final TextEditingController _repeatPasswordController = TextEditingController();
 
   bool _isLoading = false;
-  bool _passwordVisible = false;
-  bool _repeatPasswordVisible = false;
-  bool _emailSent = false;
-  bool _emailVerified = false;
-
-  Timer? _timer;
-  int _start = 0;
-  late String _verificationId;
-  int? _expandedIndex;
-  int _step = 0; // 0: e-posta, 1: kod, 2: yeni şifre
+  int _step = 0; // 0: email, 1: kod, 2: yeni şifre
   String? _resetCode;
+  String? _infoMessage;
 
-  String? _validatePassword(String? value) {
-    if (value == null || value.length < 6) {
-      return 'Şifre en az 6 karakter olmalı';
-    }
-    if (!RegExp(r'[^A-Za-z0-9]').hasMatch(value)) {
-      return 'Şifre en az 1 özel karakter içermeli';
-    }
-    return null;
-  }
-
-  void _startTimer() {
-    _start = 30;
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_start == 0) {
-        timer.cancel();
-      } else {
-        setState(() {
-          _start--;
-        });
-      }
-    });
-  }
-
-  Future<void> _requestEmailCode() async {
+  Future<void> _sendResetEmail() async {
     final email = _emailController.text.trim();
     if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lütfen e-posta adresinizi giriniz.')),
-      );
+      setState(() => _infoMessage = 'Lütfen e-posta adresinizi giriniz.');
       return;
     }
-
-    setState(() {
-      _isLoading = true;
-      _emailVerified = false;
-    });
-
+    setState(() { _isLoading = true; _infoMessage = null; });
     try {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
       setState(() {
-        _emailSent = true;
+        _step = 1;
+        _infoMessage = 'Kod e-posta adresinize gönderildi. Lütfen mailinizi kontrol edin.';
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Şifre sıfırlama kodu gönderildi!')),
-      );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Hata: $e')));
+      setState(() { _infoMessage = 'Hata: $e'; });
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
   Future<void> _verifyCode() async {
-    final code = _passwordController.text.trim();
+    final code = _codeController.text.trim();
     if (code.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Maildeki kodu giriniz.')),
-      );
+      setState(() => _infoMessage = 'Maildeki kodu giriniz.');
       return;
     }
-    setState(() => _isLoading = true);
+    setState(() { _isLoading = true; _infoMessage = null; });
     try {
-      // Kodun geçerli olup olmadığını kontrol et
       await FirebaseAuth.instance.checkActionCode(code);
       setState(() {
         _resetCode = code;
         _step = 2;
+        _infoMessage = 'Kod doğrulandı, yeni şifre belirleyin.';
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Kod doğrulandı, yeni şifre belirleyin.')),
-      );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Kod geçersiz veya süresi dolmuş: $e')),
-      );
+      setState(() { _infoMessage = 'Kod geçersiz veya süresi dolmuş: $e'; });
     } finally {
       setState(() => _isLoading = false);
     }
@@ -113,53 +65,29 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   Future<void> _resetPassword() async {
     if (_resetCode == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Önce kodu doğrulayın.')),
-      );
+      setState(() => _infoMessage = 'Önce kodu doğrulayın.');
       return;
     }
-    if (!_formKey.currentState!.validate()) return;
-    setState(() => _isLoading = true);
+    if (_newPasswordController.text != _repeatPasswordController.text) {
+      setState(() => _infoMessage = 'Şifreler eşleşmiyor.');
+      return;
+    }
+    if (_newPasswordController.text.length < 6) {
+      setState(() => _infoMessage = 'Şifre en az 6 karakter olmalı.');
+      return;
+    }
+    setState(() { _isLoading = true; _infoMessage = null; });
     try {
       await FirebaseAuth.instance.confirmPasswordReset(
         code: _resetCode!,
-        newPassword: _repeatPasswordController.text,
+        newPassword: _newPasswordController.text,
       );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Şifre başarıyla oluşturuldu!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      setState(() {
+        _infoMessage = 'Şifre başarıyla değiştirildi!';
+      });
       Navigator.of(context).pop();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Şifre güncellenemedi: $e')),
-      );
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _sendResetEmail() async {
-    final email = _emailController.text.trim();
-    if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lütfen e-posta adresinizi giriniz.')),
-      );
-      return;
-    }
-    setState(() => _isLoading = true);
-    try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-      setState(() { _step = 1; });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Şifre sıfırlama e-postası gönderildi! Maildeki kodu giriniz.')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Hata: $e')),
-      );
+      setState(() { _infoMessage = 'Şifre güncellenemedi: $e'; });
     } finally {
       setState(() => _isLoading = false);
     }
@@ -167,9 +95,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   void dispose() {
-    _timer?.cancel();
     _emailController.dispose();
-    _passwordController.dispose();
+    _codeController.dispose();
+    _newPasswordController.dispose();
     _repeatPasswordController.dispose();
     super.dispose();
   }
@@ -198,45 +126,40 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 if (_step == 0) ...[
-                  const Text('E-posta Adresi:', style: TextStyle(fontWeight: FontWeight.w600)),
+                  const Text('E-posta Adresi', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
-                      labelText: 'E-posta Adresi',
-                      hintText: 'ornek@example.com',
+                      labelText: 'E-posta',
                       border: blueBorder,
                       focusedBorder: blueBorder,
                       enabledBorder: blueBorder,
                     ),
-                    style: const TextStyle(letterSpacing: 2, fontWeight: FontWeight.w500),
+                    style: const TextStyle(fontWeight: FontWeight.w500),
                     textAlign: TextAlign.center,
-                    validator: (v) => (v == null || v.isEmpty) ? 'E-posta adresi giriniz.' : null,
-                    enabled: !_isLoading,
                   ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    height: 40,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue[600],
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        elevation: 0,
-                      ),
-                      onPressed: _isLoading ? null : _sendResetEmail,
-                      child: _isLoading
-                          ? const CircularProgressIndicator()
-                          : const Text('Devam', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue[800],
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
+                    onPressed: _isLoading ? null : _sendResetEmail,
+                    child: _isLoading
+                        ? const CircularProgressIndicator()
+                        : const Text('Kod Gönder', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   ),
                 ],
                 if (_step == 1) ...[
-                  const Text('Maildeki Kod:', style: TextStyle(fontWeight: FontWeight.w600)),
+                  const Text('Maildeki Kod', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
                   const SizedBox(height: 8),
                   TextFormField(
-                    controller: _passwordController,
+                    controller: _codeController,
                     keyboardType: TextInputType.text,
                     decoration: InputDecoration(
                       labelText: 'Kod',
@@ -246,75 +169,71 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                     style: const TextStyle(fontWeight: FontWeight.w500),
                     textAlign: TextAlign.center,
-                    validator: (v) => (v == null || v.isEmpty) ? 'Maildeki kodu giriniz.' : null,
-                    enabled: !_isLoading,
                   ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    height: 40,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue[600],
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        elevation: 0,
-                      ),
-                      onPressed: _isLoading ? null : _verifyCode,
-                      child: _isLoading
-                          ? const CircularProgressIndicator()
-                          : const Text('Devam', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue[800],
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
+                    onPressed: _isLoading ? null : _verifyCode,
+                    child: _isLoading
+                        ? const CircularProgressIndicator()
+                        : const Text('Kodu Doğrula', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   ),
                 ],
                 if (_step == 2) ...[
-                  const Text('Yeni Şifre:', style: TextStyle(fontWeight: FontWeight.w600)),
+                  const Text('Yeni Şifre', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
                   const SizedBox(height: 8),
                   TextFormField(
-                    controller: _repeatPasswordController,
-                    obscureText: !_passwordVisible,
+                    controller: _newPasswordController,
+                    obscureText: true,
                     decoration: InputDecoration(
                       labelText: 'Yeni Şifre',
                       border: blueBorder,
                       focusedBorder: blueBorder,
                       enabledBorder: blueBorder,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _passwordVisible ? Icons.visibility : Icons.visibility_off,
-                          color: Colors.grey,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _passwordVisible = !_passwordVisible;
-                          });
-                        },
-                      ),
                     ),
                     style: const TextStyle(fontWeight: FontWeight.w500),
-                    validator: (value) {
-                      if (value == null || value.length < 6) {
-                        return 'Şifre en az 6 karakter olmalı';
-                      }
-                      if (!RegExp(r'[^A-Za-z0-9]').hasMatch(value)) {
-                        return 'Şifre en az 1 özel karakter içermeli';
-                      }
-                      return null;
-                    },
+                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    height: 40,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue[600],
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        elevation: 0,
-                      ),
-                      onPressed: _isLoading ? null : _resetPassword,
-                      child: _isLoading
-                          ? const CircularProgressIndicator()
-                          : const Text('Şifreyi Sıfırla', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _repeatPasswordController,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      labelText: 'Yeni Şifre (Tekrar)',
+                      border: blueBorder,
+                      focusedBorder: blueBorder,
+                      enabledBorder: blueBorder,
                     ),
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue[800],
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    onPressed: _isLoading ? null : _resetPassword,
+                    child: _isLoading
+                        ? const CircularProgressIndicator()
+                        : const Text('Şifreyi Değiştir', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  ),
+                ],
+                if (_infoMessage != null) ...[
+                  const SizedBox(height: 18),
+                  Text(
+                    _infoMessage!,
+                    style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w600, fontSize: 15),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ],
