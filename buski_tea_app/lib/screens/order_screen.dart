@@ -19,58 +19,9 @@ class _OrderScreenState extends State<OrderScreen>
   final List<Map<String, dynamic>> _cartItems = [];
   bool _cartDropdownOpen = false;
 
-  final List<Map<String, dynamic>> _menu = [
-    {
-      'name': 'Çay',
-      'price': 2,
-      'options': ['Şekersiz', 'Şekerli'],
-      'defaultOption': 'Şekersiz',
-    },
-    {
-      'name': 'Çay (Su Bardağı)',
-      'price': 4,
-      'options': ['Şekersiz', 'Şekerli'],
-      'defaultOption': 'Şekersiz',
-    },
-    {
-      'name': 'Bitki Çayı',
-      'price': 2,
-      'options': ['Çiçek', 'Adaçayı', 'Kuşburnu'],
-      'defaultOption': 'Çiçek',
-    },
-    {
-      'name': 'Oralet',
-      'price': 2,
-      'options': ['Şekersiz', 'Şekerli'],
-      'defaultOption': 'Şekersiz',
-    },
-    {
-      'name': 'Nescafe',
-      'price': 8,
-      'options': ['Sade', 'Sütlü'],
-      'defaultOption': 'Sade',
-    },
-    {
-      'name': 'Türk Kahvesi',
-      'price': 10,
-      'options': ['Sade', 'Orta', 'Şekerli'],
-      'defaultOption': 'Sade',
-    },
-    {
-      'name': 'Maden Suyu',
-      'price': 10,
-      'options': ['Sade', 'Elmalı', 'Limonlu', 'Narlı'],
-      'defaultOption': 'Sade',
-    },
-    {'name': 'Sade Gazoz', 'price': 30, 'options': [], 'defaultOption': ''},
-    {'name': 'Sarı Gazoz', 'price': 34, 'options': [], 'defaultOption': ''},
-    {
-      'name': "Çay Fişi 100'lü",
-      'price': 200,
-      'options': [],
-      'defaultOption': '',
-    },
-  ];
+  List<Map<String, dynamic>> _menu = [];
+  bool _isMenuLoading = true;
+  late final StreamSubscription _menuSubscription;
 
   final Map<String, int> _quantities = {};
   final Map<String, String> _selectedOptions = {};
@@ -85,6 +36,7 @@ class _OrderScreenState extends State<OrderScreen>
   @override
   void initState() {
     super.initState();
+    _listenMenuRealtime();
     for (var item in _menu) {
       _quantities[item['name']] = 1;
       _selectedOptions[item['name']] = item['defaultOption'] ?? '';
@@ -99,9 +51,49 @@ class _OrderScreenState extends State<OrderScreen>
     // Bulut animasyonu başlatma kodları kaldırıldı
   }
 
+  void _listenMenuRealtime() {
+    final menuDocRef = FirebaseFirestore.instance
+        .collection('menu')
+        .doc('main');
+    setState(() {
+      _isMenuLoading = true;
+    });
+    _menuSubscription = menuDocRef.snapshots().listen((docSnap) {
+      if (docSnap.exists &&
+          docSnap.data() != null &&
+          docSnap.data()!['items'] is List) {
+        setState(() {
+          _menu = List<Map<String, dynamic>>.from(
+            (docSnap.data()!['items'] as List).map(
+              (e) => Map<String, dynamic>.from(e),
+            ),
+          );
+          _isMenuLoading = false;
+          _quantities.clear();
+          _selectedOptions.clear();
+          for (var item in _menu) {
+            _quantities[item['name']] = 1;
+            _selectedOptions[item['name']] = item['defaultOption'] ?? '';
+          }
+          _cardVisible = List.generate(_menu.length, (index) => false);
+          if (_menu.isNotEmpty) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _showCardsAnimated();
+            });
+          }
+        });
+      } else {
+        setState(() {
+          _menu = [];
+          _isMenuLoading = false;
+        });
+      }
+    });
+  }
+
   @override
   void dispose() {
-    // Bulut animasyonu timer iptali kaldırıldı
+    _menuSubscription.cancel();
     super.dispose();
   }
 
@@ -198,6 +190,9 @@ class _OrderScreenState extends State<OrderScreen>
       setState(() => _cartDropdownOpen = !_cartDropdownOpen);
 
   Widget _buildOrderMenu() {
+    if (_isMenuLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
     return Column(
       children: [
         Expanded(
@@ -226,7 +221,12 @@ class _OrderScreenState extends State<OrderScreen>
                     itemBuilder: (context, index) {
                       final item = _menu[index];
                       final name = item['name'] as String;
-                      final price = item['price'] as int;
+                      // price güvenli şekilde alınacak:
+                      final price = (item['price'] is int)
+                          ? item['price'] as int
+                          : (item['price'] is double)
+                          ? (item['price'] as double).toInt()
+                          : int.tryParse(item['price'].toString()) ?? 0;
                       final options = List<String>.from(item['options']);
                       final hasOptions = options.isNotEmpty;
 

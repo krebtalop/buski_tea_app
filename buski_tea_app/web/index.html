@@ -3,11 +3,91 @@
 <head>
   <meta charset="UTF-8">
   <title>Buski Çay Ocağı Sipariş Paneli</title>
+
+  <style>
+    /* Hazırlandı durumunda kartın yeşil görünmesi için */
+    .card-ready {
+      background-color: #d1fae5 !important; /* emerald-100 */
+      border-color: #10b981 !important;      /* emerald-500 */
+    }
+    /* Teslim edildi animasyonu */
+    .fade-out {
+      animation: fadeShrink 0.6s forwards;
+    }
+    @keyframes fadeShrink {
+      0% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.9); }
+    }
+    .center-message {
+      text-align: center;
+      font-weight: 600;
+      color: #065f46; /* emerald-900 */
+      margin: 8px 0;
+      width: 100%;
+    }
+
+    /* Modal stilleri */
+    .modal-bg {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      max-height: 80vh;
+      overflow-y: auto;
+      width: 420px;
+    }
+    /* Sağ üst sabit menü butonu */
+    #open-menu-btn {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 1100;
+    }
+    /* Menü listesi kart stili */
+    #menu-list > div {
+      background-color: #bbf7d0; /* orta ton yeşil */
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 8px;
+    }
+    /* Yeni ürün ekle kartı */
+    .add-product-card {
+      background-color: #f3f4f6; /* gri renk */
+      border-radius: 20px; /* oval kenar */
+      padding: 12px;
+      margin-bottom: 8px;
+      width: 80%; /* normal menülere göre daha kısa */
+      text-align: center;
+      cursor: pointer;
+      color: #000; /* siyah yazı */
+      font-size: 14px;
+    }
+    .add-product-card:hover {
+      background-color: #e5e7eb;
+    }
+    /* Yeni ürün ekleme modal */
+    .add-product-modal, .edit-product-modal {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      width: 350px;
+    }
+  </style>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
     import {
       getFirestore, collection, query, orderBy,
-      onSnapshot, updateDoc, doc, deleteDoc
+      onSnapshot, updateDoc, doc, deleteDoc, setDoc, getDoc
     } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
 
     //  Senin kendi Firebase config'inle değiştir
@@ -18,10 +98,99 @@
       storageBucket: "buski-1b341.firebasestorage.app",
       messagingSenderId: "463802150330",
       appId: "1:463802150330:web:02d0ada7954afb51658183",
-  measurementId: "G-V072X4G0BM"
-};
+      measurementId: "G-V072X4G0BM"
+    };
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+
+    // ==== MENÜ (mobildeki _menu ile aynı içerik) ====
+    const defaultMenu = [
+      {
+        name: 'Çay',
+        price: 2,
+        options: ['Şekersiz', 'Şekerli'],
+        defaultOption: 'Şekersiz',
+      },
+      {
+        name: 'Çay (Su Bardağı)',
+        price: 4,
+        options: ['Şekersiz', 'Şekerli'],
+        defaultOption: 'Şekersiz',
+      },
+      {
+        name: 'Bitki Çayı',
+        price: 2,
+        options: ['Çiçek', 'Adaçayı', 'Kuşburnu'],
+        defaultOption: 'Çiçek',
+      },
+      {
+        name: 'Oralet',
+        price: 2,
+        options: ['Şekersiz', 'Şekerli'],
+        defaultOption: 'Şekersiz',
+      },
+      {
+        name: 'Nescafe',
+        price: 8,
+        options: ['Sade', 'Sütlü'],
+        defaultOption: 'Sade',
+      },
+      {
+        name: 'Türk Kahvesi',
+        price: 10,
+        options: ['Sade', 'Orta', 'Şekerli'],
+        defaultOption: 'Sade',
+      },
+      {
+        name: 'Maden Suyu',
+        price: 10,
+        options: ['Sade', 'Elmalı', 'Limonlu', 'Narlı'],
+        defaultOption: 'Sade',
+      },
+      { name: 'Sade Gazoz', price: 30, options: [], defaultOption: '' },
+      { name: 'Sarı Gazoz', price: 34, options: [], defaultOption: '' },
+      {
+        name: "Çay Fişi 100'lü",
+        price: 200,
+        options: [],
+        defaultOption: '',
+      },
+    ];
+    let menuData = [];
+
+    // Firestore'dan menüyü oku
+    async function fetchMenuFromFirestore() {
+      const menuDocRef = doc(db, "menu", "main");
+      const menuDoc = await getDoc(menuDocRef);
+      if (menuDoc.exists()) {
+        menuData = menuDoc.data().items || [];
+      } else {
+        // Eğer menü yoksa, hazır menü ile başlat
+        menuData = [...defaultMenu];
+        await setDoc(menuDocRef, { items: menuData });
+      }
+      renderMenuList();
+    }
+
+    // Firestore'a menüyü kaydet
+    async function saveMenuToFirestore() {
+      const menuDocRef = doc(db, "menu", "main");
+      await setDoc(menuDocRef, { items: menuData });
+    }
+
+    // Firestore'daki menüde değişiklikleri dinle
+    function listenMenuRealtime() {
+      const menuDocRef = doc(db, "menu", "main");
+      onSnapshot(menuDocRef, (docSnap) => {
+        if (docSnap.exists()) {
+          menuData = docSnap.data().items || [];
+          renderMenuList();
+        }
+      });
+    }
+
+    // Sayfa açılışında gerçek zamanlı dinleme başlat
+    window.addEventListener('DOMContentLoaded', listenMenuRealtime);
 
     // Kat grupları
     const groups = [
@@ -35,6 +204,158 @@
     // Butonları ve sütunları oluşturmak için referanslar
     const groupButtonsDiv = document.getElementById("group-buttons");
     const columnsDiv = document.getElementById("columns-container");
+
+    // ==== MENÜ MODAL ELEMANLARI ====
+    const menuModal = document.getElementById('menu-modal');
+    const menuListContainer = document.getElementById('menu-list');
+    const closeMenuBtn = document.getElementById('close-menu-btn');
+    const openMenuBtn = document.getElementById('open-menu-btn');
+
+    // ==== YENİ ÜRÜN EKLEME MODAL ELEMANLARI ====
+    const addProductModal = document.getElementById('add-product-modal');
+    const closeAddProductBtn = document.getElementById('close-add-product-btn');
+    const addProductForm = document.getElementById('add-product-form');
+
+    // ==== ÜRÜN DÜZENLEME MODAL ELEMANLARI ====
+    const editProductModal = document.getElementById('edit-product-modal');
+    const closeEditProductBtn = document.getElementById('close-edit-product-btn');
+    const editProductForm = document.getElementById('edit-product-form');
+    const editProductNameInput = document.getElementById('edit-product-name');
+    const editProductPriceInput = document.getElementById('edit-product-price');
+    const editProductOptionsInput = document.getElementById('edit-product-options');
+    let editingProductIndex = -1; // Düzenlenmekte olan ürünün indeksi
+
+    openMenuBtn.addEventListener('click', () => {
+      renderMenuList();
+      menuModal.style.display = 'flex';
+    });
+
+    closeMenuBtn.addEventListener('click', () => {
+      menuModal.style.display = 'none';
+    });
+
+    closeAddProductBtn.addEventListener('click', () => {
+      addProductModal.style.display = 'none';
+    });
+
+    closeEditProductBtn.addEventListener('click', () => {
+      editProductModal.style.display = 'none';
+    });
+
+    function renderMenuList() {
+      menuListContainer.innerHTML = '';
+      menuData.forEach((item, idx) => {
+        const row = document.createElement('div');
+        row.className = 'flex items-start justify-between border-b py-2';
+        row.innerHTML = `
+          <div class="text-sm">
+            <div class="font-semibold">${item.name}</div>
+            <div class="text-gray-600">Fiyat: ${item.price} ₺</div>
+            <div class="text-gray-500 text-xs">${item.options && item.options.length ? 'Opsiyonlar: ' + item.options.join(', ') : 'Opsiyonlar: Yok'}</div>
+          </div>
+          <button
+            class="text-blue-600 hover:text-blue-800 text-xl"
+            title="Düzenle"
+            data-idx="${idx}"
+          >✏️</button>
+        `;
+        // Edit event
+        row.querySelector('button').addEventListener('click', (e) => {
+          editingProductIndex = Number(e.currentTarget.getAttribute('data-idx'));
+          const productToEdit = menuData[editingProductIndex];
+
+          editProductNameInput.value = productToEdit.name;
+          editProductPriceInput.value = productToEdit.price;
+          editProductOptionsInput.value = productToEdit.options.join(', ');
+
+          editProductModal.style.display = 'flex';
+        });
+        menuListContainer.appendChild(row);
+      });
+
+      // Yeni ürün ekle kartı
+      const addProductCard = document.createElement('div');
+      addProductCard.className = 'add-product-card';
+      addProductCard.textContent = '+ Yeni Ürün Ekleyiniz.';
+      addProductCard.style.margin = '0 auto';
+      addProductCard.addEventListener('click', () => {
+        addProductModal.style.display = 'flex';
+      });
+      menuListContainer.appendChild(addProductCard);
+    }
+
+    // Yeni ürün ekleme form submit
+    addProductForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(addProductForm);
+      const name = formData.get('product-name').trim();
+      const price = parseFloat(formData.get('product-price'));
+      const optionsText = formData.get('product-options').trim();
+      
+      if (!name || isNaN(price)) {
+        alert('Lütfen geçerli ürün adı ve fiyat giriniz.');
+        return;
+      }
+
+      const options = optionsText ? optionsText.split(',').map(opt => opt.trim()).filter(opt => opt) : [];
+      const defaultOption = options.length > 0 ? options[0] : '';
+
+      const newProduct = {
+        name: name,
+        price: price,
+        options: options,
+        defaultOption: defaultOption
+      };
+
+      menuData.push(newProduct);
+      await saveMenuToFirestore();
+      addProductModal.style.display = 'none';
+      addProductForm.reset();
+      renderMenuList();
+    });
+
+    // Ürün düzenleme form submit
+    editProductForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(editProductForm);
+      const name = formData.get('edit-product-name').trim();
+      const price = parseFloat(formData.get('edit-product-price'));
+      const optionsText = formData.get('edit-product-options').trim();
+
+      if (!name || isNaN(price)) {
+        alert('Lütfen geçerli ürün adı ve fiyat giriniz.');
+        return;
+      }
+
+      const options = optionsText ? optionsText.split(',').map(opt => opt.trim()).filter(opt => opt) : [];
+      const defaultOption = options.length > 0 ? options[0] : '';
+
+      // Update the existing product in menuData
+      if (editingProductIndex !== -1) {
+        menuData[editingProductIndex] = {
+          name: name,
+          price: price,
+          options: options,
+          defaultOption: defaultOption
+        };
+        await saveMenuToFirestore();
+      }
+      editProductModal.style.display = 'none';
+      renderMenuList();
+    });
+
+    // Ürün silme
+    document.getElementById('delete-product-btn').addEventListener('click', async () => {
+      if (editingProductIndex !== -1) {
+        if (confirm('Bu ürünü silmek istediğinizden emin misiniz?')) {
+          menuData.splice(editingProductIndex, 1);
+          await saveMenuToFirestore();
+          editProductModal.style.display = 'none';
+          renderMenuList();
+        }
+      }
+    });
+
 
     // Grup butonlarını oluştur
     function renderGroupButtons() {
@@ -106,7 +427,6 @@
         } else {
           orders.forEach(order => {
             const div = document.createElement("div");
-            div.className = "border p-4 rounded bg-white mb-2";
             const durum = order.status ?? "hazırlanıyor";
             // Ürünler dizisi desteği (items)
             const urunlerHtml = Array.isArray(order.items)
@@ -124,12 +444,12 @@
               buttonClass = "bg-gray-400 cursor-not-allowed";
               disabled = true;
             }
+            div.className = `border p-4 rounded bg-white mb-2 ${durum === 'hazırlandı' ? 'card-ready' : ''}`;
             div.innerHTML = `
               <div style="display: flex; flex-wrap: wrap; gap: 24px; margin-bottom: 8px;">
                 <div><strong>Ad:</strong> ${order.ad ?? ''}</div>
                 <div><strong>Departman:</strong> ${order.departman ?? ''}${(order.floor !== undefined && order.floor !== '' && order.floor !== null) ? ' / Kat ' + order.floor : ''}</div>
                 <div><strong>Tarih:</strong> ${order.tarih?.toDate ? order.tarih.toDate().toLocaleString() : ''}</div>
-                <div><strong>Telefon:</strong> ${order.telefon ?? ''}</div>
               </div>
               <hr style="margin: 8px 0; border: none; border-top: 1.5px solid #e5e7eb;" />
               <div style="margin-bottom: 8px;">
@@ -145,11 +465,6 @@
               <div style="display: flex; gap: 8px; align-items: center;">
                 <button class="${buttonClass} text-white px-2 py-1 mt-2 rounded" style="min-width: 110px;" onclick="cycleStatus('${order.id}', this)" ${disabled ? 'disabled' : ''}>
                   ${buttonText}
-                </button>
-                <button class="bg-red-500 text-white px-2 py-1 mt-2 rounded"
-                  style="font-size: 0.9em; padding: 2px 8px; margin-left: auto;"
-                  onclick="deleteOrder('${order.id}', this)">
-                  Sil
                 </button>
               </div>
             `;
@@ -218,7 +533,6 @@
                 <div><strong>Ad:</strong> ${order.ad ?? ''}</div>
                 <div><strong>Departman:</strong> ${order.departman ?? ''}${(order.floor !== undefined && order.floor !== '' && order.floor !== null) ? ' / Kat ' + order.floor : ''}</div>
                 <div><strong>Tarih:</strong> ${order.tarih?.toDate ? order.tarih.toDate().toLocaleString() : ''}</div>
-                <div><strong>Telefon:</strong> ${order.telefon ?? ''}</div>
               </div>
               <hr style="margin: 8px 0; border: none; border-top: 1.5px solid #e5e7eb;" />
               <div style="margin-bottom: 8px;">
@@ -263,15 +577,41 @@
       const ref = doc(db, "siparisler", id);
       // Mevcut durumu bulmak için siparişi bul
       const order = allOrders.find(o => o.id === id);
-      let nextStatus = "hazırlandı";
       if (!order || !order.status || order.status === "hazırlanıyor") {
-        nextStatus = "hazırlandı";
-      } else if (order.status === "hazırlandı") {
-        nextStatus = "teslim edildi";
-      } else if (order.status === "teslim edildi") {
-        nextStatus = "teslim edildi";
+        // İlk tıklama -> hazırlanıyor -> hazırlandı
+        await updateDoc(ref, { status: "hazırlandı" });
+        return;
       }
-      await updateDoc(ref, { status: nextStatus });
+
+      if (order.status === "hazırlandı") {
+        // İkinci tıklama -> teslim edildi
+        const card = btn.closest('.border');
+        if (card) {
+          // Teslim Edildi mesajını göster
+          const msg = document.createElement('div');
+          msg.className = 'center-message';
+          msg.textContent = 'Teslim Edildi.';
+          card.appendChild(msg);
+
+          // 1 saniye bekle, sonra fade-out animasyonunu başlat
+          setTimeout(() => {
+            card.classList.add('fade-out');
+            // Animasyon süresi 0.6s, bitince firestore'u güncelle
+            setTimeout(async () => {
+              await updateDoc(ref, { status: "teslim edildi" });
+            }, 600);
+          }, 1000);
+        } else {
+          // Güvenli taraf: kart bulunamazsa direkt güncelle
+          await updateDoc(ref, { status: "teslim edildi" });
+        }
+        return;
+      }
+
+      if (order.status === "teslim edildi") {
+        // Zaten teslim edildiyse bir şey yapma
+        return;
+      }
     };
 
     // İlk render
@@ -292,6 +632,74 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-6">
+  <button id="open-menu-btn" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-4 py-2 rounded shadow">
+    Menüyü Gör
+  </button>
+
+  <div id="menu-modal" class="modal-bg">
+    <div class="modal-content">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold">Menü</h2>
+        <button id="close-menu-btn" class="text-gray-600 hover:text-gray-900 text-2xl leading-none">&times;</button>
+      </div>
+      <div id="menu-list"></div>
+    </div>
+  </div>
+
+  <div id="add-product-modal" class="modal-bg">
+    <div class="add-product-modal">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold">Yeni Ürün Ekle</h2>
+        <button id="close-add-product-btn" class="text-gray-600 hover:text-gray-900 text-2xl leading-none">&times;</button>
+      </div>
+      <form id="add-product-form">
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Ürün:</label>
+          <input type="text" name="product-name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Fiyat:</label>
+          <input type="number" name="product-price" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+        </div>
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Opsiyonlar:</label>
+          <input type="text" name="product-options" placeholder="Virgülle ayırınız (örn: Sade, Şekerli)" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+        </div>
+        <div class="text-center">
+          <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-2 rounded">Ekle</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="edit-product-modal" class="modal-bg">
+    <div class="edit-product-modal">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold">Ürünü Düzenle</h2>
+        <button id="close-edit-product-btn" class="text-gray-600 hover:text-gray-900 text-2xl leading-none">&times;</button>
+      </div>
+      <form id="edit-product-form">
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Ürün Adı:</label>
+          <input type="text" id="edit-product-name" name="edit-product-name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Fiyat:</label>
+          <input type="number" id="edit-product-price" name="edit-product-price" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+        </div>
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Opsiyonlar:</label>
+          <input type="text" id="edit-product-options" name="edit-product-options" placeholder="Virgülle ayırınız (örn: Sade, Şekerli)" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+        </div>
+        <div class="flex justify-between">
+          <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-2 rounded">Düzenle</button>
+          <button type="button" id="delete-product-btn" class="bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-2 rounded">Sil</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
   <audio id="order-notification-sound" src="assets/sounds/notification.mp3" preload="auto"></audio>
   <h1 class="text-2xl font-bold mb-4">Çay Ocağı Sipariş Paneli</h1>
   <div id="group-buttons" class="mb-4 flex flex-wrap"></div>

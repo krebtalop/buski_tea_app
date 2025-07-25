@@ -27,6 +27,16 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Çay Ocağı',
       debugShowCheckedModeBanner: false,
+      initialRoute: '/uygulama', // '/panel' veya '/uygulama' olarak değiştir
+      routes: {
+        '/uygulama': (context) => const OrderScreen(),
+        '/panel': (context) => OrderPanelScreen(),
+        '/register': (context) => RegisterScreen(),
+        '/login': (context) => LoginScreen(),
+        '/profile': (context) => ProfileScreen(),
+        '/forgot_password': (context) => ForgotPasswordScreen(),
+      },
+
       home: const AuthGate(),
       theme: ThemeData(fontFamily: 'SourceSansPro'),
     );
