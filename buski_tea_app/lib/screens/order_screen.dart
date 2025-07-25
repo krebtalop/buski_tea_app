@@ -13,22 +13,63 @@ class OrderScreen extends StatefulWidget {
   State<OrderScreen> createState() => _OrderScreenState();
 }
 
-class _OrderScreenState extends State<OrderScreen> with SingleTickerProviderStateMixin {
+class _OrderScreenState extends State<OrderScreen>
+    with SingleTickerProviderStateMixin {
   int _selectedIndex = 0;
   final List<Map<String, dynamic>> _cartItems = [];
   bool _cartDropdownOpen = false;
 
   final List<Map<String, dynamic>> _menu = [
-    {'name': 'Çay', 'price': 2, 'options': ['Şekersiz', 'Şekerli'], 'defaultOption': 'Şekersiz'},
-    {'name': 'Çay (Su Bardağı)', 'price': 4, 'options': ['Şekersiz','Şekerli'], 'defaultOption': 'Şekersiz'},
-    {'name': 'Bitki Çayı', 'price': 2, 'options': ['Çiçek', 'Adaçayı', 'Kuşburnu'], 'defaultOption': 'Çiçek'},
-    {'name': 'Oralet', 'price': 2, 'options': ['Şekersiz', 'Şekerli'], 'defaultOption': 'Şekersiz'},
-    {'name': 'Nescafe', 'price': 8, 'options': ['Sade', 'Sütlü'], 'defaultOption': 'Sade'},
-    {'name': 'Türk Kahvesi', 'price': 10, 'options': ['Sade', 'Orta', 'Şekerli'], 'defaultOption': 'Sade'},
-    {'name': 'Maden Suyu', 'price': 10, 'options': ['Sade', 'Elmalı', 'Limonlu', 'Narlı'], 'defaultOption': 'Sade'},
+    {
+      'name': 'Çay',
+      'price': 2,
+      'options': ['Şekersiz', 'Şekerli'],
+      'defaultOption': 'Şekersiz',
+    },
+    {
+      'name': 'Çay (Su Bardağı)',
+      'price': 4,
+      'options': ['Şekersiz', 'Şekerli'],
+      'defaultOption': 'Şekersiz',
+    },
+    {
+      'name': 'Bitki Çayı',
+      'price': 2,
+      'options': ['Çiçek', 'Adaçayı', 'Kuşburnu'],
+      'defaultOption': 'Çiçek',
+    },
+    {
+      'name': 'Oralet',
+      'price': 2,
+      'options': ['Şekersiz', 'Şekerli'],
+      'defaultOption': 'Şekersiz',
+    },
+    {
+      'name': 'Nescafe',
+      'price': 8,
+      'options': ['Sade', 'Sütlü'],
+      'defaultOption': 'Sade',
+    },
+    {
+      'name': 'Türk Kahvesi',
+      'price': 10,
+      'options': ['Sade', 'Orta', 'Şekerli'],
+      'defaultOption': 'Sade',
+    },
+    {
+      'name': 'Maden Suyu',
+      'price': 10,
+      'options': ['Sade', 'Elmalı', 'Limonlu', 'Narlı'],
+      'defaultOption': 'Sade',
+    },
     {'name': 'Sade Gazoz', 'price': 30, 'options': [], 'defaultOption': ''},
     {'name': 'Sarı Gazoz', 'price': 34, 'options': [], 'defaultOption': ''},
-    {'name': "Çay Fişi 100'lü", 'price': 200, 'options': [], 'defaultOption': ''},
+    {
+      'name': "Çay Fişi 100'lü",
+      'price': 200,
+      'options': [],
+      'defaultOption': '',
+    },
   ];
 
   final Map<String, int> _quantities = {};
@@ -39,18 +80,7 @@ class _OrderScreenState extends State<OrderScreen> with SingleTickerProviderStat
 
   // Animasyon için
   List<bool> _cardVisible = [];
-  AnimationController? _cloudController;
-  Animation<double>? _cloudAnim1;
-  Animation<double>? _cloudAnim2;
-  Animation<double>? _cloudAnim3;
-  Animation<double>? _cloudAnim4;
-  Animation<double>? _cloudAnim5;
-
-  // Bulut animasyonları için bulut sayısı ve boyutları
-  final int _cloudCount = 3;
-  List<_CloudAnim>? _cloudAnims;
-  List<double>? _cloudPositions;
-  Timer? _cloudTimer;
+  // Bulut animasyonu ile ilgili tüm değişkenler ve controllerlar kaldırıldı
 
   @override
   void initState() {
@@ -66,32 +96,13 @@ class _OrderScreenState extends State<OrderScreen> with SingleTickerProviderStat
         _showCardsAnimated();
       });
     }
-    _cloudAnims = List.generate(_cloudCount, (i) => _CloudAnim.random());
-    _cloudPositions = List.generate(_cloudCount, (i) => 0.1 + i * 0.15); // Ekrana yakın başlasınlar
-    _startCloudLoop();
+    // Bulut animasyonu başlatma kodları kaldırıldı
   }
 
   @override
   void dispose() {
-    _cloudTimer?.cancel();
+    // Bulut animasyonu timer iptali kaldırıldı
     super.dispose();
-  }
-
-  void _startCloudLoop() {
-    _cloudTimer?.cancel();
-    _cloudTimer = Timer.periodic(const Duration(milliseconds: 24), (_) {
-      if (!mounted || _cloudAnims == null || _cloudPositions == null) return;
-      setState(() {
-        final width = MediaQuery.of(context).size.width;
-        for (int i = 0; i < _cloudCount; i++) {
-          _cloudPositions![i] -= _cloudAnims![i].speed * 0.0012; // Optimize hız
-          if (_cloudPositions![i] < -(_cloudAnims![i].size / width)) {
-            _cloudPositions![i] = 1.1 + (Random().nextDouble() * 0.2);
-            _cloudAnims![i] = _CloudAnim.random();
-          }
-        }
-      });
-    });
   }
 
   void _showCardsAnimated() async {
@@ -107,7 +118,12 @@ class _OrderScreenState extends State<OrderScreen> with SingleTickerProviderStat
 
   void _addToCart(String productName, int adet, String option, int price) {
     setState(() {
-      _cartItems.add({'name': productName, 'adet': adet, 'option': option, 'price': price});
+      _cartItems.add({
+        'name': productName,
+        'adet': adet,
+        'option': option,
+        'price': price,
+      });
       _notificationMessage = '$productName sepete eklendi.';
       _showTopNotification = true;
     });
@@ -125,23 +141,33 @@ class _OrderScreenState extends State<OrderScreen> with SingleTickerProviderStat
     if (_cartItems.isEmpty) return;
     setState(() => _isLoading = true);
 
-    double totalPrice = _cartItems.fold(0, (sum, item) => sum + (item['price'] * item['adet']));
+    double totalPrice = _cartItems.fold(
+      0,
+      (sum, item) => sum + (item['price'] * item['adet']),
+    );
 
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Kullanıcı oturumu yok!')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Kullanıcı oturumu yok!')));
         return;
       }
       // Kullanıcı profil bilgilerini Firestore'dan çek
-      final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
       final userData = userDoc.data() ?? {};
       final ad = userData['name'] ?? '';
       final soyad = userData['surname'] ?? '';
       final departman = userData['department'] ?? '';
       final floor = userData['floor'] ?? '';
-      final orderRef = FirebaseFirestore.instance.collection('siparisler').doc();
+      final orderRef = FirebaseFirestore.instance
+          .collection('siparisler')
+          .doc();
       final newOrder = {
         'id': orderRef.id,
         'userId': user.uid,
@@ -156,15 +182,20 @@ class _OrderScreenState extends State<OrderScreen> with SingleTickerProviderStat
       };
       await orderRef.set(newOrder);
       setState(() => _cartItems.clear());
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Tüm siparişleriniz başarıyla alındı!')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tüm siparişleriniz başarıyla alındı!')),
+      );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Siparişler gönderilemedi: $e')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Siparişler gönderilemedi: $e')));
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
-  void _toggleCartDropdown() => setState(() => _cartDropdownOpen = !_cartDropdownOpen);
+  void _toggleCartDropdown() =>
+      setState(() => _cartDropdownOpen = !_cartDropdownOpen);
 
   Widget _buildOrderMenu() {
     return Column(
@@ -175,11 +206,20 @@ class _OrderScreenState extends State<OrderScreen> with SingleTickerProviderStat
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFF1565C0), Color(0xFF42A5F5), Color(0xFFB3E5FC)],
+                colors: [
+                  Color(0xFF1565C0),
+                  Color(0xFF42A5F5),
+                  Color(0xFFB3E5FC),
+                ],
               ),
             ),
             child: _menu.isEmpty
-                ? const Center(child: Text('Menü bulunamadı', style: TextStyle(fontSize: 18, color: Colors.white)))
+                ? const Center(
+                    child: Text(
+                      'Menü bulunamadı',
+                      style: TextStyle(fontSize: 18, color: Colors.white),
+                    ),
+                  )
                 : ListView.builder(
                     padding: const EdgeInsets.all(8),
                     itemCount: _menu.length,
@@ -191,7 +231,9 @@ class _OrderScreenState extends State<OrderScreen> with SingleTickerProviderStat
                       final hasOptions = options.isNotEmpty;
 
                       // _cardVisible güvenli erişim
-                      final visible = index < _cardVisible.length ? _cardVisible[index] : true;
+                      final visible = index < _cardVisible.length
+                          ? _cardVisible[index]
+                          : true;
 
                       return AnimatedOpacity(
                         opacity: visible ? 1.0 : 0.0,
@@ -205,34 +247,57 @@ class _OrderScreenState extends State<OrderScreen> with SingleTickerProviderStat
                             color: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(6),
-                              side: BorderSide(color: Colors.blue[100]!, width: 1.0),
+                              side: BorderSide(
+                                color: Colors.blue[100]!,
+                                width: 1.0,
+                              ),
                             ),
                             elevation: 4,
-                            margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 1),
+                            margin: const EdgeInsets.symmetric(
+                              vertical: 4,
+                              horizontal: 1,
+                            ),
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 6,
+                              ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Flexible(
                                         child: Text(
                                           name,
-                                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black),
+                                          style: const TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black,
+                                          ),
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 6,
+                                          vertical: 2,
+                                        ),
                                         decoration: BoxDecoration(
                                           color: Colors.blue[50],
-                                          borderRadius: BorderRadius.circular(6),
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
                                         ),
                                         child: Text(
                                           '$price TL',
-                                          style: const TextStyle(fontSize: 18, color: Color(0xFF1976D2), fontWeight: FontWeight.w700),
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            color: Color(0xFF1976D2),
+                                            fontWeight: FontWeight.w700,
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -240,41 +305,101 @@ class _OrderScreenState extends State<OrderScreen> with SingleTickerProviderStat
                                   const SizedBox(height: 4),
                                   Row(
                                     children: [
-                                      const Text('Adet:', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500, fontSize: 13)),
+                                      const Text(
+                                        'Adet:',
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 13,
+                                        ),
+                                      ),
                                       IconButton(
-                                        icon: const Icon(Icons.remove, color: Colors.black, size: 18),
-                                        onPressed: _quantities[name]! > 1 ? () => setState(() => _quantities[name] = _quantities[name]! - 1) : null,
+                                        icon: const Icon(
+                                          Icons.remove,
+                                          color: Colors.black,
+                                          size: 18,
+                                        ),
+                                        onPressed: _quantities[name]! > 1
+                                            ? () => setState(
+                                                () => _quantities[name] =
+                                                    _quantities[name]! - 1,
+                                              )
+                                            : null,
                                       ),
                                       Text(
                                         _quantities[name].toString(),
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black),
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Colors.black,
+                                        ),
                                       ),
                                       IconButton(
-                                        icon: const Icon(Icons.add, color: Colors.black, size: 18),
-                                        onPressed: () => setState(() => _quantities[name] = _quantities[name]! + 1),
+                                        icon: const Icon(
+                                          Icons.add,
+                                          color: Colors.black,
+                                          size: 18,
+                                        ),
+                                        onPressed: () => setState(
+                                          () => _quantities[name] =
+                                              _quantities[name]! + 1,
+                                        ),
                                       ),
                                       if (hasOptions)
                                         DropdownButton<String>(
                                           value: _selectedOptions[name],
                                           dropdownColor: Colors.white,
-                                          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w600, fontSize: 14),
-                                          items: options.map((opt) => DropdownMenuItem(value: opt, child: Text(opt))).toList(),
-                                          onChanged: (val) => setState(() => _selectedOptions[name] = val!),
+                                          style: const TextStyle(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
+                                          ),
+                                          items: options
+                                              .map(
+                                                (opt) => DropdownMenuItem(
+                                                  value: opt,
+                                                  child: Text(opt),
+                                                ),
+                                              )
+                                              .toList(),
+                                          onChanged: (val) => setState(
+                                            () => _selectedOptions[name] = val!,
+                                          ),
                                           underline: const SizedBox(),
                                           iconSize: 22,
                                         ),
                                       const Spacer(),
                                       ElevatedButton(
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color(0xFF1976D2),
+                                          backgroundColor: const Color(
+                                            0xFF1976D2,
+                                          ),
                                           foregroundColor: Colors.white,
-                                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 14,
+                                            vertical: 8,
+                                          ),
                                         ),
                                         onPressed: _isLoading
                                             ? null
-                                            : () => _addToCart(name, _quantities[name]!, hasOptions ? _selectedOptions[name]! : '', price),
+                                            : () => _addToCart(
+                                                name,
+                                                _quantities[name]!,
+                                                hasOptions
+                                                    ? _selectedOptions[name]!
+                                                    : '',
+                                                price,
+                                              ),
                                         child: _isLoading
-                                            ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                            ? const SizedBox(
+                                                width: 14,
+                                                height: 14,
+                                                child:
+                                                    CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                      color: Colors.white,
+                                                    ),
+                                              )
                                             : const Text('Sepete Ekle'),
                                       ),
                                     ],
@@ -294,70 +419,76 @@ class _OrderScreenState extends State<OrderScreen> with SingleTickerProviderStat
     );
   }
 
-Widget _buildCartSummary() {
-  double totalPrice = _cartItems.fold(0, (sum, item) => sum + (item['price'] * item['adet']));
-  return Column(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      GestureDetector(
-        onTap: _toggleCartDropdown,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: Colors.blue[900]?.withOpacity(0.9),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Toplam: ${totalPrice.toStringAsFixed(2)} TL',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+  Widget _buildCartSummary() {
+    double totalPrice = _cartItems.fold(
+      0,
+      (sum, item) => sum + (item['price'] * item['adet']),
+    );
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GestureDetector(
+          onTap: _toggleCartDropdown,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.blue[900]?.withOpacity(0.9),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(12),
               ),
-              Row(
-                children: [
-                  Icon(
-                    _cartDropdownOpen
-                        ? Icons.keyboard_arrow_up
-                        : Icons.keyboard_arrow_down,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Toplam: ${totalPrice.toStringAsFixed(2)} TL',
+                  style: const TextStyle(
                     color: Colors.white,
-                    size: 28,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
                   ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
+                ),
+                Row(
+                  children: [
+                    Icon(
+                      _cartDropdownOpen
+                          ? Icons.keyboard_arrow_up
+                          : Icons.keyboard_arrow_down,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
-                        foregroundColor: Colors.blue[800]),
-                    onPressed: _isLoading ? null : _submitAllOrders,
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator())
-                        : const Text('Tüm Siparişleri Ver'),
-                  ),
-                ],
-              ),
-            ],
+                        foregroundColor: Colors.blue[800],
+                      ),
+                      onPressed: _isLoading ? null : _submitAllOrders,
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(),
+                            )
+                          : const Text('Tüm Siparişleri Ver'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-      AnimatedCrossFade(
-        firstChild: const SizedBox.shrink(),
-        secondChild: _buildCartDropdown(),
-        crossFadeState:
-            _cartDropdownOpen ? CrossFadeState.showSecond : CrossFadeState.showFirst,
-        duration: const Duration(milliseconds: 300),
-      ),
-    ],
-  );
-}
-
-
+        AnimatedCrossFade(
+          firstChild: const SizedBox.shrink(),
+          secondChild: _buildCartDropdown(),
+          crossFadeState: _cartDropdownOpen
+              ? CrossFadeState.showSecond
+              : CrossFadeState.showFirst,
+          duration: const Duration(milliseconds: 300),
+        ),
+      ],
+    );
+  }
 
   Widget _buildCartDropdown() {
     return Container(
@@ -372,9 +503,18 @@ Widget _buildCartSummary() {
             .map(
               (entry) => Row(
                 children: [
-                  Expanded(child: Text('${entry.value['name']} x${entry.value['adet']} ${entry.value['option'] != '' ? '(${entry.value['option']})' : ''}')),
-                  Text('${(entry.value['price'] * entry.value['adet']).toStringAsFixed(2)} TL'),
-                  IconButton(icon: const Icon(Icons.delete, color: Colors.redAccent), onPressed: () => _removeFromCart(entry.key)),
+                  Expanded(
+                    child: Text(
+                      '${entry.value['name']} x${entry.value['adet']} ${entry.value['option'] != '' ? '(${entry.value['option']})' : ''}',
+                    ),
+                  ),
+                  Text(
+                    '${(entry.value['price'] * entry.value['adet']).toStringAsFixed(2)} TL',
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.redAccent),
+                    onPressed: () => _removeFromCart(entry.key),
+                  ),
                 ],
               ),
             )
@@ -392,7 +532,12 @@ Widget _buildCartSummary() {
       child: Material(
         color: Colors.transparent,
         child: Container(
-          padding: const EdgeInsets.only(top: 7, bottom: 0, left: 24, right: 24),
+          padding: const EdgeInsets.only(
+            top: 7,
+            bottom: 0,
+            left: 24,
+            right: 24,
+          ),
           color: Colors.black.withOpacity(0.1),
           child: Text(
             _notificationMessage,
@@ -417,7 +562,11 @@ Widget _buildCartSummary() {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFF1565C0), Color(0xFF42A5F5), Color(0xFFB3E5FC)],
+                  colors: [
+                    Color(0xFF1565C0),
+                    Color(0xFF42A5F5),
+                    Color(0xFFB3E5FC),
+                  ],
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -429,29 +578,29 @@ Widget _buildCartSummary() {
               ),
             ),
             // Animasyonlu bulutlar başlıkla aynı hizada
-            if (_cloudAnims != null && _cloudPositions != null)
-              Stack(
-                children: List.generate(_cloudAnims!.length, (i) {
-                  final anim = _cloudAnims![i];
-                  final width = MediaQuery.of(context).size.width;
-                  final double left = _cloudPositions![i] * width;
-                  if (left + anim.size < 0 || left > width) {
-                    return const SizedBox.shrink();
-                  }
-                  return Positioned(
-                    top: anim.top,
-                    left: left,
-                    child: Opacity(
-                      opacity: anim.opacity,
-                      child: Image.asset(
-                        'assets/images/cloud.png',
-                        width: anim.size,
-                        height: anim.size * 0.6,
-                      ),
-                    ),
-                  );
-                }),
-              ),
+            // if (_cloudAnims != null && _cloudPositions != null)
+            //   Stack(
+            //     children: List.generate(_cloudAnims!.length, (i) {
+            //       final anim = _cloudAnims![i];
+            //       final width = MediaQuery.of(context).size.width;
+            //       final double left = _cloudPositions![i] * width;
+            //       if (left + anim.size < 0 || left > width) {
+            //         return const SizedBox.shrink();
+            //       }
+            //       return Positioned(
+            //         top: anim.top,
+            //         left: left,
+            //         child: Opacity(
+            //           opacity: anim.opacity,
+            //           child: Image.asset(
+            //             'assets/images/cloud.png',
+            //             width: anim.size,
+            //             height: anim.size * 0.6,
+            //           ),
+            //         ),
+            //       );
+            //     }),
+            //   ),
             // Başlık
             SafeArea(
               child: Center(
@@ -508,7 +657,20 @@ Widget _buildCartSummary() {
                 icon: Icons.shopping_cart,
                 label: 'Sipariş',
                 selected: _selectedIndex == 0,
-                onTap: () => setState(() => _selectedIndex = 0),
+                onTap: () {
+                  if (_selectedIndex != 0) {
+                    setState(() {
+                      _selectedIndex = 0;
+                      _cardVisible = List.generate(
+                        _menu.length,
+                        (index) => false,
+                      );
+                    });
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      _showCardsAnimated();
+                    });
+                  }
+                },
               ),
               _NavBarItem(
                 icon: Icons.person,
@@ -585,23 +747,4 @@ class _NavBarItem extends StatelessWidget {
 }
 
 // Bulut animasyonu modeli
-class _CloudAnim {
-  final double speed; // 0.2-0.6 arası hız
-  final double size; // 60-120 px
-  final double top; // 8-28 arası dikey konum
-  final double opacity; // 0.7-1.0 arası
-  final double offset; // başlangıç fazı
-
-  _CloudAnim(this.speed, this.size, this.top, this.opacity, this.offset);
-
-  factory _CloudAnim.random() {
-    final rand = Random();
-    return _CloudAnim(
-      rand.nextDouble() * 0.4 + 0.2, // speed
-      rand.nextDouble() * 60 + 80, // size
-      rand.nextDouble() * 20 + 8, // top (başlık hizasında)
-      rand.nextDouble() * 0.3 + 0.7, // opacity
-      rand.nextDouble(), // offset
-    );
-  }
-}
+// _CloudAnim sınıfı ve ilgili model tamamen kaldırıldı
