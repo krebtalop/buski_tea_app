@@ -178,13 +178,15 @@ class _OrderScreenState extends State<OrderScreen>
           .collection('orders')
           .doc(orderRef.id);
       final newOrder = {
-        'id': orderRef.id,
+        // Kullanıcı bilgileri
         'userId': user.uid,
         'email': user.email,
         'ad': ad,
         'soyad': soyad,
         'departman': departman,
         'floor': floor,
+        // Sipariş bilgileri
+        'id': orderRef.id,
         'tarih': Timestamp.now(),
         'toplamFiyat': totalPrice,
         'items': _cartItems,

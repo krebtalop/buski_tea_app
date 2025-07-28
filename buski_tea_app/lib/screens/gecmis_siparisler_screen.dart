@@ -107,10 +107,27 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
     if (_selectedOrderId == null) return;
 
     try {
-      await FirebaseFirestore.instance
-          .collection('siparisler')
-          .doc(_selectedOrderId)
-          .update({'rating': _selectedRating, 'ratingDate': Timestamp.now()});
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      final updateData = {
+        'rating': _selectedRating,
+        'ratingDate': Timestamp.now(),
+      };
+
+      // Hem panel koleksiyonuna hem de kullanıcı geçmişine puanlama kaydet
+      await Future.wait([
+        FirebaseFirestore.instance
+            .collection('siparisler')
+            .doc(_selectedOrderId)
+            .update(updateData),
+        FirebaseFirestore.instance
+            .collection('user_orders')
+            .doc(user.uid)
+            .collection('orders')
+            .doc(_selectedOrderId)
+            .update(updateData),
+      ]);
 
       // Siparişleri yeniden yükle
       await _fetchOrders();
