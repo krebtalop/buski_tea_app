@@ -249,6 +249,9 @@ class _OrderScreenState extends State<OrderScreen>
                       final options = List<String>.from(item['options']);
                       final hasOptions = options.isNotEmpty;
 
+                      final inStock =
+                          item['inStock'] != false; // Varsayılan true
+
                       // _cardVisible güvenli erişim
                       final visible = index < _cardVisible.length
                           ? _cardVisible[index]
@@ -389,37 +392,37 @@ class _OrderScreenState extends State<OrderScreen>
                                         ),
                                       const Spacer(),
                                       ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color(
-                                            0xFF1976D2,
-                                          ),
-                                          foregroundColor: Colors.white,
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 14,
-                                            vertical: 8,
-                                          ),
-                                        ),
-                                        onPressed: _isLoading
-                                            ? null
-                                            : () => _addToCart(
+                                        onPressed: inStock
+                                            ? () => _addToCart(
                                                 name,
-                                                _quantities[name]!,
+                                                _quantities[name] ?? 1,
                                                 hasOptions
-                                                    ? _selectedOptions[name]!
+                                                    ? _selectedOptions[name] ??
+                                                          ''
                                                     : '',
                                                 price,
-                                              ),
-                                        child: _isLoading
-                                            ? const SizedBox(
-                                                width: 14,
-                                                height: 14,
-                                                child:
-                                                    CircularProgressIndicator(
-                                                      strokeWidth: 2,
-                                                      color: Colors.white,
-                                                    ),
                                               )
-                                            : const Text('Sepete Ekle'),
+                                            : null,
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: inStock
+                                              ? Colors.blue
+                                              : Colors.grey,
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 18,
+                                            vertical: 10,
+                                          ),
+                                          textStyle: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                          ),
+                                        ),
+                                        child: Text('Sepete Ekle'),
                                       ),
                                     ],
                                   ),
