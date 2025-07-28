@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Çay Ocağı',
       debugShowCheckedModeBanner: false,
-      initialRoute: '/panel', // '/panel' veya '/uygulama' olarak değiştir
+      initialRoute: '/uygulama', // '/panel' veya '/uygulama' olarak değiştir
       routes: {
         '/uygulama': (context) => const OrderScreen(),
         '/panel': (context) => OrderPanelScreen(),

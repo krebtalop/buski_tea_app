@@ -12,6 +12,7 @@
       --secondary-color: #16a34a;
       --warning-color: #f59e0b;
       --danger-color: #dc2626;
+      --error-color: #9d17d2; /* Mor renk */
       --light-bg: #f8fafc;
       --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }
@@ -99,12 +100,19 @@
     .btn-delete:hover {
       background-color: #b91c1c;
     }
+    .btn-error {
+      background-color: var(--error-color);
+      color: white;
+    }
+    .btn-error:hover {
+      background-color: #7e1bb0;
+    }
     .empty-state {
       color: #94a3b8;
     }
     .notification-badge {
       position: absolute;
-      top: -8px;
+      top: -2px;
       right: -8px;
       background-color: var(--danger-color);
       color: white;
@@ -116,6 +124,25 @@
       justify-content: center;
       font-size: 0.75rem;
       font-weight: bold;
+      z-index: 10;
+    }
+    .floor-group-btn {
+      background-color: #e2e8f0;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 8px 16px;
+      margin: 0 4px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+    .floor-group-btn:hover {
+      background-color: #cbd5e1;
+    }
+    .floor-group-btn.active {
+      background-color: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
     }
     .fade-out {
       animation: fadeShrink 0.6s forwards;
@@ -242,13 +269,18 @@
       .floor-card {
         min-width: 100%;
       }
+      .floor-group-btn {
+        margin: 2px;
+        padding: 6px 12px;
+        font-size: 0.875rem;
+      }
     }
   </style>
 </head>
 <body class="bg-gray-50">
   <!-- Menü Açma Butonu -->
-  <button id="open-menu-btn" class="fixed top-4 right-4 z-50 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-300">
-    <i class="fas fa-mug-hot"></i>
+  <button id="open-menu-btn" class="fixed top-4 right-4 z-50 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium">
+    MENU
   </button>
   <!-- Menü Modal -->
   <div id="menu-modal" class="modal-overlay">
@@ -327,7 +359,7 @@
   </header>
   <main class="container mx-auto px-4 py-6">
     <!-- Sekmeler -->
-    <div class="flex justify-center border-b border-gray-200 mb-6">
+    <div class="flex justify-center border-b border-gray-200 mb-6 relative">
       <button id="preparing-tab" class="tab-active px-6 py-3 text-lg relative">
         Hazırlananlar
         <span id="preparing-badge" class="notification-badge hidden">0</span>
@@ -337,6 +369,14 @@
         <span id="delivered-badge" class="notification-badge hidden">0</span>
       </button>
     </div>
+    
+    <!-- Kat Grubu Seçimi Butonları -->
+    <div class="flex flex-wrap justify-center mb-6">
+      <button class="floor-group-btn active" data-group="z123">Zemin ve Kat 1-2-3</button>
+      <button class="floor-group-btn" data-group="456">Kat 4-5-6</button>
+      <button class="floor-group-btn" data-group="78910">Kat 7-8-9-10</button>
+    </div>
+    
     <!-- Katlar -->
     <div id="floors-container"></div>
   </main>
@@ -414,6 +454,7 @@
     let menuData = [];
     let allOrders = [];
     let activeTab = 'preparing'; // 'preparing' veya 'delivered'
+    let activeFloorGroup = 'z123'; // 'z123', '456', '78910'
     // DOM Elemanları
     const menuModal = document.getElementById('menu-modal');
     const menuListContainer = document.getElementById('menu-list');
@@ -433,6 +474,7 @@
     const floorsContainer = document.getElementById('floors-container');
     const preparingBadge = document.getElementById('preparing-badge');
     const deliveredBadge = document.getElementById('delivered-badge');
+    const floorGroupButtons = document.querySelectorAll('.floor-group-btn');
     let editingProductIndex = -1;
     // Modal olay dinleyicileri
     openMenuBtn.addEventListener('click', () => {
@@ -454,6 +496,18 @@
     });
     deliveredTab.addEventListener('click', () => {
       setActiveTab('delivered');
+    });
+    // Kat grubu değişiklikleri
+    floorGroupButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        // Buton stillerini güncelle
+        floorGroupButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        // Aktif grubu ayarla
+        activeFloorGroup = button.getAttribute('data-group');
+        // Katları yeniden render et
+        renderFloors();
+      });
     });
     // Menü listesini render et
     function renderMenuList() {
@@ -615,55 +669,84 @@
       }
       renderFloors();
     }
-    // Katları render et - 1-2-3, 4-5-6, 7-8-9-10 şeklinde gruplandırılmış
+
+    // Hata butonu işlevi: Siparişi hazırlananlar sekmesine geri döndürür
+    window.revertToPreparing = async function(id, btn) {
+        if (confirm('Bu siparişi hazırlananlar sekmesine geri almak istediğinizden emin misiniz?')) {
+            const ref = doc(db, "siparisler", id);
+            try {
+                await updateDoc(ref, { status: "hazırlanıyor" });
+                
+                // Otomatik olarak "Hazırlananlar" sekmesine geç
+                if (activeTab !== 'preparing') {
+                    setActiveTab('preparing');
+                }
+                
+                console.log("Sipariş durumu güncellendi:", id);
+            } catch (error) {
+                console.error("Hata durumu güncellenirken hata oluştu:", error);
+                alert("Hata durumu güncellenirken bir sorun oluştu.");
+            }
+        }
+    };
+
+    // Katları render et - Gruplara göre filtrele
     function renderFloors() {
       floorsContainer.innerHTML = '';
       
-      // Grup 1: Katlar 1-2-3
-      const group1Row = document.createElement('div');
-      group1Row.className = 'mb-8';
-      group1Row.innerHTML = '<h2 class="text-xl font-bold text-center mb-4 text-gray-700">Katlar 1 - 2 - 3</h2>';
-      const group1Grid = document.createElement('div');
-      group1Grid.className = 'floor-grid';
-      for (let floor = 1; floor <= 3; floor++) {
-        const floorCard = createFloorCard(floor);
-        group1Grid.appendChild(floorCard);
-      }
-      group1Row.appendChild(group1Grid);
-      floorsContainer.appendChild(group1Row);
+      let floorsToShow = [];
+      let groupName = "";
       
-      // Grup 2: Katlar 4-5-6
-      const group2Row = document.createElement('div');
-      group2Row.className = 'mb-8';
-      group2Row.innerHTML = '<h2 class="text-xl font-bold text-center mb-4 text-gray-700">Katlar 4 - 5 - 6</h2>';
-      const group2Grid = document.createElement('div');
-      group2Grid.className = 'floor-grid';
-      for (let floor = 4; floor <= 6; floor++) {
-        const floorCard = createFloorCard(floor);
-        group2Grid.appendChild(floorCard);
+      switch(activeFloorGroup) {
+        case 'z123':
+          floorsToShow = [
+            { floor: 0, name: 'Zemin' },
+            { floor: 1, name: 'Kat 1' },
+            { floor: 2, name: 'Kat 2' },
+            { floor: 3, name: 'Kat 3' }
+          ];
+          groupName = "Zemin ve Katlar 1 - 2 - 3";
+          break;
+        case '456':
+          floorsToShow = [
+            { floor: 4, name: 'Kat 4' },
+            { floor: 5, name: 'Kat 5' },
+            { floor: 6, name: 'Kat 6' }
+          ];
+          groupName = "Katlar 4 - 5 - 6";
+          break;
+        case '78910':
+          floorsToShow = [
+            { floor: 7, name: 'Kat 7' },
+            { floor: 8, name: 'Kat 8' },
+            { floor: 9, name: 'Kat 9' },
+            { floor: 10, name: 'Kat 10' }
+          ];
+          groupName = "Katlar 7 - 8 - 9 - 10";
+          break;
       }
-      group2Row.appendChild(group2Grid);
-      floorsContainer.appendChild(group2Row);
       
-      // Grup 3: Katlar 7-8-9-10
-      const group3Row = document.createElement('div');
-      group3Row.innerHTML = '<h2 class="text-xl font-bold text-center mb-4 text-gray-700">Katlar 7 - 8 - 9 - 10</h2>';
-      const group3Grid = document.createElement('div');
-      group3Grid.className = 'floor-grid';
-      for (let floor = 7; floor <= 10; floor++) {
-        const floorCard = createFloorCard(floor);
-        group3Grid.appendChild(floorCard);
-      }
-      group3Row.appendChild(group3Grid);
-      floorsContainer.appendChild(group3Row);
+      const groupRow = document.createElement('div');
+      groupRow.className = 'mb-8';
+      groupRow.innerHTML = `<h2 class="text-xl font-bold text-center mb-4 text-gray-700">${groupName}</h2>`;
+      const groupGrid = document.createElement('div');
+      groupGrid.className = 'floor-grid';
+      
+      floorsToShow.forEach(({floor, name}) => {
+        const floorCard = createFloorCard(floor, name);
+        groupGrid.appendChild(floorCard);
+      });
+      
+      groupRow.appendChild(groupGrid);
+      floorsContainer.appendChild(groupRow);
     }
-    // Kat kartı oluştur
-    function createFloorCard(floor) {
+    // Kat kartı oluştur (floor: kat numarası, floorName: gösterilecek isim)
+    function createFloorCard(floor, floorName) {
       const floorCard = document.createElement('div');
       floorCard.className = 'floor-card';
       const title = document.createElement('div');
       title.className = 'font-bold text-lg mb-4 text-center pb-2 border-b';
-      title.textContent = `Kat ${floor}`;
+      title.textContent = floorName;
       floorCard.appendChild(title);
       const ordersContainer = document.createElement('div');
       ordersContainer.className = 'order-list';
@@ -747,16 +830,31 @@
           <div class="ml-3 mt-2 font-bold">
             Toplam: ${escapeHtml((order.toplamFiyat || 0).toString())} ₺
           </div>
+          ${order.rating ? `
+          <div class="ml-3 mt-2 flex items-center">
+            <span class="text-sm text-gray-600 mr-2">Puan:</span>
+            <div class="flex">
+              ${Array.from({length: 5}, (_, i) => 
+                `<i class="fas fa-star ${i < order.rating ? 'text-yellow-400' : 'text-gray-300'}" style="font-size: 14px;"></i>`
+              ).join('')}
+            </div>
+            <span class="ml-2 text-sm text-gray-500">(${order.rating}/5)</span>
+          </div>
+          ` : ''}
         </div>
         <div class="flex justify-between items-center mt-3 pt-3 border-t">
           ${activeTab === 'preparing' ? 
             `<button class="${buttonClass} px-3 py-2 text-sm" onclick="cycleStatus('${order.id}', this)" ${disabled ? 'disabled' : ''}>
               ${buttonIcon}${buttonText}
             </button>` : 
-            `<span class="text-gray-600 font-medium"><i class="fas fa-check-circle mr-2 text-green-500"></i>Teslim Edildi</span>
-             <button class="btn-delete px-3 py-2 text-sm rounded" onclick="deleteOrder('${order.id}', this)">
-               <i class="fas fa-trash mr-2"></i>Sil
-             </button>`
+            `<div class="flex space-x-2">
+               <button class="btn-error px-3 py-2 text-sm rounded" onclick="revertToPreparing('${order.id}', this)" title="Hatalı Teslimat - Geri Al">
+                 <i class="fas fa-undo mr-2"></i>Hata
+               </button>
+               <button class="btn-delete px-3 py-2 text-sm rounded" onclick="deleteOrder('${order.id}', this)">
+                 <i class="fas fa-trash mr-2"></i>Sil
+               </button>
+             </div>`
           }
         </div>
       `;

@@ -110,12 +110,24 @@ class _OrderScreenState extends State<OrderScreen>
 
   void _addToCart(String productName, int adet, String option, int price) {
     setState(() {
-      _cartItems.add({
-        'name': productName,
-        'adet': adet,
-        'option': option,
-        'price': price,
-      });
+      // Aynı ürün ve aynı seçenekle sepette var mı kontrol et
+      int existingIndex = _cartItems.indexWhere(
+        (item) => item['name'] == productName && item['option'] == option,
+      );
+
+      if (existingIndex != -1) {
+        // Varsa adetini arttır
+        _cartItems[existingIndex]['adet'] += adet;
+      } else {
+        // Yoksa yeni item ekle
+        _cartItems.add({
+          'name': productName,
+          'adet': adet,
+          'option': option,
+          'price': price,
+        });
+      }
+
       _notificationMessage = '$productName sepete eklendi.';
       _showTopNotification = true;
     });
@@ -160,6 +172,11 @@ class _OrderScreenState extends State<OrderScreen>
       final orderRef = FirebaseFirestore.instance
           .collection('siparisler')
           .doc();
+      final userOrderRef = FirebaseFirestore.instance
+          .collection('user_orders')
+          .doc(user.uid)
+          .collection('orders')
+          .doc(orderRef.id);
       final newOrder = {
         'id': orderRef.id,
         'userId': user.uid,
@@ -172,7 +189,7 @@ class _OrderScreenState extends State<OrderScreen>
         'toplamFiyat': totalPrice,
         'items': _cartItems,
       };
-      await orderRef.set(newOrder);
+      await Future.wait([orderRef.set(newOrder), userOrderRef.set(newOrder)]);
       setState(() => _cartItems.clear());
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Tüm siparişleriniz başarıyla alındı!')),
