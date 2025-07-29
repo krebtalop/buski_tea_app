@@ -100,6 +100,32 @@
     .btn-delete:hover {
       background-color: #b91c1c;
     }
+    
+    /* Modal Backdrop Efektleri */
+    .modal-backdrop {
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+    
+    .modal-backdrop-light {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+    }
+    
+    /* Modal açıkken header ve navigation'ı arkaya at */
+    .modal-open header,
+    .modal-open main {
+      z-index: 10;
+      position: relative;
+    }
+    
+    /* Modal backdrop'unun z-index'ini artır */
+    .modal-backdrop,
+    .modal-backdrop-light {
+      z-index: 80 !important;
+    }
     .btn-error {
       background-color: var(--error-color);
       color: white;
@@ -280,7 +306,7 @@
 <body class="bg-gray-50">
   <!-- Menü Açma Butonu -->
   <button id="open-menu-btn" class="fixed top-4 right-4 z-50 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium">
-    MENU
+    Menü
   </button>
   <!-- Menü Modal -->
   <div id="menu-modal" class="modal-overlay">
@@ -361,6 +387,10 @@
 <button id="open-report-btn" class="fixed top-16 right-4 z-50 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium">
   Rapor
 </button>
+<!-- Tüm Teslim Edilenleri Sil Butonu -->
+<button id="delete-all-orders-btn" class="fixed top-36 right-4 z-50 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium hidden">
+  <i class="fas fa-trash-alt mr-1"></i>Tüm Teslim Edilenleri Sil
+</button>
 <!-- Rapor Modal -->
 <div id="report-modal" class="modal-overlay">
   <div class="modal-content">
@@ -392,11 +422,68 @@
           </div>
         </div>
       </div>
+      <!-- Rapor Sıfırlama Butonu -->
+      <div class="mt-6 pt-4 border-t border-gray-200">
+        <button id="reset-report-btn" class="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg shadow-sm transition-all duration-300 font-medium">
+          <i class="fas fa-trash-alt mr-2"></i>Rapor Verilerini Sıfırla
+        </button>
+      </div>
     </div>
   </div>
 </div>
 </div>
 </div>
+  <!-- Custom Alert Modal -->
+  <div id="alert-modal" class="fixed inset-0 z-90 flex items-center justify-center modal-backdrop-light hidden">
+    <div class="bg-white rounded-lg shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-95 opacity-0" id="alert-content">
+      <div class="p-6">
+        <div class="flex items-center mb-4">
+          <div class="flex-shrink-0">
+            <i id="alert-icon" class="fas fa-info-circle text-blue-500 text-2xl"></i>
+          </div>
+          <div class="ml-3">
+            <h3 id="alert-title" class="text-lg font-medium text-gray-900">Bilgi</h3>
+          </div>
+        </div>
+        <div class="mb-6">
+          <p id="alert-message" class="text-sm text-gray-600"></p>
+        </div>
+        <div class="flex justify-end">
+          <button id="alert-ok" class="px-6 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors duration-200">
+            Tamam
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Confirm Modal -->
+  <div id="confirm-modal" class="fixed inset-0 z-70 flex items-center justify-center modal-backdrop hidden">
+    <div class="bg-white rounded-lg shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-95 opacity-0" id="confirm-content">
+      <div class="p-6">
+        <div class="flex items-center mb-4">
+          <div class="flex-shrink-0">
+            <i id="confirm-icon" class="fas fa-exclamation-triangle text-yellow-500 text-2xl"></i>
+          </div>
+          <div class="ml-3">
+            <h3 id="confirm-title" class="text-lg font-medium text-gray-900">Onay Gerekli</h3>
+          </div>
+        </div>
+        <div class="mb-6">
+          <p id="confirm-message" class="text-sm text-gray-600"></p>
+        </div>
+        <div class="flex justify-end space-x-3">
+          <button id="confirm-cancel" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200">
+            İptal
+          </button>
+          <button id="confirm-ok" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors duration-200">
+            Onayla
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Bildirim Sesi -->
   <audio id="order-notification-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3" preload="auto"></audio>
   <!-- Ana İçerik -->
@@ -422,6 +509,8 @@
       </button>
     </div>
     
+
+    
     <!-- Kat Grubu Seçimi Butonları -->
     <div class="flex flex-wrap justify-center mb-6">
       <button class="floor-group-btn active" data-group="78910">Kat 7-8-9-10</button>
@@ -440,6 +529,22 @@ const dailyTotal = document.getElementById('daily-total');
 const weeklyTotal = document.getElementById('weekly-total');
 const monthlyTotal = document.getElementById('monthly-total');
 
+// Custom Alert ve Confirm modal elemanları
+const alertModal = document.getElementById('alert-modal');
+const alertContent = document.getElementById('alert-content');
+const alertIcon = document.getElementById('alert-icon');
+const alertTitle = document.getElementById('alert-title');
+const alertMessage = document.getElementById('alert-message');
+const alertOk = document.getElementById('alert-ok');
+
+const confirmModal = document.getElementById('confirm-modal');
+const confirmContent = document.getElementById('confirm-content');
+const confirmIcon = document.getElementById('confirm-icon');
+const confirmTitle = document.getElementById('confirm-title');
+const confirmMessage = document.getElementById('confirm-message');
+const confirmOk = document.getElementById('confirm-ok');
+const confirmCancel = document.getElementById('confirm-cancel');
+
 // Rapor modal olay dinleyicileri
 openReportBtn.addEventListener('click', () => {
   updateReport();
@@ -449,9 +554,12 @@ closeReportBtn.addEventListener('click', () => {
   reportModal.style.display = 'none';
 });
 
-// Rapor hesaplama fonksiyonları
+// Rapor hesaplama fonksiyonları - Panele göre filtrele
 function calculateDailyTotal(orders, date) {
-  return orders.filter(order => {
+  // Önce panele göre siparişleri filtrele
+  const filteredOrders = filterOrdersByPanel(orders);
+  
+  return filteredOrders.filter(order => {
     if (order.status !== 'teslim edildi') return false;
     const orderDate = order.tarih.toDate();
     return orderDate.getFullYear() === date.getFullYear() &&
@@ -461,6 +569,9 @@ function calculateDailyTotal(orders, date) {
 }
 
 function calculateWeeklyTotal(orders, date) {
+  // Önce panele göre siparişleri filtrele
+  const filteredOrders = filterOrdersByPanel(orders);
+  
   const startOfWeek = new Date(date);
   startOfWeek.setDate(date.getDate() - date.getDay() + 1);
   startOfWeek.setHours(0, 0, 0, 0);
@@ -469,7 +580,7 @@ function calculateWeeklyTotal(orders, date) {
   endOfWeek.setDate(startOfWeek.getDate() + 6);
   endOfWeek.setHours(23, 59, 59, 999);
 
-  return orders.filter(order => {
+  return filteredOrders.filter(order => {
     if (order.status !== 'teslim edildi') return false;
     const orderDate = order.tarih.toDate();
     return orderDate >= startOfWeek && orderDate <= endOfWeek;
@@ -477,7 +588,10 @@ function calculateWeeklyTotal(orders, date) {
 }
 
 function calculateMonthlyTotal(orders, date) {
-  return orders.filter(order => {
+  // Önce panele göre siparişleri filtrele
+  const filteredOrders = filterOrdersByPanel(orders);
+  
+  return filteredOrders.filter(order => {
     if (order.status !== 'teslim edildi') return false;
     const orderDate = order.tarih.toDate();
     return orderDate.getFullYear() === date.getFullYear() &&
@@ -485,23 +599,25 @@ function calculateMonthlyTotal(orders, date) {
   }).reduce((sum, order) => sum + (order.toplamFiyat || 0), 0);
 }
 
-function updateReport() {
+async function updateReport() {
   const now = new Date();
-  const dailyTotalValue = calculateDailyTotal(allOrders, now);
-  const weeklyTotalValue = calculateWeeklyTotal(allOrders, now);
-  const monthlyTotalValue = calculateMonthlyTotal(allOrders, now);
-
+  // Sadece kalıcı toplamı göster
+  const raporRef = doc(db, "raporlar", activeFloorGroup);
+  const raporDoc = await getDoc(raporRef);
+  let kaliciToplam = 0;
+  if (raporDoc.exists()) {
+    kaliciToplam = raporDoc.data().kaliciToplam || 0;
+  }
   // Tarih formatla
   reportDate.textContent = now.toLocaleDateString('tr-TR', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric'
   });
-
-  // Toplamları güncelle
-  dailyTotal.textContent = dailyTotalValue.toFixed(2) + ' ₺';
-  weeklyTotal.textContent = weeklyTotalValue.toFixed(2) + ' ₺';
-  monthlyTotal.textContent = monthlyTotalValue.toFixed(2) + ' ₺';
+  // Sadece toplamı göster
+  dailyTotal.textContent = kaliciToplam.toFixed(2) + ' ₺';
+  weeklyTotal.textContent = kaliciToplam.toFixed(2) + ' ₺';
+  monthlyTotal.textContent = kaliciToplam.toFixed(2) + ' ₺';
 }
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
     import {
@@ -521,58 +637,6 @@ function updateReport() {
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     // Menü verisi
-    const defaultMenu = [
-      {
-        name: 'Çay',
-        price: 2,
-        options: ['Şekersiz', 'Şekerli'],
-        defaultOption: 'Şekersiz',
-      },
-      {
-        name: 'Çay (Su Bardağı)',
-        price: 4,
-        options: ['Şekersiz', 'Şekerli'],
-        defaultOption: 'Şekersiz',
-      },
-      {
-        name: 'Bitki Çayı',
-        price: 2,
-        options: ['Çiçek', 'Adaçayı', 'Kuşburnu'],
-        defaultOption: 'Çiçek',
-      },
-      {
-        name: 'Oralet',
-        price: 2,
-        options: ['Şekersiz', 'Şekerli'],
-        defaultOption: 'Şekersiz',
-      },
-      {
-        name: 'Nescafe',
-        price: 8,
-        options: ['Sade', 'Sütlü'],
-        defaultOption: 'Sade',
-      },
-      {
-        name: 'Türk Kahvesi',
-        price: 10,
-        options: ['Sade', 'Orta', 'Şekerli'],
-        defaultOption: 'Sade',
-      },
-      {
-        name: 'Maden Suyu',
-        price: 10,
-        options: ['Sade', 'Elmalı', 'Limonlu', 'Narlı'],
-        defaultOption: 'Sade',
-      },
-      { name: 'Sade Gazoz', price: 30, options: [], defaultOption: '' },
-      { name: 'Sarı Gazoz', price: 34, options: [], defaultOption: '' },
-      {
-        name: "Çay Fişi 100'lü",
-        price: 200,
-        options: [],
-        defaultOption: '',
-      },
-    ];
     let menuData = [];
     let allOrders = [];
     let activeTab = 'preparing'; // 'preparing' veya 'delivered'
@@ -599,6 +663,7 @@ function updateReport() {
     const preparingBadge = document.getElementById('preparing-badge');
     const deliveredBadge = document.getElementById('delivered-badge');
     const floorGroupButtons = document.querySelectorAll('.floor-group-btn');
+    const deleteAllOrdersBtn = document.getElementById('delete-all-orders-btn');
     let editingProductIndex = -1;
     // Modal olay dinleyicileri
     openMenuBtn.addEventListener('click', () => {
@@ -620,6 +685,11 @@ function updateReport() {
     });
     deliveredTab.addEventListener('click', () => {
       setActiveTab('delivered');
+    });
+    
+    // Tüm siparişleri sil butonu olay dinleyicisi
+    deleteAllOrdersBtn.addEventListener('click', () => {
+      deleteAllOrders();
     });
     // Kat grubu değişiklikleri - Sadece kat 7-8-9-10
     // Bu panel sadece kat 7-8-9-10 için olduğundan değişiklik yok
@@ -771,7 +841,7 @@ function updateReport() {
       if (menuDoc.exists()) {
         menuData = menuDoc.data().items || [];
       } else {
-        menuData = [...defaultMenu];
+        menuData = [];
         await setDoc(menuDocRef, { items: menuData });
       }
       renderMenuList();
@@ -799,18 +869,23 @@ function updateReport() {
         preparingTab.classList.remove('tab-inactive');
         deliveredTab.classList.add('tab-inactive');
         deliveredTab.classList.remove('tab-active');
+        // Hazırlananlar sekmesinde toplu silme butonunu gizle
+        deleteAllOrdersBtn.classList.add('hidden');
       } else {
         deliveredTab.classList.add('tab-active');
         deliveredTab.classList.remove('tab-inactive');
         preparingTab.classList.add('tab-inactive');
         preparingTab.classList.remove('tab-active');
+        // Teslim edilenler sekmesinde toplu silme butonunu göster
+        deleteAllOrdersBtn.classList.remove('hidden');
       }
       renderFloors();
     }
 
     // Hata butonu işlevi: Siparişi hazırlananlar sekmesine geri döndürür
     window.revertToPreparing = async function(id, btn) {
-        if (confirm('Bu siparişi hazırlananlar sekmesine geri almak istediğinizden emin misiniz?')) {
+        const confirmed = await showConfirm('Sipariş Geri Alma', 'Bu siparişi hazırlananlar sekmesine geri almak istediğinizden emin misiniz?', 'warning');
+        if (confirmed) {
             const ref = doc(db, "siparisler", id);
             try {
                 await updateDoc(ref, { status: "hazırlanıyor" });
@@ -823,7 +898,7 @@ function updateReport() {
                 console.log("Sipariş durumu güncellendi:", id);
             } catch (error) {
                 console.error("Hata durumu güncellenirken hata oluştu:", error);
-                alert("Hata durumu güncellenirken bir sorun oluştu.");
+                await showAlert("Hata durumu güncellenirken bir sorun oluştu.", 'error');
             }
         }
     };
@@ -961,10 +1036,7 @@ function updateReport() {
             `<button class="${buttonClass} px-3 py-2 text-sm" onclick="cycleStatus('${order.id}', this)" ${disabled ? 'disabled' : ''}>
               ${buttonIcon}${buttonText}
             </button>` : 
-            `<div class="flex space-x-2">
-               <button class="btn-error px-3 py-2 text-sm rounded" onclick="revertToPreparing('${order.id}', this)" title="Hatalı Teslimat - Geri Al">
-                 <i class="fas fa-undo mr-2"></i>Geri Al
-               </button>
+            `<div class="ml-auto">
                <button class="btn-delete px-3 py-2 text-sm rounded" onclick="deleteOrder('${order.id}', this)">
                  <i class="fas fa-trash mr-2"></i>Sil
                </button>
@@ -993,28 +1065,286 @@ function updateReport() {
             card.classList.add('fade-out');
             setTimeout(async () => {
               await updateDoc(ref, { status: "teslim edildi" });
+              // --- RAPOR TOPLAMINI ARTIR ---
+              await increaseReportTotal(order);
             }, 600);
           }, 1000);
         } else {
           await updateDoc(ref, { status: "teslim edildi" });
+          // --- RAPOR TOPLAMINI ARTIR ---
+          await increaseReportTotal(order);
         }
       }
       // Badge sayılarını güncelle
       updateBadges();
     };
+
+    // Rapor toplamını artıran fonksiyon
+    async function increaseReportTotal(order) {
+      try {
+        const raporRef = doc(db, "raporlar", activeFloorGroup);
+        const raporDoc = await getDoc(raporRef);
+        let total = 0;
+        if (raporDoc.exists()) {
+          total = raporDoc.data().kaliciToplam || 0;
+          // Sipariş zaten eklendiyse tekrar ekleme
+          const eklenenSiparisler = raporDoc.data().eklenenSiparisler || [];
+          if (eklenenSiparisler.includes(order.id)) return;
+          eklenenSiparisler.push(order.id);
+          await setDoc(raporRef, {
+            kaliciToplam: total + (order.toplamFiyat || 0),
+            eklenenSiparisler,
+          }, { merge: true });
+        } else {
+          await setDoc(raporRef, {
+            kaliciToplam: (order.toplamFiyat || 0),
+            eklenenSiparisler: [order.id],
+          });
+        }
+      } catch (error) {
+        console.error('Rapor toplamı artırılırken hata:', error);
+      }
+    }
     // Siparişi sil
     window.deleteOrder = async function(id, btn) {
-      if (confirm('Bu siparişi silmek istediğinizden emin misiniz?')) {
-        const ref = doc(db, "siparisler", id);
-        await deleteDoc(ref);
-        const card = btn.closest('.order-card');
-        if (card) {
-          card.remove();
+      const confirmed = await showConfirm('Sipariş Silme', 'Bu siparişi silmek istediğinizden emin misiniz?', 'warning');
+      if (confirmed) {
+        try {
+          const ref = doc(db, "siparisler", id);
+          await deleteDoc(ref);
+          const card = btn.closest('.order-card');
+          if (card) {
+            card.remove();
+          }
+          // Badge sayılarını güncelle
+          updateBadges();
+        } catch (error) {
+          console.error('Sipariş silinirken hata oluştu:', error);
+          await showAlert('Sipariş silinirken bir hata oluştu: ' + error.message, 'error');
         }
-        // Badge sayılarını güncelle
-        updateBadges();
       }
     };
+    
+    // Tüm teslim edilmiş siparişleri sil fonksiyonu
+    async function deleteAllOrders() {
+      const confirmed = await showConfirm('Toplu Silme', 'TÜM TESLİM EDİLMİŞ SİPARİŞLERİ SİLMEK İSTEDİĞİNİZDEN EMİN MİSİNİZ? Bu işlem geri alınamaz!', 'danger');
+      if (confirmed) {
+        try {
+          // Panele göre siparişleri filtrele ve sadece teslim edilmiş olanları al
+          const filteredOrders = filterOrdersByPanel(allOrders);
+          const deliveredOrders = filteredOrders.filter(order => order.status === 'teslim edildi');
+
+          // --- RAPORU GÜNCELLE (kaliciToplam ve eklenenSiparisler) ---
+          const raporRef = doc(db, "raporlar", activeFloorGroup);
+          const raporDoc = await getDoc(raporRef);
+          let kaliciToplam = 0;
+          let eklenenSiparisler = [];
+          if (raporDoc.exists()) {
+            kaliciToplam = raporDoc.data().kaliciToplam || 0;
+            eklenenSiparisler = raporDoc.data().eklenenSiparisler || [];
+          }
+          let yeniToplam = kaliciToplam;
+          let yeniEklenenler = [...eklenenSiparisler];
+          for (const order of deliveredOrders) {
+            if (!yeniEklenenler.includes(order.id)) {
+              yeniToplam += order.toplamFiyat || 0;
+              yeniEklenenler.push(order.id);
+            }
+          }
+          await setDoc(raporRef, {
+            kaliciToplam: yeniToplam,
+            eklenenSiparisler: yeniEklenenler,
+            lastUpdated: new Date(),
+            floorGroup: activeFloorGroup
+          }, { merge: true });
+          // --- SONU ---
+
+          // Her teslim edilmiş siparişi Firebase'den sil
+          for (const order of deliveredOrders) {
+            await deleteDoc(doc(db, "siparisler", order.id));
+          }
+        } catch (error) {
+          console.error('Toplu silme işleminde hata oluştu:', error);
+          await showAlert('Toplu silme işleminde bir hata oluştu: ' + error.message, 'error');
+        }
+      }
+    }
+    
+    // Rapor verilerini kaydet
+    async function saveReportData() {
+      try {
+        const now = new Date();
+        const dailyTotal = calculateDailyTotal(allOrders, now);
+        const weeklyTotal = calculateWeeklyTotal(allOrders, now);
+        const monthlyTotal = calculateMonthlyTotal(allOrders, now);
+        
+        const reportData = {
+          dailyTotal: dailyTotal,
+          weeklyTotal: weeklyTotal,
+          monthlyTotal: monthlyTotal,
+          lastUpdated: now,
+          floorGroup: activeFloorGroup
+        };
+        
+        await setDoc(doc(db, "raporlar", activeFloorGroup), reportData);
+      } catch (error) {
+        console.error('Rapor verileri kaydedilirken hata oluştu:', error);
+      }
+    }
+    
+    // Rapor verilerini yükle
+    async function loadReportData() {
+      try {
+        const reportDoc = await getDoc(doc(db, "raporlar", activeFloorGroup));
+        if (reportDoc.exists()) {
+          return reportDoc.data();
+        }
+      } catch (error) {
+        console.error('Rapor verileri yüklenirken hata oluştu:', error);
+      }
+      return null;
+    }
+    
+    // Rapor sıfırlama fonksiyonu
+    async function resetReportData() {
+      // Önce rapor modal'ını kapat
+      reportModal.style.display = 'none';
+      
+      const confirmed = await showConfirm('Rapor Sıfırlama', 'RAPOR VERİLERİNİ SIFIRLAMAK İSTEDİĞİNİZDEN EMİN MİSİNİZ? Bu işlem geri alınamaz!', 'danger');
+      if (confirmed) {
+        try {
+          const raporRef = doc(db, "raporlar", activeFloorGroup);
+          await setDoc(raporRef, {
+            kaliciToplam: 0,
+            eklenenSiparisler: [],
+            lastUpdated: new Date(),
+            floorGroup: activeFloorGroup
+          });
+          updateReport();
+          // Başarı alert'ini kaldırdık
+        } catch (error) {
+          console.error('Rapor verileri sıfırlanırken hata oluştu:', error);
+          await showAlert('Rapor verileri sıfırlanırken bir hata oluştu: ' + error.message, 'error');
+        }
+      }
+    }
+    
+    // Custom Alert fonksiyonu
+    function showAlert(message, type = 'info') {
+      return new Promise((resolve) => {
+        let iconClass = '';
+        let title = '';
+        switch(type) {
+          case 'success': iconClass = 'fas fa-check-circle text-green-500'; title = 'Başarılı'; break;
+          case 'error': iconClass = 'fas fa-exclamation-circle text-red-500'; title = 'Hata'; break;
+          case 'warning': iconClass = 'fas fa-exclamation-triangle text-yellow-500'; title = 'Uyarı'; break;
+          case 'info': iconClass = 'fas fa-info-circle text-blue-500'; title = 'Bilgi'; break;
+          default: iconClass = 'fas fa-info-circle text-blue-500'; title = 'Bilgi';
+        }
+        
+        alertIcon.className = iconClass;
+        alertTitle.textContent = title;
+        alertMessage.textContent = message;
+        
+        // Body'ye modal-open sınıfını ekle
+        document.body.classList.add('modal-open');
+        
+        alertModal.classList.remove('hidden');
+        setTimeout(() => {
+          alertContent.classList.remove('scale-95', 'opacity-0');
+          alertContent.classList.add('scale-100', 'opacity-100');
+        }, 10);
+        
+        const handleOk = () => {
+          hideAlert();
+          resolve();
+        };
+        
+        alertOk.addEventListener('click', handleOk, { once: true });
+        
+        // ESC tuşu ile kapatma
+        const handleEsc = (e) => {
+          if (e.key === 'Escape') {
+            handleOk();
+            document.removeEventListener('keydown', handleEsc);
+          }
+        };
+        document.addEventListener('keydown', handleEsc);
+      });
+    }
+
+    function hideAlert() {
+      alertContent.classList.remove('scale-100', 'opacity-100');
+      alertContent.classList.add('scale-95', 'opacity-0');
+      setTimeout(() => {
+        alertModal.classList.add('hidden');
+        // Body'den modal-open sınıfını kaldır
+        document.body.classList.remove('modal-open');
+      }, 300);
+    }
+
+    // Custom Confirm fonksiyonu
+    function showConfirm(title, message, type = 'warning') {
+      return new Promise((resolve) => {
+        let iconClass = '';
+        let buttonColor = '';
+        switch(type) {
+          case 'danger': iconClass = 'fas fa-exclamation-triangle text-red-500'; buttonColor = 'bg-red-600 hover:bg-red-700'; break;
+          case 'warning': iconClass = 'fas fa-exclamation-triangle text-yellow-500'; buttonColor = 'bg-yellow-600 hover:bg-yellow-700'; break;
+          case 'info': iconClass = 'fas fa-info-circle text-blue-500'; buttonColor = 'bg-blue-600 hover:bg-blue-700'; break;
+          default: iconClass = 'fas fa-exclamation-triangle text-yellow-500'; buttonColor = 'bg-yellow-600 hover:bg-yellow-700';
+        }
+        
+        confirmIcon.className = iconClass;
+        confirmTitle.textContent = title;
+        confirmMessage.textContent = message;
+        confirmOk.className = `px-4 py-2 text-sm font-medium text-white ${buttonColor} rounded-md transition-colors duration-200`;
+        
+        // Body'ye modal-open sınıfını ekle
+        document.body.classList.add('modal-open');
+        
+        confirmModal.classList.remove('hidden');
+        setTimeout(() => {
+          confirmContent.classList.remove('scale-95', 'opacity-0');
+          confirmContent.classList.add('scale-100', 'opacity-100');
+        }, 10);
+        
+        const handleConfirm = () => {
+          hideConfirm();
+          resolve(true);
+        };
+        
+        const handleCancel = () => {
+          hideConfirm();
+          resolve(false);
+        };
+        
+        confirmOk.addEventListener('click', handleConfirm, { once: true });
+        confirmCancel.addEventListener('click', handleCancel, { once: true });
+        
+        // ESC tuşu ile iptal
+        const handleEsc = (e) => {
+          if (e.key === 'Escape') {
+            handleCancel();
+            document.removeEventListener('keydown', handleEsc);
+          }
+        };
+        document.addEventListener('keydown', handleEsc);
+      });
+    }
+
+    function hideConfirm() {
+      confirmContent.classList.remove('scale-100', 'opacity-100');
+      confirmContent.classList.add('scale-95', 'opacity-0');
+      setTimeout(() => {
+        confirmModal.classList.add('hidden');
+        // Body'den modal-open sınıfını kaldır
+        document.body.classList.remove('modal-open');
+      }, 300);
+    }
+
+    // Rapor sıfırlama butonu olay dinleyicisi
+    document.getElementById('reset-report-btn').addEventListener('click', resetReportData);
     // Bildirim sesi çal
     function playOrderNotification() {
       const audio = document.getElementById('order-notification-sound');
@@ -1023,30 +1353,34 @@ function updateReport() {
         audio.play().catch(e => console.log("Ses çalınamadı:", e));
       }
     }
-    // Badge sayılarını güncelle - Sadece o kat grubunun siparişlerini say
-    function updateBadges() {
-      // Kat grubuna göre siparişleri filtrele
-      let filteredOrders = [];
-      
+    // Panele göre siparişleri filtrele
+    function filterOrdersByPanel(orders) {
       if (activeFloorGroup === 'z123') {
         // Zemin ve kat 1-2-3
-        filteredOrders = allOrders.filter(order => {
+        return orders.filter(order => {
           const orderFloor = Number(order.floor);
           return orderFloor >= 0 && orderFloor <= 3;
         });
       } else if (activeFloorGroup === '456') {
         // Kat 4-5-6
-        filteredOrders = allOrders.filter(order => {
+        return orders.filter(order => {
           const orderFloor = Number(order.floor);
           return orderFloor >= 4 && orderFloor <= 6;
         });
       } else if (activeFloorGroup === '78910') {
         // Kat 7-8-9-10
-        filteredOrders = allOrders.filter(order => {
+        return orders.filter(order => {
           const orderFloor = Number(order.floor);
           return orderFloor >= 7 && orderFloor <= 10;
         });
       }
+      return orders; // Varsayılan olarak tüm siparişler
+    }
+    
+    // Badge sayılarını güncelle - Sadece o kat grubunun siparişlerini say
+    function updateBadges() {
+      // Kat grubuna göre siparişleri filtrele
+      let filteredOrders = filterOrdersByPanel(allOrders);
       
       const preparingCount = filteredOrders.filter(order => 
         order.status !== "teslim edildi"

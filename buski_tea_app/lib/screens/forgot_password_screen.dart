@@ -109,25 +109,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   style: const TextStyle(fontWeight: FontWeight.w500),
                   textAlign: TextAlign.center,
                 ),
-                if (_showSuccess)
-                  Column(
-                    children: [
-                      AnimatedScale(
-                        scale: _showSuccess ? 1.0 : 0.0,
-                        duration: const Duration(milliseconds: 500),
-                        curve: Curves.elasticOut,
-                        child: Icon(Icons.check_circle, color: Colors.green, size: 56),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Şifre sıfırlama linki mailinize gönderildi.',
-                        style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 16),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                  ),
                 const SizedBox(height: 16),
+                if (_showSuccess)
+                  const Text(
+                    'Şifre sıfırlama linki mailinize gönderildi.',
+                    style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 16),
+                    textAlign: TextAlign.center,
+                  ),
+                if (_showSuccess) const SizedBox(height: 16),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue[800],
