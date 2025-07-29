@@ -107,14 +107,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     focusedBorder: blueBorder,
                     enabledBorder: blueBorder,
                   ),
-                  items: List.generate(10, (index) => index + 1)
-                      .map(
-                        (floor) => DropdownMenuItem(
-                          value: floor,
-                          child: Text('$floor. Kat'),
-                        ),
-                      )
-                      .toList(),
+                  items: [
+                    const DropdownMenuItem(value: 0, child: Text('Zemin Kat')),
+                    ...List.generate(10, (index) => index + 1)
+                        .map(
+                          (floor) => DropdownMenuItem(
+                            value: floor,
+                            child: Text('$floor. Kat'),
+                          ),
+                        )
+                        .toList(),
+                  ],
                   onChanged: (value) => setState(() => _selectedFloor = value),
                   validator: (value) => value == null ? 'Kat seçiniz' : null,
                 ),

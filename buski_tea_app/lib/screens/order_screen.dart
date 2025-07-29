@@ -51,13 +51,52 @@ class _OrderScreenState extends State<OrderScreen>
     // Bulut animasyonu başlatma kodları kaldırıldı
   }
 
-  void _listenMenuRealtime() {
+  void _listenMenuRealtime() async {
+    // Kullanıcının kat bilgisini al
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      setState(() {
+        _isMenuLoading = false;
+        _menu = [];
+      });
+      return;
+    }
+
+    // Kullanıcı profil bilgilerini al
+    final userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .get();
+    
+    final userData = userDoc.data() ?? {};
+    final floor = userData['floor']?.toString() ?? '0'; // int'i string'e çevir
+    
+    print('Kullanıcı kat bilgisi: $floor'); // Debug için
+    
+    // Kat bilgisine göre menü koleksiyonunu belirle
+    String menuCollection;
+    int floorNumber = int.tryParse(floor) ?? 0;
+    
+    if (floorNumber >= 0 && floorNumber <= 3) {
+      menuCollection = 'kat123';
+    } else if (floorNumber >= 4 && floorNumber <= 6) {
+      menuCollection = 'kat456';
+    } else if (floorNumber >= 7 && floorNumber <= 10) {
+      menuCollection = 'kat78910';
+    } else {
+      menuCollection = 'kat123'; // Varsayılan
+    }
+    
+    print('Seçilen menü koleksiyonu: $menuCollection'); // Debug için
+
     final menuDocRef = FirebaseFirestore.instance
         .collection('menu')
-        .doc('main');
+        .doc(menuCollection);
+    
     setState(() {
       _isMenuLoading = true;
     });
+    
     _menuSubscription = menuDocRef.snapshots().listen((docSnap) {
       if (docSnap.exists &&
           docSnap.data() != null &&
@@ -83,12 +122,87 @@ class _OrderScreenState extends State<OrderScreen>
           }
         });
       } else {
+        // Menü koleksiyonu yoksa varsayılan menüyü oluştur
+        _createDefaultMenu(menuCollection);
         setState(() {
           _menu = [];
           _isMenuLoading = false;
         });
       }
     });
+  }
+
+  // Varsayılan menü oluştur
+  void _createDefaultMenu(String menuCollection) async {
+    final defaultMenu = [
+      {
+        'name': 'Çay',
+        'price': 2,
+        'options': ['Şekersiz', 'Şekerli'],
+        'defaultOption': 'Şekersiz',
+        'inStock': true,
+      },
+      {
+        'name': 'Çay (Su Bardağı)',
+        'price': 4,
+        'options': ['Şekersiz', 'Şekerli'],
+        'defaultOption': 'Şekersiz',
+        'inStock': true,
+      },
+      {
+        'name': 'Bitki Çayı',
+        'price': 2,
+        'options': ['Çiçek', 'Adaçayı', 'Kuşburnu'],
+        'defaultOption': 'Çiçek',
+        'inStock': true,
+      },
+      {
+        'name': 'Oralet',
+        'price': 2,
+        'options': ['Şekersiz', 'Şekerli'],
+        'defaultOption': 'Şekersiz',
+        'inStock': true,
+      },
+      {
+        'name': 'Nescafe',
+        'price': 8,
+        'options': ['Sade', 'Sütlü'],
+        'defaultOption': 'Sade',
+        'inStock': true,
+      },
+      {
+        'name': 'Türk Kahvesi',
+        'price': 10,
+        'options': ['Sade', 'Orta', 'Şekerli'],
+        'defaultOption': 'Sade',
+        'inStock': true,
+      },
+      {
+        'name': 'Maden Suyu',
+        'price': 10,
+        'options': ['Sade', 'Elmalı', 'Limonlu', 'Narlı'],
+        'defaultOption': 'Sade',
+        'inStock': true,
+      },
+      { 'name': 'Sade Gazoz', 'price': 30, 'options': [], 'defaultOption': '', 'inStock': true },
+      { 'name': 'Sarı Gazoz', 'price': 34, 'options': [], 'defaultOption': '', 'inStock': true },
+      {
+        'name': "Çay Fişi 100'lü",
+        'price': 200,
+        'options': [],
+        'defaultOption': '',
+        'inStock': true,
+      },
+    ];
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('menu')
+          .doc(menuCollection)
+          .set({'items': defaultMenu});
+    } catch (e) {
+      print('Varsayılan menü oluşturulamadı: $e');
+    }
   }
 
   @override
