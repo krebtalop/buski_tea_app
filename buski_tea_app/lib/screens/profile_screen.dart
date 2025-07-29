@@ -1,11 +1,13 @@
-import 'package:buski_tea_app/screens/login_screen.dart';
-import 'package:buski_tea_app/screens/change_password_screen.dart'; // ✅ Şifremi değiştir sayfası eklendi
+// En üste eklenmesi gereken importlar:
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
-import 'package:buski_tea_app/screens/gecmis_siparisler_screen.dart'; // GecmisSiparislerScreen eklendi
+
+import 'package:buski_tea_app/screens/login_screen.dart';
+import 'package:buski_tea_app/screens/gecmis_siparisler_screen.dart';
+import 'package:buski_tea_app/screens/change_password_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -18,10 +20,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   File? _profileImage;
-  String? _profileImageUrl;
   final ImagePicker _picker = ImagePicker();
 
-  // Çıkış yapma fonksiyonu
+  final _nameController = TextEditingController();
+  final _departmentController = TextEditingController();
+  final _floorController = TextEditingController();
+  final _emailController = TextEditingController();
+
+  bool _isEditing = false;
+  bool _hasChanges = false;
+
   Future<void> _logout() async {
     bool? confirmed = await _showConfirmationDialog(
       title: 'Çıkış Onayı',
@@ -39,12 +47,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // Hesap silme fonksiyonu
   Future<void> _deleteAccount() async {
     bool? confirmed = await _showConfirmationDialog(
       title: 'Hesap Silme Onayı',
-      content:
-          'Hesabınızı kalıcı olarak silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
+      content: 'Hesabınızı kalıcı olarak silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
     );
 
     if (confirmed != true) return;
@@ -53,10 +59,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (user == null) return;
 
     try {
-      // Önce Firestore'dan kullanıcı verilerini sil
       await _firestore.collection('users').doc(user.uid).delete();
-
-      // Sonra Firebase Authentication'dan kullanıcıyı sil
       await user.delete();
 
       if (mounted) {
@@ -70,9 +73,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'requires-recent-login') {
-        _showErrorDialog(
-          'Bu işlem için yeniden giriş yapmanız gerekiyor. Lütfen çıkış yapıp tekrar giriş yaptıktan sonra tekrar deneyin.',
-        );
+        _showErrorDialog('Bu işlem için yeniden giriş yapmanız gerekiyor. Lütfen çıkış yapıp tekrar giriş yaptıktan sonra tekrar deneyin.');
       } else {
         _showErrorDialog('Hesap silinirken bir hata oluştu: ${e.message}');
       }
@@ -89,37 +90,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() {
         _profileImage = File(picked.path);
       });
-      // Firebase Storage entegrasyonu yoksa sadece local göster, varsa yükle ve url kaydet
-      // Şimdilik Firestore'a path kaydedelim
       await _firestore.collection('users').doc(user.uid).update({'profileImage': picked.path});
     }
   }
 
-  // Onay dialogu gösterme
-  Future<bool?> _showConfirmationDialog({
-    required String title,
-    required String content,
-  }) {
+  Future<bool?> _showConfirmationDialog({required String title, required String content}) {
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(title),
         content: Text(content),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Hayır'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Evet'),
-          ),
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Hayır')),
+          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Evet')),
         ],
       ),
     );
   }
 
-  // Hata dialogu gösterme
   void _showErrorDialog(String message) {
     if (mounted) {
       showDialog(
@@ -138,11 +126,90 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  void _openEditDialog(Map<String, dynamic> userData) {
+    _emailController.text = _auth.currentUser?.email ?? '';
+    _nameController.text = userData['name'] ?? '';
+    _departmentController.text = userData['department'] ?? '';
+    _floorController.text = userData['floor']?.toString() ?? '';
+
+    _hasChanges = false;
+
+    showDialog(
+      context: context,
+      builder: (_) => StatefulBuilder(
+        builder: (context, setModalState) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Bilgileri Düzenle', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  _buildTextField('E-posta', _emailController, true, setModalState),
+                  _buildTextField('Kullanıcı Adı', _nameController, true, setModalState),
+                  _buildTextField('Departman', _departmentController, true, setModalState),
+                  _buildTextField('Kat', _floorController, false, setModalState),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: !_hasChanges
+                        ? null
+                        : () async {
+                            final uid = _auth.currentUser?.uid;
+                            if (uid != null) {
+                              await _firestore.collection('users').doc(uid).update({
+                                'name': _nameController.text.trim(),
+                                'department': _departmentController.text.trim(),
+                                'floor': _floorController.text.trim(),
+                              });
+                              Navigator.of(context).pop();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: const Text('Kullanıcı bilgileri düzenlendi.'),
+                                  backgroundColor: Colors.green[400],
+                                ),
+                              );
+                              setState(() {}); // Refresh UI
+                            }
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue[700],
+                      disabledBackgroundColor: Colors.grey[400],
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Düzenle'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField(String label, TextEditingController controller, bool editable, void Function(void Function()) setModalState) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: TextField(
+        controller: controller,
+        enabled: editable,
+        onChanged: (_) => setModalState(() => _hasChanges = true),
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = _auth.currentUser;
     return Scaffold(
       backgroundColor: Colors.transparent,
+      resizeToAvoidBottomInset: true,
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -159,7 +226,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Profil Fotoğrafı + Ekle Butonu
+                // Profil Fotoğrafı
                 FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
                   future: _firestore.collection('users').doc(user?.uid).get(),
                   builder: (context, snapshot) {
@@ -204,108 +271,97 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   },
                 ),
                 const SizedBox(height: 18),
-                // Kullanıcı Bilgileri Kartı (modern ve yumuşak)
-                Card(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-                  elevation: 10,
-                  margin: const EdgeInsets.only(bottom: 28),
-                  color: Colors.white.withOpacity(0.96),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 26),
-                    child: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                      future: _firestore.collection('users').doc(user?.uid).get(),
-                      builder: (context, snapshot) {
-                        final data = snapshot.data?.data();
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Text(
-                              user?.email ?? 'Kullanıcı',
-                              style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: Color(0xFF1565C0)),
-                              textAlign: TextAlign.center,
+
+                // Kullanıcı Bilgileri Kartı
+                FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                  future: _firestore.collection('users').doc(user?.uid).get(),
+                  builder: (context, snapshot) {
+                    final data = snapshot.data?.data();
+                    return Stack(
+                      children: [
+                        Card(
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+                          elevation: 10,
+                          margin: const EdgeInsets.only(bottom: 28),
+                          color: Colors.white.withOpacity(0.96),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 26),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  user?.email ?? 'Kullanıcı',
+                                  style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: Color(0xFF1565C0)),
+                                  textAlign: TextAlign.center,
+                                ),
+                                if (data != null && data['name'] != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 2.0, bottom: 8),
+                                    child: Text('${data['name']}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                                  ),
+                                Divider(height: 22, thickness: 1, color: Colors.blue[50]),
+                                if (data != null && data['phoneCode'] != null)
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(Icons.phone, size: 18, color: Colors.grey),
+                                      const SizedBox(width: 8),
+                                      Text('${data['phoneCode']}', style: const TextStyle(fontSize: 15, color: Colors.black87)),
+                                    ],
+                                  ),
+                                if (data != null && data['department'] != null)
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(Icons.business, size: 18, color: Colors.grey),
+                                      const SizedBox(width: 8),
+                                      Text('${data['department']}', style: const TextStyle(fontSize: 15, color: Colors.black87)),
+                                    ],
+                                  ),
+                                if (data != null && data['floor'] != null)
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(Icons.location_on, size: 18, color: Colors.grey),
+                                      const SizedBox(width: 8),
+                                      Text('Kat: ${data['floor']}', style: const TextStyle(fontSize: 15, color: Colors.black87)),
+                                    ],
+                                  ),
+                              ],
                             ),
-                            if (data != null && data['name'] != null)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 2.0, bottom: 8),
-                                child: Text('${data['name']}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-                              ),
-                            Divider(height: 22, thickness: 1, color: Colors.blue[50]),
-                            if (data != null && data['phoneCode'] != null)
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(Icons.phone, size: 18, color: Colors.grey),
-                                  const SizedBox(width: 8),
-                                  Text('${data['phoneCode']}', style: const TextStyle(fontSize: 15, color: Colors.black87)),
-                                ],
-                              ),
-                            if (data != null && data['department'] != null)
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(Icons.business, size: 18, color: Colors.grey),
-                                  const SizedBox(width: 8),
-                                  Text('${data['department']}', style: const TextStyle(fontSize: 15, color: Colors.black87)),
-                                ],
-                              ),
-                            if (data != null && data['floor'] != null)
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(Icons.location_on, size: 18, color: Colors.grey),
-                                  const SizedBox(width: 8),
-                                  Text('Kat: ${data['floor']}', style: const TextStyle(fontSize: 15, color: Colors.black87)),
-                                ],
-                              ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 44,
+                          right: 24,
+                          child: GestureDetector(
+                            onTap: () {
+                              if (data != null) _openEditDialog(data);
+                            },
+                            child: const CircleAvatar(
+                              backgroundColor: Colors.blue,
+                              radius: 18,
+                              child: Icon(Icons.edit, size: 18, color: Colors.white),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
+
                 // Butonlar
-                Column(
-                  children: [
-                    _buildProfileButton(
-                      text: 'Geçmiş Siparişlerim',
-                      icon: Icons.history,
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const GecmisSiparislerScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 14),
-                    _buildProfileButton(
-                      text: 'Şifremi Değiştir',
-                      icon: Icons.lock_outline,
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ChangePasswordScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 14),
-                    _buildProfileButton(
-                      text: 'Çıkış Yap',
-                      icon: Icons.exit_to_app,
-                      onPressed: _logout,
-                    ),
-                    const SizedBox(height: 14),
-                    _buildProfileButton(
-                      text: 'Hesabı Sil',
-                      icon: Icons.delete_forever,
-                      onPressed: _deleteAccount,
-                      isDestructive: true,
-                    ),
-                  ],
-                ),
+                _buildProfileButton(text: 'Geçmiş Siparişlerim', icon: Icons.history, onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const GecmisSiparislerScreen()));
+                }),
+                const SizedBox(height: 14),
+                _buildProfileButton(text: 'Şifremi Değiştir', icon: Icons.lock_outline, onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const ChangePasswordScreen()));
+                }),
+                const SizedBox(height: 14),
+                _buildProfileButton(text: 'Çıkış Yap', icon: Icons.exit_to_app, onPressed: _logout),
+                const SizedBox(height: 14),
+                _buildProfileButton(text: 'Hesabı Sil', icon: Icons.delete_forever, onPressed: _deleteAccount, isDestructive: true),
               ],
             ),
           ),
@@ -314,12 +370,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildProfileButton({
-    required String text,
-    required IconData icon,
-    required VoidCallback onPressed,
-    bool isDestructive = false,
-  }) {
+  Widget _buildProfileButton({required String text, required IconData icon, required VoidCallback onPressed, bool isDestructive = false}) {
     final style = ElevatedButton.styleFrom(
       backgroundColor: isDestructive ? Colors.red[700] : Colors.white,
       foregroundColor: isDestructive ? Colors.white : Colors.blue[800],
@@ -330,11 +381,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       shadowColor: Colors.black.withOpacity(0.2),
     );
 
-    return ElevatedButton.icon(
-      icon: Icon(icon),
-      label: Text(text),
-      onPressed: onPressed,
-      style: style,
-    );
+    return ElevatedButton.icon(icon: Icon(icon), label: Text(text), onPressed: onPressed, style: style);
   }
 }
