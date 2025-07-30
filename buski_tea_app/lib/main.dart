@@ -9,6 +9,7 @@ import 'screens/order_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/order_panel_screen.dart';
 import 'screens/forgot_password_screen.dart';
+import 'screens/gecmis_siparisler_screen.dart';
 // TODO: Ana sayfa için HomeScreen eklenince import edilecek
 
 void main() async {
@@ -35,6 +36,7 @@ class MyApp extends StatelessWidget {
         '/login': (context) => LoginScreen(),
         '/profile': (context) => ProfileScreen(),
         '/forgot_password': (context) => ForgotPasswordScreen(),
+        '/gecmis_siparisler': (context) => const GecmisSiparislerScreen(),
       },
 
       home: const AuthGate(),

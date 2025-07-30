@@ -503,10 +503,14 @@
         Hazırlananlar
         <span id="preparing-badge" class="notification-badge hidden">0</span>
       </button>
-      <button id="delivered-tab" class="tab-inactive px-6 py-3 text-lg relative">
-        Teslim Edilenler
-        <span id="delivered-badge" class="notification-badge hidden">0</span>
-      </button>
+              <button id="delivered-tab" class="tab-inactive px-6 py-3 text-lg relative">
+          Teslim Edilenler
+          <span id="delivered-badge" class="notification-badge hidden">0</span>
+        </button>
+        <button id="ratings-tab" class="tab-inactive px-6 py-3 text-lg relative">
+          Puanlama
+          <span id="ratings-badge" class="notification-badge hidden">0</span>
+        </button>
     </div>
     
 
@@ -518,6 +522,40 @@
     
     <!-- Katlar -->
     <div id="floors-container"></div>
+    
+    <!-- Puanlama Sekmesi İçeriği -->
+    <div id="ratings-container" class="hidden">
+      <div class="max-w-4xl mx-auto">
+        <!-- Ortalama Puan Kartı -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+          <div class="text-center">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Ortalama Puan</h2>
+            <div class="flex items-center justify-center mb-4">
+              <span id="average-rating" class="text-4xl font-bold text-blue-600 mr-4">0.0</span>
+              <div id="average-stars" class="flex">
+                <!-- Yıldızlar JavaScript ile doldurulacak -->
+              </div>
+            </div>
+            <p id="total-ratings" class="text-gray-600">0 değerlendirme</p>
+          </div>
+        </div>
+        
+        <!-- Butonlar -->
+        <div class="text-center mb-6 space-x-4">
+          <button id="refresh-ratings-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-lg transition-all duration-300 font-medium">
+            <i class="fas fa-refresh mr-2"></i>Puanları Yenile
+          </button>
+          <button id="delete-all-ratings-btn" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg shadow-lg transition-all duration-300 font-medium">
+            <i class="fas fa-trash-alt mr-2"></i>Tüm Puanları Sil
+          </button>
+        </div>
+        
+        <!-- Puan Listesi -->
+        <div id="ratings-list" class="space-y-4">
+          <!-- Puanlar JavaScript ile doldurulacak -->
+        </div>
+      </div>
+    </div>
   </main>
   <script type="module">
     // Rapor modal elemanları
@@ -622,7 +660,7 @@ async function updateReport() {
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
     import {
       getFirestore, collection, query, orderBy,
-      onSnapshot, updateDoc, doc, deleteDoc, setDoc, getDoc
+      onSnapshot, updateDoc, doc, deleteDoc, setDoc, getDoc, getDocs, where, writeBatch
     } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
     // Firebase config
     const firebaseConfig = {
@@ -639,8 +677,10 @@ async function updateReport() {
     // Menü verisi
     let menuData = [];
     let allOrders = [];
-    let activeTab = 'preparing'; // 'preparing' veya 'delivered'
+    let activeTab = 'preparing'; // 'preparing', 'delivered' veya 'ratings'
     let activeFloorGroup = '78910'; // Sadece kat 7-8-9-10
+    let ratingsData = [];
+    let averageRating = 0.0;
     // DOM Elemanları
     const menuModal = document.getElementById('menu-modal');
     const menuListContainer = document.getElementById('menu-list');
@@ -659,9 +699,17 @@ async function updateReport() {
     const editProductInStockInput = document.getElementById('edit-product-instock');
     const preparingTab = document.getElementById('preparing-tab');
     const deliveredTab = document.getElementById('delivered-tab');
+    const ratingsTab = document.getElementById('ratings-tab');
     const floorsContainer = document.getElementById('floors-container');
+    const ratingsContainer = document.getElementById('ratings-container');
     const preparingBadge = document.getElementById('preparing-badge');
     const deliveredBadge = document.getElementById('delivered-badge');
+    const ratingsBadge = document.getElementById('ratings-badge');
+    const refreshRatingsBtn = document.getElementById('refresh-ratings-btn');
+    const averageRatingSpan = document.getElementById('average-rating');
+    const averageStarsDiv = document.getElementById('average-stars');
+    const totalRatingsSpan = document.getElementById('total-ratings');
+    const ratingsListDiv = document.getElementById('ratings-list');
     const floorGroupButtons = document.querySelectorAll('.floor-group-btn');
     const deleteAllOrdersBtn = document.getElementById('delete-all-orders-btn');
     let editingProductIndex = -1;
@@ -685,6 +733,20 @@ async function updateReport() {
     });
     deliveredTab.addEventListener('click', () => {
       setActiveTab('delivered');
+    });
+    ratingsTab.addEventListener('click', () => {
+      setActiveTab('ratings');
+    });
+    
+    // Puanları yenile butonu
+    refreshRatingsBtn.addEventListener('click', () => {
+      loadRatings();
+    });
+    
+    // Tüm puanları sil butonu
+    const deleteAllRatingsBtn = document.getElementById('delete-all-ratings-btn');
+    deleteAllRatingsBtn.addEventListener('click', () => {
+      deleteAllRatings();
     });
     
     // Tüm siparişleri sil butonu olay dinleyicisi
@@ -861,25 +923,95 @@ async function updateReport() {
         }
       });
     }
+    // Puanlama silme fonksiyonu
+    window.deleteRating = async function(ratingId) {
+      const confirmed = await showConfirm('Puanlama Silme', 'Bu puanlamayı silmek istediğinizden emin misiniz?', 'warning');
+      if (confirmed) {
+        try {
+          const ref = doc(db, "siparisler", ratingId);
+          await updateDoc(ref, { 
+            rating: 0, 
+            comment: '', 
+            ratingDate: null 
+          });
+          
+          // Puanlamaları yeniden yükle
+          loadRatings();
+        } catch (error) {
+          console.error("Puanlama silinirken hata oluştu:", error);
+          await showAlert("Puanlama silinirken bir sorun oluştu.", 'error');
+        }
+      }
+    };
+
+    // Tüm puanları sil
+    window.deleteAllRatings = async function() {
+      const confirmed = await showConfirm('Tüm Puanları Sil', 'Bu işlem tüm puanları ve yorumları kalıcı olarak silecektir. Devam etmek istediğinizden emin misiniz?', 'warning');
+      if (confirmed) {
+        try {
+          // Kat grubuna göre siparişleri filtrele
+          const filteredOrders = filterOrdersByPanel(allOrders);
+          const ordersWithRatings = filteredOrders.filter(order => order.rating && order.rating > 0);
+          
+          // Tüm puanları sil
+          const batch = writeBatch(db);
+          ordersWithRatings.forEach(order => {
+            const orderRef = doc(db, "siparisler", order.id);
+            batch.update(orderRef, {
+              rating: 0,
+              comment: "",
+              ratingDate: null
+            });
+          });
+          
+          await batch.commit();
+          
+                      // Puanları yeniden yükle
+            loadRatings();
+            
+            await showAlert(`${ordersWithRatings.length} puanlama başarıyla silindi.`, 'success');
+        } catch (error) {
+          console.error("Tüm puanlar silinirken hata oluştu:", error);
+          await showAlert("Tüm puanlar silinirken bir sorun oluştu.", 'error');
+        }
+      }
+    };
+
     // Sekme değiştirme
     function setActiveTab(tab) {
       activeTab = tab;
+      
+      // Tüm sekmeleri pasif yap
+      preparingTab.classList.remove('tab-active');
+      preparingTab.classList.add('tab-inactive');
+      deliveredTab.classList.remove('tab-active');
+      deliveredTab.classList.add('tab-inactive');
+      ratingsTab.classList.remove('tab-active');
+      ratingsTab.classList.add('tab-inactive');
+      
+      // Tüm container'ları gizle
+      floorsContainer.classList.add('hidden');
+      ratingsContainer.classList.add('hidden');
+      
       if (tab === 'preparing') {
         preparingTab.classList.add('tab-active');
         preparingTab.classList.remove('tab-inactive');
-        deliveredTab.classList.add('tab-inactive');
-        deliveredTab.classList.remove('tab-active');
-        // Hazırlananlar sekmesinde toplu silme butonunu gizle
+        floorsContainer.classList.remove('hidden');
         deleteAllOrdersBtn.classList.add('hidden');
-      } else {
+        renderFloors();
+      } else if (tab === 'delivered') {
         deliveredTab.classList.add('tab-active');
         deliveredTab.classList.remove('tab-inactive');
-        preparingTab.classList.add('tab-inactive');
-        preparingTab.classList.remove('tab-active');
-        // Teslim edilenler sekmesinde toplu silme butonunu göster
+        floorsContainer.classList.remove('hidden');
         deleteAllOrdersBtn.classList.remove('hidden');
+        renderFloors();
+      } else if (tab === 'ratings') {
+        ratingsTab.classList.add('tab-active');
+        ratingsTab.classList.remove('tab-inactive');
+        ratingsContainer.classList.remove('hidden');
+        deleteAllOrdersBtn.classList.add('hidden');
+        loadRatings();
       }
-      renderFloors();
     }
 
     // Hata butonu işlevi: Siparişi hazırlananlar sekmesine geri döndürür
@@ -1343,6 +1475,24 @@ async function updateReport() {
       }, 300);
     }
 
+    // Notification gösterme fonksiyonu
+    function showNotification(message, type = 'info') {
+      // Basit bir notification sistemi
+      const notification = document.createElement('div');
+      notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 ${
+        type === 'error' ? 'bg-red-500 text-white' : 
+        type === 'success' ? 'bg-green-500 text-white' : 
+        'bg-blue-500 text-white'
+      }`;
+      notification.textContent = message;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    }
+
     // Rapor sıfırlama butonu olay dinleyicisi
     document.getElementById('reset-report-btn').addEventListener('click', resetReportData);
     // Bildirim sesi çal
@@ -1374,10 +1524,149 @@ async function updateReport() {
           return orderFloor >= 7 && orderFloor <= 10;
         });
       }
-      return orders; // Varsayılan olarak tüm siparişler
-    }
-    
-    // Badge sayılarını güncelle - Sadece o kat grubunun siparişlerini say
+              return orders; // Varsayılan olarak tüm siparişler
+      }
+      
+      // Puanları yükle - Sadece kat 7-8-9-10 için
+      async function loadRatings() {
+        try {
+          const snapshot = await getDocs(query(
+            collection(db, "siparisler"),
+            where("rating", ">", 0)
+          ));
+          
+          // Sadece kat 7-8-9-10 puanlarını filtrele ve tarihe göre sırala
+          ratingsData = snapshot.docs
+            .map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            }))
+            .filter(rating => {
+              const floor = Number(rating.floor);
+              return floor >= 7 && floor <= 10;
+            })
+            .sort((a, b) => {
+              // Tarihe göre sırala (en yeni önce)
+              const dateA = a.ratingDate && a.ratingDate.toDate ? a.ratingDate.toDate() : new Date(0);
+              const dateB = b.ratingDate && b.ratingDate.toDate ? b.ratingDate.toDate() : new Date(0);
+              return dateB - dateA;
+            });
+          
+          // Kullanıcı bilgilerini çek
+          for (let rating of ratingsData) {
+            if (rating.userId) {
+              try {
+                const userDoc = await getDoc(doc(db, "users", rating.userId));
+                if (userDoc.exists()) {
+                  const userData = userDoc.data();
+                  rating.userName = userData.fullName || userData.name || 'İsimsiz Kullanıcı';
+                } else {
+                  rating.userName = 'İsimsiz Kullanıcı';
+                }
+              } catch (error) {
+                console.error('Kullanıcı bilgisi çekilirken hata:', error);
+                rating.userName = 'İsimsiz Kullanıcı';
+              }
+            } else {
+              rating.userName = 'İsimsiz Kullanıcı';
+            }
+          }
+          
+          // Ortalama puanı hesapla
+          if (ratingsData.length > 0) {
+            const totalRating = ratingsData.reduce((sum, rating) => sum + (rating.rating || 0), 0);
+            averageRating = totalRating / ratingsData.length;
+          } else {
+            averageRating = 0;
+          }
+          
+          renderRatings();
+        } catch (error) {
+          console.error('Puanlar yüklenirken hata:', error);
+        }
+      }
+      
+      // Puanları render et
+      function renderRatings() {
+        // Ortalama puanı güncelle
+        averageRatingSpan.textContent = averageRating.toFixed(1);
+        totalRatingsSpan.textContent = `${ratingsData.length} değerlendirme`;
+        
+        // Ortalama yıldızları render et
+        averageStarsDiv.innerHTML = '';
+        for (let i = 0; i < 5; i++) {
+          const star = document.createElement('i');
+          if (i < Math.floor(averageRating)) {
+            star.className = 'fas fa-star text-yellow-400 text-2xl';
+          } else if (i < averageRating) {
+            star.className = 'fas fa-star-half-alt text-yellow-400 text-2xl';
+          } else {
+            star.className = 'far fa-star text-gray-300 text-2xl';
+          }
+          averageStarsDiv.appendChild(star);
+        }
+        
+        // Puan listesini render et
+        ratingsListDiv.innerHTML = '';
+        
+        if (ratingsData.length === 0) {
+          ratingsListDiv.innerHTML = `
+            <div class="text-center py-8">
+              <i class="fas fa-star text-4xl text-gray-300 mb-4"></i>
+              <p class="text-gray-500 text-lg">Henüz puanlama yapılmamış</p>
+            </div>
+          `;
+          return;
+        }
+        
+        ratingsData.forEach(rating => {
+          const ratingCard = document.createElement('div');
+          ratingCard.className = 'bg-white rounded-lg shadow-md p-6';
+          
+          const ratingValue = rating.rating || 0;
+          const comment = rating.comment || '';
+          const userName = rating.userName || 'İsimsiz Kullanıcı';
+          const floor = rating.floor || 0;
+          const floorName = floor === 0 ? 'Zemin' : `Kat ${floor}`;
+          const displayName = userName !== 'İsimsiz Kullanıcı' ? `${userName} (${floorName})` : `İsimsiz Kullanıcı (${floorName})`;
+          const tarih = rating.ratingDate && rating.ratingDate.toDate ? 
+            rating.ratingDate.toDate() : new Date();
+          
+          let starsHtml = '';
+          for (let i = 0; i < 5; i++) {
+            starsHtml += `<i class="fas fa-star ${i < ratingValue ? 'text-yellow-400' : 'text-gray-300'}" style="font-size: 16px;"></i>`;
+          }
+          
+          ratingCard.innerHTML = `
+            <div class="flex justify-between items-start mb-4">
+              <div>
+                <h3 class="font-bold text-lg text-gray-800">${escapeHtml(displayName)}</h3>
+                <p class="text-gray-500 text-sm">${tarih.toLocaleDateString('tr-TR')}</p>
+              </div>
+              <div class="flex items-center gap-2">
+                ${starsHtml}
+                <span class="ml-2 text-sm text-gray-500">(${ratingValue}/5)</span>
+                <button 
+                  onclick="deleteRating('${rating.id}')" 
+                  class="ml-2 text-red-500 hover:text-red-700 p-1 rounded"
+                  title="Bu puanlamayı sil"
+                >
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+            ${comment ? `
+              <div class="bg-gray-50 rounded-lg p-4">
+                <p class="text-gray-700">${escapeHtml(comment)}</p>
+              </div>
+            ` : ''}
+          `;
+          
+          ratingsListDiv.appendChild(ratingCard);
+        });
+      }
+      
+      // Badge sayılarını güncelle - Sadece o kat grubunun siparişlerini say
     function updateBadges() {
       // Kat grubuna göre siparişleri filtrele
       let filteredOrders = filterOrdersByPanel(allOrders);
@@ -1388,11 +1677,16 @@ async function updateReport() {
       const deliveredCount = filteredOrders.filter(order => 
         order.status === "teslim edildi"
       ).length;
+      const ratingsCount = filteredOrders.filter(order => 
+        order.rating && order.rating > 0
+      ).length;
       
       preparingBadge.textContent = preparingCount;
       deliveredBadge.textContent = deliveredCount;
+      ratingsBadge.textContent = ratingsCount;
       preparingBadge.classList.toggle('hidden', preparingCount === 0);
       deliveredBadge.classList.toggle('hidden', deliveredCount === 0);
+      ratingsBadge.classList.toggle('hidden', ratingsCount === 0);
     }
     // Siparişleri Firestore'dan çek
     const q = query(collection(db, "siparisler"), orderBy("tarih", "desc"));
@@ -1405,14 +1699,14 @@ async function updateReport() {
       }
       lastOrderIds = currentOrderIds;
       allOrders = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
-      renderFloors();
-      updateBadges();
-    });
+              renderFloors();
+        updateBadges();
+        loadRatings(); // Puanları da yükle
+      });
     // Sayfa yüklendiğinde
     window.addEventListener('DOMContentLoaded', () => {
       listenMenuRealtime();
-      renderFloors();
-      updateBadges();
+      setActiveTab('preparing'); // Varsayılan olarak preparing sekmesini aktif et
     });
   </script>
 </body>

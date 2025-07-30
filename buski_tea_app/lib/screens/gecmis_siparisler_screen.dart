@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'dart:async';
-import 'package:flutter/cupertino.dart';
 
 class GecmisSiparislerScreen extends StatefulWidget {
   const GecmisSiparislerScreen({Key? key}) : super(key: key);
@@ -17,15 +15,11 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
   List<QueryDocumentSnapshot<Map<String, dynamic>>> _orders = [];
   bool _loading = true;
   double _totalSpent = 0;
-  Map<String, int> _productCounts = {};
   String? _errorMessage;
-  int? _touchedIndex;
-  String? _selectedProduct;
-  int? _selectedProductCount;
-  int? _expandedIndex;
   String? _selectedOrderId;
   int _selectedRating = 0;
   bool _showRatingDialog = false;
+  final TextEditingController _commentController = TextEditingController();
 
   @override
   void initState() {
@@ -38,6 +32,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
       _loading = true;
       _errorMessage = null;
     });
+    
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       setState(() {
@@ -45,6 +40,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
       });
       return;
     }
+
     try {
       final now = DateTime.now();
       DateTime startDate;
@@ -53,6 +49,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
       } else {
         startDate = now.subtract(const Duration(days: 30));
       }
+
       final snapshot = await FirebaseFirestore.instance
           .collection('user_orders')
           .doc(user.uid)
@@ -60,28 +57,15 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
           .where('tarih', isGreaterThan: Timestamp.fromDate(startDate))
           .orderBy('tarih', descending: true)
           .get();
+
       _orders = snapshot.docs;
       _totalSpent = 0;
-      _productCounts = {};
+      
       for (var doc in _orders) {
         final data = doc.data();
         _totalSpent += (data['toplamFiyat'] ?? 0).toDouble();
-        final items = List<Map<String, dynamic>>.from(data['items'] ?? []);
-        for (var item in items) {
-          final name = item['name'] ?? 'Ürün';
-          int adet = 1;
-          if (item['adet'] != null) {
-            if (item['adet'] is int) {
-              adet = item['adet'];
-            } else if (item['adet'] is num) {
-              adet = (item['adet'] as num).toInt();
-            } else if (item['adet'] is String) {
-              adet = int.tryParse(item['adet']) ?? 1;
-            }
-          }
-          _productCounts[name] = (_productCounts[name] ?? 0) + adet;
-        }
       }
+
       setState(() {
         _loading = false;
       });
@@ -93,10 +77,154 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
     }
   }
 
+  // Tüm yorumları sil
+  Future<void> _clearAllComments() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Tüm Yorumları Sil'),
+          content: const Text('Tüm yorumlarınızı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('İptal'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Sil', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      // Kullanıcının tüm siparişlerini al
+      final snapshot = await FirebaseFirestore.instance
+          .collection('user_orders')
+          .doc(user.uid)
+          .collection('orders')
+          .get();
+
+      // Batch işlemi ile tüm yorumları sil
+      final batch = FirebaseFirestore.instance.batch();
+      
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        if (data['comment'] != null && data['comment'].toString().isNotEmpty) {
+          batch.update(doc.reference, {
+            'comment': '',
+          });
+        }
+      }
+
+      await batch.commit();
+
+      // Siparişleri yeniden yükle
+      await _fetchOrders();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Tüm yorumlar başarıyla silindi'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Yorumlar silinirken hata oluştu: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // Siparişi tekrarla
+  Future<void> _repeatOrder(Map<String, dynamic> orderData) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      final items = List<Map<String, dynamic>>.from(orderData['items'] ?? []);
+      if (items.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sipariş içeriği bulunamadı!'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Kullanıcı profil bilgilerini al
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      
+      final userData = userDoc.data() ?? {};
+
+      // Yeni sipariş oluştur
+      final newOrder = {
+        'userId': user.uid,
+        'userName': user.displayName ?? userData['name'] ?? 'Kullanıcı',
+        'floor': orderData['floor'],
+        'items': items,
+        'toplamFiyat': orderData['toplamFiyat'],
+        'tarih': Timestamp.now(),
+        'status': 'hazırlanıyor',
+        'isRepeated': true,
+        'originalOrderId': orderData['id'] ?? '',
+      };
+
+      // Siparişi hem panel koleksiyonuna hem de kullanıcı geçmişine kaydet
+      final orderRef = await FirebaseFirestore.instance
+          .collection('siparisler')
+          .add(newOrder);
+
+      await FirebaseFirestore.instance
+          .collection('user_orders')
+          .doc(user.uid)
+          .collection('orders')
+          .doc(orderRef.id)
+          .set({
+        ...newOrder,
+        'id': orderRef.id,
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Siparişiniz tekrarlandı!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      Navigator.of(context).pop();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Sipariş tekrarlanırken hata oluştu: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   // Puanlama modalını göster
   void _showRatingModal(String orderId, Map<String, dynamic> orderData) {
     _selectedOrderId = orderId;
     _selectedRating = orderData['rating'] ?? 0;
+    _commentController.text = orderData['comment'] ?? '';
     setState(() {
       _showRatingDialog = true;
     });
@@ -113,9 +241,9 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
       final updateData = {
         'rating': _selectedRating,
         'ratingDate': Timestamp.now(),
+        'comment': _commentController.text.trim(),
       };
 
-      // Hem panel koleksiyonuna hem de kullanıcı geçmişine puanlama kaydet
       await Future.wait([
         FirebaseFirestore.instance
             .collection('siparisler')
@@ -129,22 +257,18 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
             .update(updateData),
       ]);
 
-      // Siparişleri yeniden yükle
       await _fetchOrders();
 
       setState(() {
         _showRatingDialog = false;
         _selectedOrderId = null;
         _selectedRating = 0;
+        _commentController.clear();
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            _selectedRating > 0
-                ? 'Puanınız kaydedildi!'
-                : 'Puanınız kaldırıldı!',
-          ),
+        const SnackBar(
+          content: Text('Puanınız kaydedildi!'),
           backgroundColor: Colors.green,
         ),
       );
@@ -177,8 +301,9 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
 
   // Puanlama modalı
   Widget _buildRatingModal() {
-    if (!_showRatingDialog || _selectedOrderId == null)
+    if (!_showRatingDialog || _selectedOrderId == null) {
       return const SizedBox.shrink();
+    }
 
     final orderData = _orders
         .firstWhere((doc) => doc.id == _selectedOrderId)
@@ -212,6 +337,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                         _showRatingDialog = false;
                         _selectedOrderId = null;
                         _selectedRating = 0;
+                        _commentController.clear();
                       });
                     },
                     icon: const Icon(Icons.close),
@@ -219,7 +345,6 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-              // Sipariş bilgileri
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -279,40 +404,40 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _selectedRating > 0 ? _saveRating : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue[700],
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const Text('Puanı Kaydet'),
+              // Yorum alanı
+              Container(
+                width: double.infinity,
+                child: TextField(
+                  controller: _commentController,
+                  maxLines: 3,
+                  maxLength: 200,
+                  decoration: const InputDecoration(
+                    hintText: 'Siparişiniz hakkında yorum yazın (isteğe bağlı)...',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                      borderSide: BorderSide(color: Colors.blue),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () {
-                        setState(() {
-                          _selectedRating = 0;
-                        });
-                      },
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const Text('Temizle'),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _selectedRating > 0 ? _saveRating : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue[700],
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                ],
+                  child: const Text('Puanı Kaydet'),
+                ),
               ),
             ],
           ),
@@ -321,82 +446,8 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
     );
   }
 
-  Future<void> _clearOrderHistory() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    // Onay dialogu
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Geçmişi Temizle'),
-        content: const Text(
-          'Tüm geçmiş siparişlerinizi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('İptal'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Temizle'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-
-    setState(() {
-      _loading = true;
-    });
-    try {
-      final batch = FirebaseFirestore.instance.batch();
-      for (var doc in _orders) {
-        batch.delete(doc.reference);
-      }
-      await batch.commit();
-      await _fetchOrders();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Geçmiş siparişleriniz temizlendi.'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Temizleme başarısız: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted)
-        setState(() {
-          _loading = false;
-        });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    // Siparişleri gün gün grupla
-    Map<String, List<Map<String, dynamic>>> groupedOrders = {};
-    for (var doc in _orders) {
-      final data = doc.data();
-      final tarih = (data['tarih'] as Timestamp).toDate();
-      final dayKey =
-          '${tarih.year}-${tarih.month.toString().padLeft(2, '0')}-${tarih.day.toString().padLeft(2, '0')}';
-      groupedOrders.putIfAbsent(dayKey, () => []).add(data);
-    }
     return Scaffold(
       appBar: AppBar(
         title: const Text('Geçmiş Siparişlerim'),
@@ -405,21 +456,11 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
         centerTitle: true,
         elevation: 0,
         actions: [
-          if (_orders.isNotEmpty)
-            IconButton(
-              onPressed: _loading ? null : _clearOrderHistory,
-              icon: _loading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                  : const Icon(Icons.delete_sweep),
-              tooltip: 'Geçmişi Temizle',
-            ),
+          IconButton(
+            icon: const Icon(Icons.delete_sweep),
+            onPressed: _clearAllComments,
+            tooltip: 'Tüm Yorumları Sil',
+          ),
         ],
       ),
       body: Stack(
@@ -548,93 +589,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                           ),
                         ),
                         const SizedBox(height: 18),
-                        // Pasta Grafik
-                        if (_productCounts.isNotEmpty)
-                          Card(
-                            color: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            elevation: 4,
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Column(
-                                children: [
-                                  SizedBox(
-                                    height: 200,
-                                    child: PieChart(
-                                      PieChartData(
-                                        sections: _productCounts.entries.map((
-                                          e,
-                                        ) {
-                                          final idx = _productCounts.keys
-                                              .toList()
-                                              .indexOf(e.key);
-                                          final color =
-                                              Colors.primaries[idx %
-                                                  Colors.primaries.length];
-                                          final isTouched =
-                                              _touchedIndex == idx;
-                                          return PieChartSectionData(
-                                            color: color,
-                                            value: e.value.toDouble(),
-                                            title: '',
-                                            radius: isTouched ? 70 : 60,
-                                            titleStyle: const TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white,
-                                            ),
-                                            titlePositionPercentageOffset: 0.6,
-                                          );
-                                        }).toList(),
-                                        sectionsSpace: 2,
-                                        centerSpaceRadius: 30,
-                                        pieTouchData: PieTouchData(
-                                          touchCallback: (event, response) {
-                                            if (response != null &&
-                                                response.touchedSection !=
-                                                    null) {
-                                              setState(() {
-                                                _touchedIndex = response
-                                                    .touchedSection!
-                                                    .touchedSectionIndex;
-                                                final key = _productCounts.keys
-                                                    .toList()[_touchedIndex!];
-                                                _selectedProduct = key;
-                                                _selectedProductCount =
-                                                    _productCounts[key];
-                                              });
-                                            } else {
-                                              setState(() {
-                                                _touchedIndex = null;
-                                                _selectedProduct = null;
-                                                _selectedProductCount = null;
-                                              });
-                                            }
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  if (_selectedProduct != null &&
-                                      _selectedProductCount != null)
-                                    Text(
-                                      '${_selectedProduct!}: $_selectedProductCount adet',
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFF1565C0),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        const SizedBox(height: 18),
-                        // Sipariş Listesi (trendyol tarzı, expandable)
-                        const SizedBox(height: 18),
+                        // Sipariş Listesi
                         const Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
@@ -642,9 +597,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color: Color(
-                                0xFF003366,
-                              ), // Daha koyu ve belirgin mavi
+                              color: Color(0xFF003366),
                               letterSpacing: 0.5,
                             ),
                           ),
@@ -661,6 +614,8 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                               data['items'] ?? [],
                             );
                             final rating = data['rating'] ?? 0;
+                            final comment = data['comment'] ?? '';
+
                             return Card(
                               color: Colors.white,
                               shape: RoundedRectangleBorder(
@@ -668,112 +623,96 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                               ),
                               elevation: 2,
                               margin: const EdgeInsets.symmetric(vertical: 6),
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(12),
-                                onTap: () {
-                                  setState(() {
-                                    _expandedIndex = _expandedIndex == i
-                                        ? null
-                                        : i;
-                                  });
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 14,
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            '${tarih.day.toString().padLeft(2, '0')}.${tarih.month.toString().padLeft(2, '0')}.${tarih.year}',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              color: Color(0xFF1565C0),
-                                            ),
-                                          ),
-                                          Row(
-                                            children: [
-                                              Text(
-                                                '${data['toplamFiyat']} TL',
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 16,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 12),
-                                              Text(
-                                                _expandedIndex == i
-                                                    ? 'Detayı Gizle'
-                                                    : 'Detayı Gör',
-                                                style: const TextStyle(
-                                                  fontSize: 14,
-                                                  color: Color(0xFF1565C0),
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                              Icon(
-                                                _expandedIndex == i
-                                                    ? CupertinoIcons.chevron_up
-                                                    : CupertinoIcons
-                                                          .chevron_down,
-                                                color: Color(0xFF1565C0),
-                                                size: 18,
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                      if (_expandedIndex == i) ...[
-                                        const Divider(
-                                          height: 18,
-                                          thickness: 1,
-                                          color: Color(0xFFB3E5FC),
-                                        ),
-                                        ...items.map(
-                                          (item) => Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                              vertical: 2.0,
-                                            ),
-                                            child: Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: [
-                                                Text(
-                                                  '${item['name']} ${item['option'] != null && item['option'] != '' ? '(${item['option']})' : ''}',
-                                                  style: const TextStyle(
-                                                    fontSize: 15,
-                                                  ),
-                                                ),
-                                                Text(
-                                                  'x${item['adet']}',
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
                                         Text(
-                                          'Sipariş Saati: ${tarih.hour.toString().padLeft(2, '0')}:${tarih.minute.toString().padLeft(2, '0')}',
+                                          '${tarih.day.toString().padLeft(2, '0')}.${tarih.month.toString().padLeft(2, '0')}.${tarih.year}',
                                           style: const TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.black54,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF1565C0),
                                           ),
                                         ),
-                                        const SizedBox(height: 12),
-                                        // Puanlama bölümü
+                                        Text(
+                                          '${data['toplamFiyat']} TL',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    ...items.map(
+                                      (item) => Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: 2.0),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              '${item['name']} ${item['option'] != null && item['option'] != '' ? '(${item['option']})' : ''}',
+                                              style: const TextStyle(fontSize: 15),
+                                            ),
+                                            Text(
+                                              'x${item['adet']}',
+                                              style: const TextStyle(fontWeight: FontWeight.w600),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Sipariş Saati: ${tarih.hour.toString().padLeft(2, '0')}:${tarih.minute.toString().padLeft(2, '0')}',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.black54,
+                                      ),
+                                    ),
+                                    // Yorum gösterimi
+                                    if (comment.isNotEmpty) ...[
+                                      const SizedBox(height: 8),
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: Colors.blue[50],
+                                          borderRadius: BorderRadius.circular(6),
+                                          border: Border.all(color: Colors.blue[200]!),
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'Yorumunuz:',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.blue,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              comment,
+                                              style: const TextStyle(
+                                                fontSize: 13,
+                                                color: Colors.black87,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                    const SizedBox(height: 12),
+                                    // Puanlama ve tekrarlama bölümü
+                                    Column(
+                                      children: [
                                         Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
                                             Row(
                                               children: [
@@ -785,9 +724,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                                                   ),
                                                 ),
                                                 Row(
-                                                  children: List.generate(5, (
-                                                    index,
-                                                  ) {
+                                                  children: List.generate(5, (index) {
                                                     return Icon(
                                                       index < rating
                                                           ? Icons.star
@@ -821,31 +758,51 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                                                 size: 16,
                                               ),
                                               label: Text(
-                                                rating > 0
-                                                    ? 'Puanı Değiştir'
-                                                    : 'Puanla',
+                                                rating > 0 ? 'Puanı Değiştir' : 'Puanla',
                                               ),
                                               style: ElevatedButton.styleFrom(
                                                 backgroundColor: rating > 0
                                                     ? Colors.orange
                                                     : Colors.blue[700],
                                                 foregroundColor: Colors.white,
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 12,
-                                                      vertical: 6,
-                                                    ),
+                                                padding: const EdgeInsets.symmetric(
+                                                  horizontal: 12,
+                                                  vertical: 6,
+                                                ),
                                                 shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(6),
+                                                  borderRadius: BorderRadius.circular(6),
                                                 ),
                                               ),
                                             ),
                                           ],
                                         ),
+                                        const SizedBox(height: 8),
+                                        // Tekrarlama butonu
+                                        SizedBox(
+                                          width: double.infinity,
+                                          child: ElevatedButton.icon(
+                                            onPressed: () => _repeatOrder(data),
+                                            icon: const Icon(
+                                              Icons.replay,
+                                              size: 16,
+                                            ),
+                                            label: const Text('Bu Siparişi Tekrarla'),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.green[600],
+                                              foregroundColor: Colors.white,
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: 16,
+                                                vertical: 8,
+                                              ),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(6),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
                                       ],
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             );
