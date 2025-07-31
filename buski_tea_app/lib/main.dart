@@ -10,6 +10,8 @@ import 'screens/profile_screen.dart';
 import 'screens/order_panel_screen.dart';
 import 'screens/forgot_password_screen.dart';
 import 'screens/gecmis_siparisler_screen.dart';
+import 'screens/web_order_screen.dart';
+import 'package:flutter/foundation.dart';
 // TODO: Ana sayfa için HomeScreen eklenince import edilecek
 
 void main() async {
@@ -28,17 +30,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Çay Ocağı',
       debugShowCheckedModeBanner: false,
-      initialRoute: '/uygulama', // '/panel' veya '/uygulama' olarak değiştir
-      routes: {
-        '/uygulama': (context) => const OrderScreen(),
-        '/panel': (context) => OrderPanelScreen(),
-        '/register': (context) => RegisterScreen(),
-        '/login': (context) => LoginScreen(),
-        '/profile': (context) => ProfileScreen(),
-        '/forgot_password': (context) => ForgotPasswordScreen(),
-        '/gecmis_siparisler': (context) => const GecmisSiparislerScreen(),
-      },
-
+     
       home: const AuthGate(),
       theme: ThemeData(fontFamily: 'SourceSansPro'),
     );
@@ -60,7 +52,11 @@ class AuthGate extends StatelessWidget {
         }
         if (snapshot.hasData) {
           // Kullanıcı giriş yapmışsa ana ekrana yönlendir
-          return const OrderScreen();
+          if (kIsWeb) {
+            return const WebOrderScreen();
+          } else {
+            return const OrderScreen();
+          }
         } else {
           // Giriş yoksa login ekranına yönlendir
           return const LoginScreen();

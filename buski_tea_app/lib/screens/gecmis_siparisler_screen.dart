@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'dart:async';
 
 class GecmisSiparislerScreen extends StatefulWidget {
@@ -20,6 +21,21 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
   int _selectedRating = 0;
   bool _showRatingDialog = false;
   final TextEditingController _commentController = TextEditingController();
+  
+  // Pasta grafiği için değişkenler
+  Map<String, double> _categoryData = {};
+  Map<String, int> _categoryCounts = {}; // Her kategorinin sipariş sayısı
+  String? _selectedCategory; // Seçili kategori
+  List<Color> _pieColors = [
+    Colors.blue,
+    Colors.green,
+    Colors.orange,
+    Colors.red,
+    Colors.purple,
+    Colors.teal,
+    Colors.pink,
+    Colors.indigo,
+  ];
 
   @override
   void initState() {
@@ -60,10 +76,24 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
 
       _orders = snapshot.docs;
       _totalSpent = 0;
+      _categoryData.clear();
+      _categoryCounts.clear();
       
       for (var doc in _orders) {
         final data = doc.data();
         _totalSpent += (data['toplamFiyat'] ?? 0).toDouble();
+        
+        // Kategori verilerini hesapla
+        final items = List<Map<String, dynamic>>.from(data['items'] ?? []);
+        for (var item in items) {
+          final category = item['name'] ?? 'Diğer';
+          final price = (item['price'] ?? 0).toDouble() * (item['adet'] ?? 1);
+          final int adet = (item['adet'] ?? 1).toInt();
+          
+          _categoryData[category] = (_categoryData[category] ?? 0) + price;
+          final currentCount = _categoryCounts[category] ?? 0;
+          _categoryCounts[category] = currentCount + adet;
+        }
       }
 
       setState(() {
@@ -77,14 +107,14 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
     }
   }
 
-  // Tüm yorumları sil
-  Future<void> _clearAllComments() async {
+  // Tüm siparişleri sil (sadece kullanıcı geçmişinden)
+  Future<void> _clearAllOrders() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Tüm Yorumları Sil'),
-          content: const Text('Tüm yorumlarınızı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.'),
+          title: const Text('Siparişleri Sil'),
+          content: const Text('Tüm sipariş geçmişinizi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
@@ -112,16 +142,11 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
           .collection('orders')
           .get();
 
-      // Batch işlemi ile tüm yorumları sil
+      // Batch işlemi ile tüm siparişleri sil
       final batch = FirebaseFirestore.instance.batch();
       
       for (var doc in snapshot.docs) {
-        final data = doc.data();
-        if (data['comment'] != null && data['comment'].toString().isNotEmpty) {
-          batch.update(doc.reference, {
-            'comment': '',
-          });
-        }
+        batch.delete(doc.reference);
       }
 
       await batch.commit();
@@ -132,7 +157,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Tüm yorumlar başarıyla silindi'),
+            content: Text('Sipariş geçmişi başarıyla silindi'),
             backgroundColor: Colors.green,
           ),
         );
@@ -141,12 +166,189 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Yorumlar silinirken hata oluştu: $e'),
+            content: Text('Siparişler silinirken hata oluştu: $e'),
             backgroundColor: Colors.red,
           ),
         );
       }
     }
+  }
+
+
+
+  // Pasta grafiği widget'ı
+  Widget _buildPieChart() {
+    if (_categoryData.isEmpty) {
+      return Container(
+        height: 200,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Center(
+          child: Text(
+            'Henüz sipariş verisi yok',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey,
+            ),
+          ),
+        ),
+      );
+    }
+
+    final pieChartSections = <PieChartSectionData>[];
+    final categories = _categoryData.keys.toList();
+    
+    for (int i = 0; i < categories.length; i++) {
+      final category = categories[i];
+      final value = _categoryData[category]!;
+      final percentage = (_totalSpent > 0) ? (value / _totalSpent * 100) : 0;
+      final isSelected = _selectedCategory == category;
+      
+      pieChartSections.add(
+        PieChartSectionData(
+          color: _pieColors[i % _pieColors.length],
+          value: value,
+          title: isSelected 
+            ? '${_categoryCounts[category] ?? 0}\n${percentage.toStringAsFixed(1)}%'
+            : '${percentage.toStringAsFixed(1)}%',
+          radius: isSelected ? 70 : 60,
+          titleStyle: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      height: 350,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          const Text(
+            'Kategori Dağılımı',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1565C0),
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (_selectedCategory != null) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue[200]!),
+              ),
+              child: Text(
+                '$_selectedCategory: ${_categoryCounts[_selectedCategory] ?? 0} adet sipariş',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1565C0),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedCategory = null;
+                });
+              },
+              child: PieChart(
+                PieChartData(
+                  sections: pieChartSections,
+                  centerSpaceRadius: 40,
+                  sectionsSpace: 2,
+                  pieTouchData: PieTouchData(
+                    touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                      if (event is! FlPointerHoverEvent && pieTouchResponse?.touchedSection != null) {
+                        final touchedIndex = pieTouchResponse!.touchedSection!.touchedSectionIndex;
+                        final category = categories[touchedIndex];
+                        setState(() {
+                          _selectedCategory = _selectedCategory == category ? null : category;
+                        });
+                      }
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Kategori açıklamaları
+          Wrap(
+            spacing: 16,
+            runSpacing: 8,
+            children: categories.asMap().entries.map((entry) {
+              final index = entry.key;
+              final category = entry.value;
+              final value = _categoryData[category]!;
+              final percentage = (_totalSpent > 0) ? (value / _totalSpent * 100) : 0;
+              final count = _categoryCounts[category] ?? 0;
+              final isSelected = _selectedCategory == category;
+              
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedCategory = _selectedCategory == category ? null : category;
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.blue[100] : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                    border: isSelected ? Border.all(color: Colors.blue[300]!) : null,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: _pieColors[index % _pieColors.length],
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '$category (${percentage.toStringAsFixed(1)}% - $count adet)',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                          color: isSelected ? const Color(0xFF1565C0) : Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
   }
 
   // Siparişi tekrarla
@@ -456,10 +658,25 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
         centerTitle: true,
         elevation: 0,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.delete_sweep),
-            onPressed: _clearAllComments,
-            tooltip: 'Tüm Yorumları Sil',
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              if (value == 'clear_orders') {
+                _clearAllOrders();
+              }
+            },
+            itemBuilder: (BuildContext context) => [
+              const PopupMenuItem<String>(
+                value: 'clear_orders',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete_sweep, color: Colors.red),
+                    SizedBox(width: 8),
+                    Text('Siparişleri Sil'),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -553,6 +770,9 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                             ),
                           ],
                         ),
+                        const SizedBox(height: 18),
+                        // Pasta grafiği
+                        _buildPieChart(),
                         const SizedBox(height: 18),
                         // Toplam harcama
                         Card(
