@@ -26,6 +26,9 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
   Map<String, double> _categoryData = {};
   Map<String, int> _categoryCounts = {}; // Her kategorinin sipariş sayısı
   String? _selectedCategory; // Seçili kategori
+  int? _touchedIndex; // Dokunulan dilim indeksi
+  String? _selectedProduct;
+  int? _selectedProductCount;
   List<Color> _pieColors = [
     Colors.blue,
     Colors.green,
@@ -174,24 +177,41 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
     }
   }
 
-
-
   // Pasta grafiği widget'ı
   Widget _buildPieChart() {
     if (_categoryData.isEmpty) {
       return Container(
-        height: 200,
+        height: 150,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: const Center(
-          child: Text(
-            'Henüz sipariş verisi yok',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-            ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.pie_chart_outline,
+                size: 32,
+                color: Colors.grey,
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Henüz sipariş verisi yok',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
         ),
       );
@@ -203,36 +223,31 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
     for (int i = 0; i < categories.length; i++) {
       final category = categories[i];
       final value = _categoryData[category]!;
-      final percentage = (_totalSpent > 0) ? (value / _totalSpent * 100) : 0;
       final isSelected = _selectedCategory == category;
       
       pieChartSections.add(
         PieChartSectionData(
           color: _pieColors[i % _pieColors.length],
           value: value,
-          title: isSelected 
-            ? '${_categoryCounts[category] ?? 0}\n${percentage.toStringAsFixed(1)}%'
-            : '${percentage.toStringAsFixed(1)}%',
-          radius: isSelected ? 70 : 60,
-          titleStyle: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+          title: '', // Başlık yok
+          radius: isSelected ? 45 : 35, // Seçili olan büyük
+          borderSide: isSelected 
+            ? const BorderSide(color: Colors.white, width: 2)
+            : BorderSide.none,
         ),
       );
     }
 
     return Container(
-      height: 350,
+      height: 220,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
@@ -242,32 +257,15 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
           const Text(
             'Kategori Dağılımı',
             style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1565C0),
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1A1A1A),
             ),
           ),
-          const SizedBox(height: 8),
-          if (_selectedCategory != null) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.blue[50],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue[200]!),
-              ),
-              child: Text(
-                '$_selectedCategory: ${_categoryCounts[_selectedCategory] ?? 0} adet sipariş',
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF1565C0),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-          ],
-          Expanded(
+          const SizedBox(height: 12),
+          // Pasta grafiği
+          SizedBox(
+            height: 140,
             child: GestureDetector(
               onTap: () {
                 setState(() {
@@ -277,8 +275,8 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
               child: PieChart(
                 PieChartData(
                   sections: pieChartSections,
-                  centerSpaceRadius: 40,
-                  sectionsSpace: 2,
+                  centerSpaceRadius: 25,
+                  sectionsSpace: 1,
                   pieTouchData: PieTouchData(
                     touchCallback: (FlTouchEvent event, pieTouchResponse) {
                       if (event is! FlPointerHoverEvent && pieTouchResponse?.touchedSection != null) {
@@ -294,58 +292,18 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 16),
-          // Kategori açıklamaları
-          Wrap(
-            spacing: 16,
-            runSpacing: 8,
-            children: categories.asMap().entries.map((entry) {
-              final index = entry.key;
-              final category = entry.value;
-              final value = _categoryData[category]!;
-              final percentage = (_totalSpent > 0) ? (value / _totalSpent * 100) : 0;
-              final count = _categoryCounts[category] ?? 0;
-              final isSelected = _selectedCategory == category;
-              
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _selectedCategory = _selectedCategory == category ? null : category;
-                  });
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: isSelected ? Colors.blue[100] : Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
-                    border: isSelected ? Border.all(color: Colors.blue[300]!) : null,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 12,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: _pieColors[index % _pieColors.length],
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '$category (${percentage.toStringAsFixed(1)}% - $count adet)',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                          color: isSelected ? const Color(0xFF1565C0) : Colors.black87,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
+          // Seçili kategori bilgisi
+          if (_selectedCategory != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              '$_selectedCategory: ${_categoryCounts[_selectedCategory] ?? 0} adet',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF1565C0),
+              ),
+            ),
+          ],
         ],
       ),
     );
