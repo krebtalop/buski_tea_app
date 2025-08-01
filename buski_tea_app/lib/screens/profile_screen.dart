@@ -147,7 +147,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   const Text('Bilgileri Düzenle', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 16),
-                  _buildTextField('E-posta', _emailController, true, setModalState),
+                  _buildTextField('E-posta', _emailController, false, setModalState),
                   _buildTextField('Kullanıcı Adı', _nameController, true, setModalState),
                   _buildTextField('Departman', _departmentController, true, setModalState),
                   _buildTextField('Kat', _floorController, false, setModalState),

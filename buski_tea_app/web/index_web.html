@@ -11,18 +11,115 @@
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
   
+  <!-- Chart.js for Pasta Grafiği -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
     }
     
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #87CEEB 0%, #4682B4 100%);
       color: #1e293b;
       line-height: 1.6;
+      position: relative;
+    }
+
+    /* Cloud Animation Background */
+    .cloud-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -1;
+      overflow: hidden;
+    }
+
+    .cloud {
+      position: absolute;
+      opacity: 0.6;
+      animation: float 20s infinite linear;
+    }
+
+    .cloud1 {
+      top: 5%;
+      left: -100px;
+      width: 120px;
+      height: 60px;
+      animation-delay: 0s;
+      animation-duration: 25s;
+    }
+
+    .cloud2 {
+      top: 20%;
+      left: -150px;
+      width: 180px;
+      height: 90px;
+      animation-delay: 3s;
+      animation-duration: 30s;
+    }
+
+    .cloud3 {
+      top: 40%;
+      left: -200px;
+      width: 150px;
+      height: 75px;
+      animation-delay: 6s;
+      animation-duration: 35s;
+    }
+
+    .cloud4 {
+      top: 60%;
+      left: -120px;
+      width: 140px;
+      height: 70px;
+      animation-delay: 9s;
+      animation-duration: 28s;
+    }
+
+    .cloud5 {
+      top: 75%;
+      left: -180px;
+      width: 160px;
+      height: 80px;
+      animation-delay: 12s;
+      animation-duration: 32s;
+    }
+
+    .cloud6 {
+      top: 85%;
+      left: -160px;
+      width: 130px;
+      height: 65px;
+      animation-delay: 15s;
+      animation-duration: 26s;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateX(-100px) translateY(0px);
+        opacity: 0;
+      }
+      10% {
+        opacity: 0.6;
+      }
+      90% {
+        opacity: 0.6;
+      }
+      100% {
+        transform: translateX(calc(100vw + 200px)) translateY(-20px);
+        opacity: 0;
+      }
     }
     
     .screen {
@@ -40,7 +137,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #87CEEB 0%, #4682B4 100%);
       padding: 20px;
     }
     
@@ -99,6 +196,10 @@
       font-size: 16px;
       transition: all 0.3s ease;
       background: #f9fafb;
+      -webkit-user-select: text;
+      -moz-user-select: text;
+      -ms-user-select: text;
+      user-select: text;
     }
     
     .form-group input:focus,
@@ -138,6 +239,10 @@
       transition: all 0.3s ease;
       margin-bottom: 16px;
       box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
     }
     
     .btn:hover {
@@ -218,11 +323,13 @@
       min-height: 100vh;
       background: #f8fafc;
       position: relative;
-      max-width: 900px;
+      max-width: 1200px;
       margin: 0 auto;
-      border-radius: 0 0 20px 20px;
+      border-radius: 20px 20px 0 0;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
       overflow: visible;
+      padding-bottom: 100px;
+      margin-bottom: 20px;
     }
 
     .header {
@@ -248,12 +355,12 @@
 
     .menu-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 20px;
-      padding: 20px;
-      max-width: 900px;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      padding: 24px;
+      max-width: 1200px;
       margin: 0 auto;
-      padding-bottom: 20px; /* Reduced padding since cart is now fixed */
+      padding-bottom: 24px; /* Reduced padding since cart is now fixed */
     }
 
     .menu-item {
@@ -268,6 +375,10 @@
       min-height: 200px;
       display: flex;
       flex-direction: column;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
     }
 
     .menu-item::before {
@@ -678,11 +789,12 @@
       min-height: 100vh;
       background: #f8fafc;
       padding-bottom: 100px;
-      max-width: 900px;
+      max-width: 1200px;
       margin: 0 auto;
-      border-radius: 0 0 20px 20px;
+      border-radius: 20px 20px 0 0;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
       overflow: hidden;
+      margin-bottom: 20px;
     }
 
     .profile-header {
@@ -854,6 +966,144 @@
       line-height: 1.5;
     }
 
+    /* Pasta Grafiği ve Yorum Sistemi Stilleri */
+    .chart-container {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e2e8f0;
+    }
+
+    .chart-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .chart-wrapper {
+      position: relative;
+      height: 300px;
+      margin: 0 auto;
+      max-width: 400px;
+    }
+
+    .order-item-with-rating {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border: 1px solid #e2e8f0;
+      position: relative;
+    }
+
+    .rating-section {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .rating-stars {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+
+    .star {
+      font-size: 20px;
+      cursor: pointer;
+      color: #d1d5db;
+      transition: color 0.2s ease;
+    }
+
+    .star.active {
+      color: #fbbf24;
+    }
+
+    .star:hover {
+      color: #fbbf24;
+    }
+
+    .comment-section {
+      margin-top: 8px;
+    }
+
+    .comment-input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      resize: vertical;
+      min-height: 60px;
+      font-family: inherit;
+      -webkit-user-select: text;
+      -moz-user-select: text;
+      -ms-user-select: text;
+      user-select: text;
+    }
+
+    .comment-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .submit-rating-btn {
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 8px;
+    }
+
+    .submit-rating-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .submit-rating-btn:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .rating-display {
+      margin-top: 8px;
+      padding: 8px 12px;
+      background: #f0f9ff;
+      border-radius: 8px;
+      border-left: 4px solid #3b82f6;
+    }
+
+    .rating-display .stars {
+      color: #fbbf24;
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
+
+    .rating-display .comment {
+      font-size: 14px;
+      color: #374151;
+      font-style: italic;
+    }
+
+    .no-orders-message {
+      text-align: center;
+      color: #64748b;
+      padding: 40px 20px;
+      font-size: 16px;
+    }
+
     .profile-image-upload {
       margin-bottom: 24px;
     }
@@ -975,16 +1225,7 @@
       background: #475569;
     }
 
-    .action-buttons {
-      background: white;
-      padding: 16px 24px;
-      border-top: 1px solid #e2e8f0;
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-      max-width: 600px;
-      margin: 0 auto;
-    }
+
 
     /* Responsive Design */
     @media (max-width: 768px) {
@@ -1029,17 +1270,8 @@
         min-width: 120px;
       }
 
-      .action-buttons {
-        flex-direction: column;
-        gap: 12px;
-        max-width: 100%;
-        margin: 0 16px;
-      }
-
-      .btn-secondary,
-      .btn-danger {
-        width: 100%;
-        margin-right: 0;
+      .bottom-nav, .profile-bottom-nav {
+        max-width: 100vw;
       }
     }
   </style>
@@ -1048,17 +1280,17 @@
   .bottom-nav, .profile-bottom-nav {
     position: fixed;
     bottom: 0;
-    left: 0;
-    right: 0;
+    left: 50%;
+    transform: translateX(-50%);
     background: white;
     display: flex;
-    padding: 6px 0;
+    padding: 12px 0;
     box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
     border-top: 1px solid #e2e8f0;
-    z-index: 100;
-    max-width: 900px;
-    margin: 0 auto;
-    height: 56px;
+    max-width: 1200px;
+    width: 100%;
+    height: 80px;
+    z-index: 1000;
   }
   .nav-item {
     flex: 1;
@@ -1075,16 +1307,16 @@
     min-width: 0;
   }
   .nav-item .nav-icon {
-    font-size: 18px;
-    margin-bottom: 0;
+    font-size: 22px;
+    margin-bottom: 4px;
   }
   .nav-item .nav-text {
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 500;
   }
   .nav-item.active {
     color: #3b82f6;
-    background: #eff6ff;
+    background: transparent;
   }
   @media (max-width: 900px) {
     .bottom-nav, .profile-bottom-nav {
@@ -1094,6 +1326,16 @@
   </style>
 </head>
 <body>
+  <!-- Cloud Animation Background -->
+  <div class="cloud-bg">
+    <img src="../assets/images/cloud.png" alt="Cloud" class="cloud cloud1">
+    <img src="../assets/images/cloud.png" alt="Cloud" class="cloud cloud2">
+    <img src="../assets/images/cloud.png" alt="Cloud" class="cloud cloud3">
+    <img src="../assets/images/cloud.png" alt="Cloud" class="cloud cloud4">
+    <img src="../assets/images/cloud.png" alt="Cloud" class="cloud cloud5">
+    <img src="../assets/images/cloud.png" alt="Cloud" class="cloud cloud6">
+  </div>
+
   <!-- Login Screen -->
   <div id="loginScreen" class="screen active">
     <div class="auth-container">
@@ -1114,7 +1356,12 @@
             <label for="loginPassword">Şifre</label>
             <div class="password-field">
               <input type="password" id="loginPassword" required>
-              <button type="button" class="password-toggle" onclick="togglePassword('loginPassword')">👁️</button>
+              <button type="button" class="password-toggle" onclick="togglePassword('loginPassword')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </button>
             </div>
           </div>
           
@@ -1187,7 +1434,12 @@
             <label for="registerPassword">Şifre</label>
             <div class="password-field">
               <input type="password" id="registerPassword" required>
-              <button type="button" class="password-toggle" onclick="togglePassword('registerPassword')">👁️</button>
+              <button type="button" class="password-toggle" onclick="togglePassword('registerPassword')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </button>
             </div>
           </div>
           
@@ -1195,7 +1447,12 @@
             <label for="registerPasswordRepeat">Şifre Tekrar</label>
             <div class="password-field">
               <input type="password" id="registerPasswordRepeat" required>
-              <button type="button" class="password-toggle" onclick="togglePassword('registerPasswordRepeat')">👁️</button>
+              <button type="button" class="password-toggle" onclick="togglePassword('registerPasswordRepeat')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </button>
             </div>
           </div>
           
@@ -1358,6 +1615,15 @@
         <div id="history-section" class="tab-panel">
           <div class="history-card">
             <h3>Sipariş Geçmişi</h3>
+            
+            <!-- Pasta Grafiği -->
+            <div class="chart-container">
+              <h4 class="chart-title">Sipariş Dağılımı</h4>
+              <div class="chart-wrapper">
+                <canvas id="orderChart"></canvas>
+              </div>
+            </div>
+            
             <div id="orderHistory" class="order-history">
               <!-- Order history will be loaded here -->
             </div>
@@ -1373,21 +1639,36 @@
                 <label for="currentPassword">Mevcut Şifre</label>
                 <div class="password-field">
                   <input type="password" id="currentPassword" required>
-                  <button type="button" class="password-toggle" onclick="togglePassword('currentPassword')">👁️</button>
+                  <button type="button" class="password-toggle" onclick="togglePassword('currentPassword')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  </button>
                 </div>
               </div>
               <div class="form-group">
                 <label for="newPassword">Yeni Şifre</label>
                 <div class="password-field">
                   <input type="password" id="newPassword" required>
-                  <button type="button" class="password-toggle" onclick="togglePassword('newPassword')">👁️</button>
+                  <button type="button" class="password-toggle" onclick="togglePassword('newPassword')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  </button>
                 </div>
               </div>
               <div class="form-group">
                 <label for="confirmPassword">Yeni Şifre Tekrar</label>
                 <div class="password-field">
                   <input type="password" id="confirmPassword" required>
-                  <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword')">👁️</button>
+                  <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  </button>
                 </div>
               </div>
               <button type="submit" class="btn">Şifre Değiştir</button>
@@ -1401,9 +1682,9 @@
             <h3>Profil Ayarları</h3>
             
             <!-- Profile Image Upload -->
-            <div class="profile-image-upload">
+            <div class="profile-image-upload" style="text-align: center; margin: 30px 0;">
               <h4>Profil Fotoğrafı</h4>
-              <div class="profile-image-preview" onclick="document.getElementById('profileImageInput').click()">
+              <div class="profile-image-preview" onclick="document.getElementById('profileImageInput').click()" style="margin: 0 auto;">
                 <img id="profileImagePreview2" src="../assets/images/logo1.png" alt="Profil">
                 <div class="upload-overlay">
                   <span>📷</span>
@@ -1442,13 +1723,9 @@
               <button type="submit" class="btn">Bilgileri Güncelle</button>
             </form>
 
-            <!-- Danger Zone -->
-            <div class="danger-zone">
-              <h4>Tehlikeli Bölge</h4>
-              <div class="danger-warning">
-                <p>⚠️ Bu işlem geri alınamaz!</p>
-                <button class="btn-danger" onclick="deleteAccount()">Hesabı Sil</button>
-              </div>
+            <!-- Delete Account Button -->
+            <div style="text-align: center; margin-top: 30px;">
+              <button class="btn-danger" onclick="deleteAccount()">Hesabı Sil</button>
             </div>
           </div>
         </div>
@@ -1464,11 +1741,7 @@
           <span class="nav-text">Profil</span>
         </div>
       </nav>
-      <!-- Action Buttons -->
-      <div class="action-buttons">
-        <button class="btn-secondary" onclick="showOrderTab()">Menüye Dön</button>
-        <button class="btn-danger" onclick="logout()">Çıkış Yap</button>
-      </div>
+
     </div>
   </div>
 
@@ -1485,6 +1758,9 @@
     let cartItems = [];
     let menu = [];
     let userData = {};
+    let orderChart = null;
+    let orderHistoryData = [];
+    let ratings = {};
 
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
@@ -1519,6 +1795,9 @@
           showScreen('orderScreen');
         } else {
           currentUser = null;
+          userData = {};
+          menu = [];
+          cartItems = [];
           showScreen('loginScreen');
         }
       });
@@ -1527,31 +1806,15 @@
     function loadUserData() {
       console.log("loadUserData çağrıldı, currentUser:", currentUser);
       
+      if (!currentUser) return;
+      
       firebase.firestore().collection('users').doc(currentUser.uid).get()
         .then((doc) => {
           console.log("Firestore'dan gelen user data:", doc.data());
           if (doc.exists) {
             userData = doc.data();
             console.log("userData set edildi:", userData);
-            document.getElementById('userName').textContent = userData.name || 'Kullanıcı';
-            
-            // Update profile screen data
-            document.getElementById('profileUserName').textContent = userData.name || 'Kullanıcı';
-            document.getElementById('profileUserEmail').textContent = userData.email || 'kullanici@email.com';
-            document.getElementById('profileUserFloor').textContent = `Kat: ${userData.floor || '-'}`;
-            document.getElementById('profileUserDepartment').textContent = `Departman: ${userData.department || '-'}`;
-            
-            document.getElementById('profileFullName').textContent = `${userData.name || ''} ${userData.surname || ''}`;
-            document.getElementById('profileEmail').textContent = userData.email || '-';
-            document.getElementById('profileFloor').textContent = userData.floor || '-';
-            document.getElementById('profileDept').textContent = userData.department || '-';
-            
-            // Update profile image if exists
-            if (userData.profileImage) {
-              document.getElementById('profileImagePreview').src = userData.profileImage;
-              document.getElementById('profileImagePreview2').src = userData.profileImage;
-            }
-            
+            updateUserInterface();
             loadMenu();
           }
         })
@@ -1560,9 +1823,30 @@
         });
     }
 
+    function updateUserInterface() {
+      // Update order screen
+      document.getElementById('userName').textContent = userData.name || 'Kullanıcı';
+      
+      // Update profile screen data
+      document.getElementById('profileUserName').textContent = userData.name || 'Kullanıcı';
+      document.getElementById('profileUserEmail').textContent = userData.email || 'kullanici@email.com';
+      document.getElementById('profileUserFloor').textContent = `Kat: ${userData.floor || '-'}`;
+      document.getElementById('profileUserDepartment').textContent = `Departman: ${userData.department || '-'}`;
+      
+      document.getElementById('profileFullName').textContent = `${userData.name || ''} ${userData.surname || ''}`;
+      document.getElementById('profileEmail').textContent = userData.email || '-';
+      document.getElementById('profileFloor').textContent = userData.floor || '-';
+      document.getElementById('profileDept').textContent = userData.department || '-';
+      
+      // Update profile image if exists
+      if (userData.profileImage) {
+        document.getElementById('profileImagePreview').src = userData.profileImage;
+        document.getElementById('profileImagePreview2').src = userData.profileImage;
+      }
+    }
+
     function loadMenu() {
       console.log("loadMenu çağrıldı, userData:", userData);
-      console.log("userData.floor:", userData.floor, "type:", typeof userData.floor);
       
       if (!userData || !userData.floor) {
         console.log("userData veya floor bilgisi eksik, varsayılan menü yükleniyor");
@@ -1620,8 +1904,6 @@
     }
 
     function displayMenu() {
-      console.log("displayMenu çağrıldı, menu:", menu);
-      console.log("menu.length:", menu.length);
       const menuGrid = document.getElementById('menuGrid');
       
       if (!menuGrid) {
@@ -1629,7 +1911,6 @@
         return;
       }
       
-      console.log("menuGrid elementi bulundu, innerHTML temizleniyor");
       menuGrid.innerHTML = '';
       
       const itemEmojis = {
@@ -1657,7 +1938,6 @@
       };
 
       menu.forEach((item, index) => {
-        console.log(`Menü öğesi ${index}:`, item);
         const emoji = itemEmojis[item.name] || '🍽️';
         const menuItem = document.createElement('div');
         menuItem.className = 'menu-item';
@@ -1681,7 +1961,6 @@
         `;
         
         menuGrid.appendChild(menuItem);
-        console.log(`Menü öğesi ${index} DOM'a eklendi`);
       });
     }
 
@@ -1726,10 +2005,10 @@
       
       if (input.type === 'password') {
         input.type = 'text';
-        toggle.textContent = '🙈';
+        toggle.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
       } else {
         input.type = 'password';
-        toggle.textContent = '👁️';
+        toggle.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
       }
     }
 
@@ -1896,19 +2175,13 @@
     }
 
     function addToCart(itemName) {
-      console.log('addToCart çağrıldı:', itemName);
       const quantity = parseInt(document.getElementById(`quantity-${itemName}`).textContent);
       const menuItem = menu.find(item => item.name === itemName);
-      
-      console.log('quantity:', quantity);
-      console.log('menuItem:', menuItem);
-      console.log('cartItems before:', cartItems);
       
       if (menuItem) {
         const existingItem = cartItems.find(item => item.name === itemName);
         if (existingItem) {
           existingItem.quantity += quantity;
-          console.log('Mevcut ürün güncellendi:', existingItem);
         } else {
           const newItem = {
             name: itemName,
@@ -1916,10 +2189,8 @@
             quantity: quantity
           };
           cartItems.push(newItem);
-          console.log('Yeni ürün eklendi:', newItem);
         }
         
-        console.log('cartItems after:', cartItems);
         updateCartCount();
         showNotification(`${itemName} sepete eklendi!`, 'success');
         
@@ -1935,7 +2206,6 @@
         const minusBtn = document.getElementById(`quantity-${itemName}`).previousElementSibling;
         minusBtn.disabled = true;
       } else {
-        console.error('Menu item bulunamadı:', itemName);
         showNotification('Ürün bulunamadı!', 'error');
       }
     }
@@ -2145,50 +2415,290 @@
         .orderBy('tarih', 'desc')
         .get()
         .then((querySnapshot) => {
+          orderHistoryData = [];
+          
           if (querySnapshot.empty) {
-            // Show sample order with pasta for demonstration
-            orderHistoryDiv.innerHTML = `
-              <div class="order-item">
-                <div class="order-header">
-                  <span class="order-date">${new Date().toLocaleString('tr-TR')}</span>
-                  <span class="order-total">25 ₺</span>
-                </div>
-                <div class="order-items">Pasta (1 adet), Çay (2 adet)</div>
-              </div>
-              <div class="order-item">
-                <div class="order-header">
-                  <span class="order-date">${new Date(Date.now() - 86400000).toLocaleString('tr-TR')}</span>
-                  <span class="order-total">15 ₺</span>
-                </div>
-                <div class="order-items">Kahve (1 adet), Kurabiye (1 adet)</div>
-              </div>
-            `;
+            // Show sample orders for demonstration
+            const sampleOrders = [
+              {
+                id: 'sample1',
+                tarih: new Date(),
+                toplamFiyat: 25,
+                items: [
+                  { name: 'Pasta', adet: 1, price: 15 },
+                  { name: 'Çay', adet: 2, price: 5 }
+                ]
+              },
+              {
+                id: 'sample2',
+                tarih: new Date(Date.now() - 86400000),
+                toplamFiyat: 15,
+                items: [
+                  { name: 'Kahve', adet: 1, price: 8 },
+                  { name: 'Kurabiye', adet: 1, price: 7 }
+                ]
+              }
+            ];
+            
+            orderHistoryData = sampleOrders;
+            displayOrderHistory(sampleOrders);
+            createOrderChart(sampleOrders);
             return;
           }
           
-          orderHistoryDiv.innerHTML = '';
           querySnapshot.forEach((doc) => {
             const order = doc.data();
-            const orderDate = order.tarih.toDate().toLocaleString('tr-TR');
-            const orderItems = order.items.map(item => `${item.name} (${item.adet} adet)`).join(', ');
-            
-            const orderElement = document.createElement('div');
-            orderElement.className = 'order-item';
-            orderElement.innerHTML = `
-              <div class="order-header">
-                <span class="order-date">${orderDate}</span>
-                <span class="order-total">${order.toplamFiyat} ₺</span>
-              </div>
-              <div class="order-items">${orderItems}</div>
-            `;
-            orderHistoryDiv.appendChild(orderElement);
+            orderHistoryData.push(order);
           });
+          
+          displayOrderHistory(orderHistoryData);
+          createOrderChart(orderHistoryData);
         })
         .catch((error) => {
           console.error('Error loading order history:', error);
           orderHistoryDiv.innerHTML = '<p style="text-align: center; color: #ef4444;">Sipariş geçmişi yüklenirken hata oluştu</p>';
         });
     }
+
+    function displayOrderHistory(orders) {
+      const orderHistoryDiv = document.getElementById('orderHistory');
+      orderHistoryDiv.innerHTML = '';
+      
+      if (orders.length === 0) {
+        orderHistoryDiv.innerHTML = '<div class="no-orders-message">Henüz sipariş geçmişiniz bulunmuyor.</div>';
+        return;
+      }
+      
+      orders.forEach((order) => {
+        const orderDate = order.tarih.toDate ? order.tarih.toDate().toLocaleString('tr-TR') : new Date(order.tarih).toLocaleString('tr-TR');
+        const orderItems = order.items.map(item => `${item.name} (${item.adet} adet)`).join(', ');
+        const orderId = order.id || order.id;
+        
+        const orderElement = document.createElement('div');
+        orderElement.className = 'order-item-with-rating';
+        orderElement.innerHTML = `
+          <div class="order-header">
+            <span class="order-date">${orderDate}</span>
+            <span class="order-total">${order.toplamFiyat} ₺</span>
+          </div>
+          <div class="order-items">${orderItems}</div>
+          
+          <div class="rating-section">
+            <div class="rating-stars" data-order-id="${orderId}">
+              <span class="star" data-rating="1">⭐</span>
+              <span class="star" data-rating="2">⭐</span>
+              <span class="star" data-rating="3">⭐</span>
+              <span class="star" data-rating="4">⭐</span>
+              <span class="star" data-rating="5">⭐</span>
+            </div>
+            <div class="comment-section">
+              <textarea class="comment-input" placeholder="Yorumunuzu yazın..." data-order-id="${orderId}"></textarea>
+              <button class="submit-rating-btn" onclick="submitRating('${orderId}')">Değerlendirme Gönder</button>
+            </div>
+            <div id="rating-display-${orderId}" class="rating-display" style="display: none;">
+              <div class="stars"></div>
+              <div class="comment"></div>
+            </div>
+          </div>
+        `;
+        
+        orderHistoryDiv.appendChild(orderElement);
+        
+        // Load existing rating if any
+        loadExistingRating(orderId);
+      });
+      
+      // Add event listeners for stars
+      addStarEventListeners();
+    }
+
+    function createOrderChart(orders) {
+      const ctx = document.getElementById('orderChart');
+      if (!ctx) return;
+      
+      // Destroy existing chart
+      if (orderChart) {
+        orderChart.destroy();
+      }
+      
+      // Calculate item frequencies
+      const itemCounts = {};
+      orders.forEach(order => {
+        order.items.forEach(item => {
+          itemCounts[item.name] = (itemCounts[item.name] || 0) + item.adet;
+        });
+      });
+      
+      const labels = Object.keys(itemCounts);
+      const data = Object.values(itemCounts);
+      
+      if (labels.length === 0) {
+        ctx.style.display = 'none';
+        return;
+      }
+      
+      ctx.style.display = 'block';
+      
+      // Generate colors
+      const colors = [
+        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
+        '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
+      ];
+      
+      orderChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: colors.slice(0, labels.length),
+            borderWidth: 2,
+            borderColor: '#fff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                padding: 20,
+                usePointStyle: true,
+                font: {
+                  size: 12
+                }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const label = context.label || '';
+                  const value = context.parsed;
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const percentage = ((value / total) * 100).toFixed(1);
+                  return `${label}: ${value} adet (${percentage}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function addStarEventListeners() {
+      document.querySelectorAll('.rating-stars').forEach(starContainer => {
+        const stars = starContainer.querySelectorAll('.star');
+        const orderId = starContainer.getAttribute('data-order-id');
+        
+        stars.forEach((star, index) => {
+          star.addEventListener('click', () => {
+            const rating = index + 1;
+            setRating(orderId, rating);
+          });
+          
+          star.addEventListener('mouseenter', () => {
+            const rating = index + 1;
+            highlightStars(starContainer, rating);
+          });
+        });
+        
+        starContainer.addEventListener('mouseleave', () => {
+          const currentRating = ratings[orderId] || 0;
+          highlightStars(starContainer, currentRating);
+        });
+      });
+    }
+
+    function setRating(orderId, rating) {
+      ratings[orderId] = rating;
+      const starContainer = document.querySelector(`[data-order-id="${orderId}"]`);
+      highlightStars(starContainer, rating);
+    }
+
+    function highlightStars(starContainer, rating) {
+      const stars = starContainer.querySelectorAll('.star');
+      stars.forEach((star, index) => {
+        if (index < rating) {
+          star.classList.add('active');
+        } else {
+          star.classList.remove('active');
+        }
+      });
+    }
+
+    function submitRating(orderId) {
+      const rating = ratings[orderId];
+      const commentInput = document.querySelector(`textarea[data-order-id="${orderId}"]`);
+      const comment = commentInput.value.trim();
+      
+      if (!rating) {
+        showNotification('Lütfen bir puan seçin', 'error');
+        return;
+      }
+      
+      const submitBtn = document.querySelector(`button[onclick="submitRating('${orderId}')"]`);
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Gönderiliyor...';
+      
+      // Save rating to Firebase
+      const ratingData = {
+        orderId: orderId,
+        userId: currentUser.uid,
+        userEmail: currentUser.email,
+        userName: userData.name,
+        userFloor: userData.floor,
+        userDepartment: userData.department,
+        rating: rating,
+        comment: comment,
+        timestamp: firebase.firestore.Timestamp.now()
+      };
+      
+      firebase.firestore().collection('ratings').doc(orderId).set(ratingData)
+        .then(() => {
+          showNotification('Değerlendirmeniz başarıyla gönderildi!', 'success');
+          displayRating(orderId, rating, comment);
+          commentInput.value = '';
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Değerlendirme Gönder';
+        })
+        .catch((error) => {
+          console.error('Error submitting rating:', error);
+          showNotification('Değerlendirme gönderilirken hata oluştu', 'error');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Değerlendirme Gönder';
+        });
+    }
+
+    function loadExistingRating(orderId) {
+      firebase.firestore().collection('ratings').doc(orderId).get()
+        .then((doc) => {
+          if (doc.exists) {
+            const ratingData = doc.data();
+            displayRating(orderId, ratingData.rating, ratingData.comment);
+            ratings[orderId] = ratingData.rating;
+            const starContainer = document.querySelector(`[data-order-id="${orderId}"]`);
+            highlightStars(starContainer, ratingData.rating);
+          }
+        })
+        .catch((error) => {
+          console.error('Error loading rating:', error);
+        });
+    }
+
+    function displayRating(orderId, rating, comment) {
+      const ratingDisplay = document.getElementById(`rating-display-${orderId}`);
+      if (ratingDisplay) {
+        const stars = '⭐'.repeat(rating);
+        ratingDisplay.innerHTML = `
+          <div class="stars">${stars}</div>
+          <div class="comment">${comment}</div>
+        `;
+        ratingDisplay.style.display = 'block';
+      }
+    }
+
+
 
     function changePassword() {
       const currentPassword = document.getElementById('currentPassword').value;

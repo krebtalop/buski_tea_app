@@ -7,6 +7,20 @@
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
+    * {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+    
+    input, textarea, select {
+      -webkit-user-select: text;
+      -moz-user-select: text;
+      -ms-user-select: text;
+      user-select: text;
+    }
+    
     :root {
       --primary-color: #2563eb;
       --secondary-color: #16a34a;
@@ -99,6 +113,42 @@
     }
     .btn-delete:hover {
       background-color: #b91c1c;
+    }
+    
+    /* Çöp Kutusu İkonu Stilleri */
+    .delete-icon-btn {
+      background: none;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 16px;
+      opacity: 0.7;
+      padding: 4px;
+      margin-left: 8px;
+    }
+    
+    .delete-icon-btn:hover {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+    
+    .delete-icon-preparing {
+      color: #6b7280;
+    }
+    
+    .delete-icon-preparing:hover {
+      color: #4b5563;
+    }
+    
+    .delete-icon-delivered {
+      color: #dc2626;
+    }
+    
+    .delete-icon-delivered:hover {
+      color: #b91c1c;
     }
     
     /* Modal Backdrop Efektleri */
@@ -947,31 +997,53 @@ async function updateReport() {
     // Puanları yükle
     async function loadRatings() {
       try {
+        // Normal siparişlerden puanları çek
         const snapshot = await getDocs(query(
           collection(db, "siparisler"),
           where("rating", ">", 0)
         ));
         
-        // Kat grubuna göre puanları filtrele ve tarihe göre sırala
-        ratingsData = snapshot.docs
+        // Korunan puanlamalardan da çek
+        const preservedSnapshot = await getDocs(collection(db, "preserved_ratings"));
+        
+        // Normal siparişlerden puanları al
+        let normalRatings = snapshot.docs
           .map(doc => ({
             id: doc.id,
-            ...doc.data()
+            ...doc.data(),
+            isPreserved: false
           }))
           .filter(rating => {
             const floor = Number(rating.floor);
-            return floor >= 0 && floor <= 3; // Zemin ve kat 1-2-3
-          })
+            return floor >= 1 && floor <= 3; // Kat 1-2-3 (zemin hariç)
+          });
+        
+        // Korunan puanlamalardan al
+        let preservedRatings = preservedSnapshot.docs
+          .map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            isPreserved: true
+          }))
+          .filter(rating => {
+            const floor = Number(rating.userFloor);
+            return floor >= 1 && floor <= 3; // Kat 1-2-3 (zemin hariç)
+          });
+        
+        // Tüm puanları birleştir ve tarihe göre sırala
+        ratingsData = [...normalRatings, ...preservedRatings]
           .sort((a, b) => {
             // Tarihe göre sırala (en yeni önce)
-            const dateA = a.ratingDate && a.ratingDate.toDate ? a.ratingDate.toDate() : new Date(0);
-            const dateB = b.ratingDate && b.ratingDate.toDate ? b.ratingDate.toDate() : new Date(0);
+            const dateA = a.ratingDate && a.ratingDate.toDate ? a.ratingDate.toDate() : 
+                         a.timestamp && a.timestamp.toDate ? a.timestamp.toDate() : new Date(0);
+            const dateB = b.ratingDate && b.ratingDate.toDate ? b.ratingDate.toDate() : 
+                         b.timestamp && b.timestamp.toDate ? b.timestamp.toDate() : new Date(0);
             return dateB - dateA;
           });
         
         // Kullanıcı bilgilerini çek
         for (let rating of ratingsData) {
-          if (rating.userId) {
+          if (rating.userId && !rating.isPreserved) {
             try {
               const userDoc = await getDoc(doc(db, "users", rating.userId));
               if (userDoc.exists()) {
@@ -984,6 +1056,9 @@ async function updateReport() {
               console.error('Kullanıcı bilgisi çekilirken hata:', error);
               rating.userName = 'İsimsiz Kullanıcı';
             }
+          } else if (rating.isPreserved) {
+            // Korunan puanlamalarda kullanıcı adı zaten var
+            rating.userName = rating.userName || 'İsimsiz Kullanıcı';
           } else {
             rating.userName = 'İsimsiz Kullanıcı';
           }
@@ -1043,7 +1118,7 @@ async function updateReport() {
         const ratingValue = rating.rating || 0;
         const comment = rating.comment || '';
         const userName = rating.userName || 'İsimsiz Kullanıcı';
-        const floor = rating.floor || 0;
+        const floor = rating.floor || rating.userFloor || 0;
         const floorName = floor === 0 ? 'Zemin' : `Kat ${floor}`;
         const displayName = userName !== 'İsimsiz Kullanıcı' ? `${userName} (${floorName})` : `İsimsiz Kullanıcı (${floorName})`;
         const tarih = rating.ratingDate && rating.ratingDate.toDate ? 
@@ -1088,12 +1163,22 @@ async function updateReport() {
       const confirmed = await showConfirm('Puanlama Silme', 'Bu puanlamayı silmek istediğinizden emin misiniz?', 'warning');
       if (confirmed) {
         try {
-          const ref = doc(db, "siparisler", ratingId);
-          await updateDoc(ref, { 
-            rating: 0, 
-            comment: '', 
-            ratingDate: null 
-          });
+          // Önce korunan puanlamalarda ara
+          const preservedRef = doc(db, "preserved_ratings", ratingId);
+          const preservedDoc = await getDoc(preservedRef);
+          
+          if (preservedDoc.exists()) {
+            // Korunan puanlamadan sil
+            await deleteDoc(preservedRef);
+          } else {
+            // Normal siparişten puanlamayı sil
+            const ref = doc(db, "siparisler", ratingId);
+            await updateDoc(ref, { 
+              rating: 0, 
+              comment: '', 
+              ratingDate: null 
+            });
+          }
           
           // Puanlamaları yeniden yükle
           loadRatings();
@@ -1126,10 +1211,22 @@ async function updateReport() {
           
           await batch.commit();
           
-                      // Puanları yeniden yükle
-            loadRatings();
-            
-            await showAlert(`${ordersWithRatings.length} puanlama başarıyla silindi.`, 'success');
+          // Korunan puanlamaları da sil
+          const preservedSnapshot = await getDocs(collection(db, "preserved_ratings"));
+          const preservedBatch = writeBatch(db);
+          preservedSnapshot.docs.forEach(doc => {
+            const ratingData = doc.data();
+            const floor = Number(ratingData.userFloor);
+            if (floor >= 1 && floor <= 3) { // Kat 1-2-3
+              preservedBatch.delete(doc.ref);
+            }
+          });
+          await preservedBatch.commit();
+          
+          // Puanları yeniden yükle
+          loadRatings();
+          
+          await showAlert(`${ordersWithRatings.length} puanlama başarıyla silindi.`, 'success');
         } catch (error) {
           console.error("Tüm puanlar silinirken hata oluştu:", error);
           await showAlert("Tüm puanlar silinirken bir sorun oluştu.", 'error');
@@ -1286,17 +1383,17 @@ async function updateReport() {
           </div>
           ` : ''}
         </div>
-        <div class="flex justify-between items-center mt-3 pt-3 border-t">
-          ${activeTab === 'preparing' ? 
-            `<button class="${buttonClass} px-3 py-2 text-sm" onclick="cycleStatus('${order.id}', this)" ${disabled ? 'disabled' : ''}>
-              ${buttonIcon}${buttonText}
-            </button>` : 
-            `<div class="ml-auto">
-               <button class="btn-delete px-3 py-2 text-sm rounded" onclick="deleteOrder('${order.id}', this)">
-                 <i class="fas fa-trash mr-2"></i>Sil
-               </button>
-             </div>`
-          }
+        <div class="flex justify-between items-center mt-3 pt-3 border-t relative">
+          <button class="${buttonClass} px-3 py-2 text-sm" onclick="cycleStatus('${order.id}', this)" ${disabled ? 'disabled' : ''}>
+            ${buttonIcon}${buttonText}
+          </button>
+          
+          <!-- Çöp Kutusu İkonu -->
+          <button class="delete-icon-btn ${activeTab === 'preparing' ? 'delete-icon-preparing' : 'delete-icon-delivered'}" 
+                  onclick="deleteOrder('${order.id}', this)" 
+                  title="Siparişi Sil">
+            <i class="fas fa-trash"></i>
+          </button>
         </div>
       `;
       return card;
@@ -1331,7 +1428,7 @@ async function updateReport() {
         }
       }
       // Badge sayılarını güncelle
-      updateBadges();
+      updateBadges().catch(console.error);
     };
 
     // Rapor toplamını artıran fonksiyon
@@ -1365,15 +1462,43 @@ async function updateReport() {
       const confirmed = await showConfirm('Sipariş Silme', 'Bu siparişi silmek istediğinizden emin misiniz?', 'warning');
       if (confirmed) {
         try {
+          const order = allOrders.find(o => o.id === id);
           const ref = doc(db, "siparisler", id);
+          
+          console.log('Silinecek sipariş:', order); // Debug için
+          
+          // Eğer siparişin puanlaması varsa, puanlama verilerini koru
+          if (order && (order.rating > 0 || order.comment)) {
+            console.log('Puanlama bulundu, korunuyor:', order.rating, order.comment); // Debug için
+            
+            // Siparişi sil ama puanlama verilerini ayrı bir koleksiyonda sakla
+            const ratingData = {
+              orderId: id,
+              rating: order.rating || 0,
+              comment: order.comment || '',
+              userName: order.ad || '',
+              userDepartment: order.departman || '',
+              userFloor: order.floor || 0,
+              timestamp: order.tarih || new Date(),
+              preservedAt: new Date()
+            };
+            
+            console.log('Korunan puanlama verisi:', ratingData); // Debug için
+            
+            // Puanlama verilerini ayrı koleksiyonda sakla
+            await setDoc(doc(db, "preserved_ratings", id), ratingData);
+            console.log('Puanlama korundu'); // Debug için
+          } else {
+            console.log('Puanlama bulunamadı, korunmuyor'); // Debug için
+          }
+          
           await deleteDoc(ref);
           const card = btn.closest('.order-card');
           if (card) {
             card.remove();
           }
           // Badge sayılarını güncelle
-          updateBadges();
-          // Başarı alert'ini kaldırdık
+          updateBadges().catch(console.error);
         } catch (error) {
           console.error('Sipariş silinirken hata oluştu:', error);
           await showAlert('Sipariş silinirken bir hata oluştu: ' + error.message, 'error');
@@ -1417,8 +1542,33 @@ async function updateReport() {
 
           // Her teslim edilmiş siparişi Firebase'den sil
           for (const order of deliveredOrders) {
+            // Eğer siparişin puanlaması varsa, puanlama verilerini koru
+            if (order.rating > 0 || order.comment) {
+              console.log('Toplu silmede puanlama korunuyor:', order.id, order.rating, order.comment);
+              
+              const ratingData = {
+                orderId: order.id,
+                rating: order.rating || 0,
+                comment: order.comment || '',
+                userName: order.ad || '',
+                userDepartment: order.departman || '',
+                userFloor: order.floor || 0,
+                timestamp: order.tarih || new Date(),
+                preservedAt: new Date()
+              };
+              
+              // Puanlama verilerini ayrı koleksiyonda sakla
+              await setDoc(doc(db, "preserved_ratings", order.id), ratingData);
+            }
+            
             await deleteDoc(doc(db, "siparisler", order.id));
           }
+          
+          // Badge sayılarını güncelle
+          await updateBadges().catch(console.error);
+          
+          // Puanlamaları yeniden yükle
+          await loadRatings();
         } catch (error) {
           console.error('Toplu silme işleminde hata oluştu:', error);
           await showAlert('Toplu silme işleminde bir hata oluştu: ' + error.message, 'error');
@@ -1628,10 +1778,10 @@ async function updateReport() {
     // Panele göre siparişleri filtrele
     function filterOrdersByPanel(orders) {
       if (activeFloorGroup === 'z123') {
-        // Zemin ve kat 1-2-3
+        // Zemin ve kat 1-2-3 (zemin hariç)
         return orders.filter(order => {
           const orderFloor = Number(order.floor);
-          return orderFloor >= 0 && orderFloor <= 3;
+          return orderFloor >= 1 && orderFloor <= 3;
         });
       } else if (activeFloorGroup === '456') {
         // Kat 4-5-6
@@ -1650,7 +1800,7 @@ async function updateReport() {
     }
     
     // Badge sayılarını güncelle - Sadece o kat grubunun siparişlerini say
-    function updateBadges() {
+    async function updateBadges() {
       // Kat grubuna göre siparişleri filtrele
       let filteredOrders = filterOrdersByPanel(allOrders);
       
@@ -1660,9 +1810,33 @@ async function updateReport() {
       const deliveredCount = filteredOrders.filter(order => 
         order.status === "teslim edildi"
       ).length;
-      const ratingsCount = filteredOrders.filter(order => 
+      
+      // Normal siparişlerden puanlama sayısı
+      let ratingsCount = filteredOrders.filter(order => 
         order.rating && order.rating > 0
       ).length;
+      
+      // Korunan puanlamalardan da say
+      try {
+        const preservedSnapshot = await getDocs(collection(db, "preserved_ratings"));
+        const preservedRatings = preservedSnapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data() }))
+          .filter(rating => {
+            const floor = Number(rating.userFloor);
+            if (activeFloorGroup === 'z123') {
+              return floor >= 1 && floor <= 3;
+            } else if (activeFloorGroup === '456') {
+              return floor >= 4 && floor <= 6;
+            } else if (activeFloorGroup === '78910') {
+              return floor >= 7 && floor <= 10;
+            }
+            return false;
+          });
+        
+        ratingsCount += preservedRatings.length;
+      } catch (error) {
+        console.error('Korunan puanlamalar sayılırken hata:', error);
+      }
       
       preparingBadge.textContent = preparingCount;
       deliveredBadge.textContent = deliveredCount;
@@ -1683,13 +1857,13 @@ async function updateReport() {
       lastOrderIds = currentOrderIds;
       allOrders = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
       renderFloors();
-      updateBadges();
+      updateBadges().catch(console.error);
     });
     // Sayfa yüklendiğinde
     window.addEventListener('DOMContentLoaded', () => {
       listenMenuRealtime();
       renderFloors();
-      updateBadges();
+      updateBadges().catch(console.error);
       loadRatings(); // Puanları da yükle
     });
   </script>

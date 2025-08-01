@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/order_model.dart';
+import '../models/rating_model.dart';
 
 class OrderController extends GetxController {
   // Kat grupları
@@ -26,6 +27,11 @@ class OrderController extends GetxController {
   late final Stream<QuerySnapshot> _orderStream;
   var isLoading = true.obs;
 
+  // Yorumlar
+  var ratings = <RatingModel>[].obs;
+  late final Stream<QuerySnapshot> _ratingStream;
+  var isLoadingRatings = true.obs;
+
   @override
   void onInit() {
     super.onInit();
@@ -40,6 +46,19 @@ class OrderController extends GetxController {
         return OrderModel.fromMap(data);
       }).toList();
       isLoading.value = false;
+    });
+
+    // Yorumları dinle
+    _ratingStream = FirebaseFirestore.instance
+        .collection('ratings')
+        .orderBy('timestamp', descending: true)
+        .snapshots();
+    _ratingStream.listen((snapshot) {
+      ratings.value = snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return RatingModel.fromMap(data, doc.id);
+      }).toList();
+      isLoadingRatings.value = false;
     });
   }
 
@@ -68,5 +87,13 @@ class OrderController extends GetxController {
 
   Future<void> deleteOrder(String id) async {
     await FirebaseFirestore.instance.collection('siparisler').doc(id).delete();
+  }
+
+  Future<void> deleteRating(String id) async {
+    await FirebaseFirestore.instance.collection('ratings').doc(id).delete();
+  }
+
+  List<RatingModel> getRatingsByFloor(int floor) {
+    return ratings.where((rating) => rating.userFloor == floor).toList();
   }
 }
