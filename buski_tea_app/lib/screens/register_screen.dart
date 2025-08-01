@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/user_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'dart:async';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -17,7 +15,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _surnameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _repeatPasswordController = TextEditingController();
+  final TextEditingController _repeatPasswordController =
+      TextEditingController();
   final TextEditingController _departmentController = TextEditingController();
   int? _selectedFloor;
 
@@ -96,7 +95,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   style: const TextStyle(fontWeight: FontWeight.w500),
                   validator: (value) =>
-                      value == null || value.isEmpty || !value.contains('@') ? 'Geçerli bir e-posta giriniz' : null,
+                      value == null || value.isEmpty || !value.contains('@')
+                      ? 'Geçerli bir e-posta giriniz'
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<int>(
@@ -214,12 +215,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         setState(() => _isLoading = true);
                         try {
                           // Önce bu e-posta ile kullanıcı var mı kontrol et
-                          final existingMethods =
-                              await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
+                          final existingMethods = await FirebaseAuth.instance
+                              .fetchSignInMethodsForEmail(email);
                           if (existingMethods.isNotEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('Bu e-posta ile kayıtlı kullanıcı var.'),
+                                content: Text(
+                                  'Bu e-posta ile kayıtlı kullanıcı var.',
+                                ),
                               ),
                             );
                             setState(() => _isLoading = false);
@@ -227,24 +230,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           }
 
                           // Authentication'a kayıt
-                          final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-                            email: email,
-                            password: password,
-                          );
+                          final userCredential = await FirebaseAuth.instance
+                              .createUserWithEmailAndPassword(
+                                email: email,
+                                password: password,
+                              );
                           // Firestore'a profil bilgilerini kaydet
                           final user = userCredential.user;
                           if (user != null) {
-                            await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-                              'name': _nameController.text,
-                              'surname': _surnameController.text,
-                              'department': _departmentController.text,
-                              'floor': _selectedFloor,
-                              'email': email,
-                            });
+                            await FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(user.uid)
+                                .set({
+                                  'name': _nameController.text,
+                                  'surname': _surnameController.text,
+                                  'department': _departmentController.text,
+                                  'floor': _selectedFloor,
+                                  'email': email,
+                                });
                           }
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Kayıt başarılı! Giriş yapabilirsiniz.'),
+                              content: Text(
+                                'Kayıt başarılı! Giriş yapabilirsiniz.',
+                              ),
                             ),
                           );
                           Navigator.of(context).pop();
@@ -252,11 +261,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           String errorMessage = 'Bir hata oluştu: $e';
                           final msg = e.toString();
                           if (msg.contains('email-already-in-use')) {
-                            errorMessage = 'Bu e-posta ile kayıtlı kullanıcı var.';
+                            errorMessage =
+                                'Bu e-posta ile kayıtlı kullanıcı var.';
                           }
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(errorMessage)),
-                          );
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(SnackBar(content: Text(errorMessage)));
                         } finally {
                           setState(() => _isLoading = false);
                         }

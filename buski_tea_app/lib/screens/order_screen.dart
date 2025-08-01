@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/order_model.dart';
 import 'profile_screen.dart';
-import 'dart:math';
 import 'dart:async';
 
 class OrderScreen extends StatefulWidget {
@@ -67,16 +65,16 @@ class _OrderScreenState extends State<OrderScreen>
         .collection('users')
         .doc(user.uid)
         .get();
-    
+
     final userData = userDoc.data() ?? {};
     final floor = userData['floor']?.toString() ?? '0'; // int'i string'e çevir
-    
+
     print('Kullanıcı kat bilgisi: $floor'); // Debug için
-    
+
     // Kat bilgisine göre menü koleksiyonunu belirle
     String menuCollection;
     int floorNumber = int.tryParse(floor) ?? 0;
-    
+
     if (floorNumber >= 0 && floorNumber <= 3) {
       menuCollection = 'kat123';
     } else if (floorNumber >= 4 && floorNumber <= 6) {
@@ -86,17 +84,17 @@ class _OrderScreenState extends State<OrderScreen>
     } else {
       menuCollection = 'kat123'; // Varsayılan
     }
-    
+
     print('Seçilen menü koleksiyonu: $menuCollection'); // Debug için
 
     final menuDocRef = FirebaseFirestore.instance
         .collection('menu')
         .doc(menuCollection);
-    
+
     setState(() {
       _isMenuLoading = true;
     });
-    
+
     _menuSubscription = menuDocRef.snapshots().listen((docSnap) {
       if (docSnap.exists &&
           docSnap.data() != null &&
@@ -184,8 +182,20 @@ class _OrderScreenState extends State<OrderScreen>
         'defaultOption': 'Sade',
         'inStock': true,
       },
-      { 'name': 'Sade Gazoz', 'price': 30, 'options': [], 'defaultOption': '', 'inStock': true },
-      { 'name': 'Sarı Gazoz', 'price': 34, 'options': [], 'defaultOption': '', 'inStock': true },
+      {
+        'name': 'Sade Gazoz',
+        'price': 30,
+        'options': [],
+        'defaultOption': '',
+        'inStock': true,
+      },
+      {
+        'name': 'Sarı Gazoz',
+        'price': 34,
+        'options': [],
+        'defaultOption': '',
+        'inStock': true,
+      },
       {
         'name': "Çay Fişi 100'lü",
         'price': 200,
@@ -308,7 +318,11 @@ class _OrderScreenState extends State<OrderScreen>
       await Future.wait([orderRef.set(newOrder), userOrderRef.set(newOrder)]);
       setState(() => _cartItems.clear());
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tüm siparişleriniz başarıyla alındı!')),
+        SnackBar(
+          content: const Text('Tüm siparişleriniz başarıyla alındı!'),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     } catch (e) {
       ScaffoldMessenger.of(

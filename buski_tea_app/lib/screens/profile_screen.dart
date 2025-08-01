@@ -27,7 +27,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _floorController = TextEditingController();
   final _emailController = TextEditingController();
 
-  bool _isEditing = false;
   bool _hasChanges = false;
 
   Future<void> _logout() async {
@@ -50,7 +49,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _deleteAccount() async {
     bool? confirmed = await _showConfirmationDialog(
       title: 'Hesap Silme Onayı',
-      content: 'Hesabınızı kalıcı olarak silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
+      content:
+          'Hesabınızı kalıcı olarak silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
     );
 
     if (confirmed != true) return;
@@ -73,7 +73,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'requires-recent-login') {
-        _showErrorDialog('Bu işlem için yeniden giriş yapmanız gerekiyor. Lütfen çıkış yapıp tekrar giriş yaptıktan sonra tekrar deneyin.');
+        _showErrorDialog(
+          'Bu işlem için yeniden giriş yapmanız gerekiyor. Lütfen çıkış yapıp tekrar giriş yaptıktan sonra tekrar deneyin.',
+        );
       } else {
         _showErrorDialog('Hesap silinirken bir hata oluştu: ${e.message}');
       }
@@ -85,24 +87,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _pickProfileImage() async {
     final user = _auth.currentUser;
     if (user == null) return;
-    final picked = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    final picked = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
     if (picked != null) {
       setState(() {
         _profileImage = File(picked.path);
       });
-      await _firestore.collection('users').doc(user.uid).update({'profileImage': picked.path});
+      await _firestore.collection('users').doc(user.uid).update({
+        'profileImage': picked.path,
+      });
     }
   }
 
-  Future<bool?> _showConfirmationDialog({required String title, required String content}) {
+  Future<bool?> _showConfirmationDialog({
+    required String title,
+    required String content,
+  }) {
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(title),
         content: Text(content),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Hayır')),
-          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Evet')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Hayır'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Evet'),
+          ),
         ],
       ),
     );
@@ -138,19 +154,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (_) => StatefulBuilder(
         builder: (context, setModalState) => Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('Bilgileri Düzenle', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Bilgileri Düzenle',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 16),
-                  _buildTextField('E-posta', _emailController, false, setModalState),
-                  _buildTextField('Kullanıcı Adı', _nameController, true, setModalState),
-                  _buildTextField('Departman', _departmentController, true, setModalState),
-                  _buildTextField('Kat', _floorController, false, setModalState),
+                  _buildTextField(
+                    'E-posta',
+                    _emailController,
+                    false,
+                    setModalState,
+                  ),
+                  _buildTextField(
+                    'Kullanıcı Adı',
+                    _nameController,
+                    true,
+                    setModalState,
+                  ),
+                  _buildTextField(
+                    'Departman',
+                    _departmentController,
+                    true,
+                    setModalState,
+                  ),
+                  _buildTextField(
+                    'Kat',
+                    _floorController,
+                    false,
+                    setModalState,
+                  ),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: !_hasChanges
@@ -158,15 +199,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         : () async {
                             final uid = _auth.currentUser?.uid;
                             if (uid != null) {
-                              await _firestore.collection('users').doc(uid).update({
-                                'name': _nameController.text.trim(),
-                                'department': _departmentController.text.trim(),
-                                'floor': _floorController.text.trim(),
-                              });
+                              await _firestore
+                                  .collection('users')
+                                  .doc(uid)
+                                  .update({
+                                    'name': _nameController.text.trim(),
+                                    'department': _departmentController.text
+                                        .trim(),
+                                    'floor': _floorController.text.trim(),
+                                  });
                               Navigator.of(context).pop();
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: const Text('Kullanıcı bilgileri düzenlendi.'),
+                                  content: const Text(
+                                    'Kullanıcı bilgileri düzenlendi.',
+                                  ),
                                   backgroundColor: Colors.green[400],
                                 ),
                               );
@@ -189,7 +236,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, bool editable, void Function(void Function()) setModalState) {
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller,
+    bool editable,
+    void Function(void Function()) setModalState,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: TextField(
@@ -244,10 +296,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           backgroundImage: _profileImage != null
                               ? FileImage(_profileImage!)
                               : (imagePath != null && imagePath.isNotEmpty)
-                                  ? FileImage(File(imagePath))
-                                  : null,
-                          child: (_profileImage == null && (imagePath == null || imagePath.isEmpty))
-                              ? const Icon(Icons.account_circle, size: 70, color: Color(0xFF1565C0))
+                              ? FileImage(File(imagePath))
+                              : null,
+                          child:
+                              (_profileImage == null &&
+                                  (imagePath == null || imagePath.isEmpty))
+                              ? const Icon(
+                                  Icons.account_circle,
+                                  size: 70,
+                                  color: Color(0xFF1565C0),
+                                )
                               : null,
                         ),
                         Positioned(
@@ -259,10 +317,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               decoration: BoxDecoration(
                                 color: Colors.blue[700],
                                 shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white, width: 2),
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 2,
+                                ),
                               ),
                               padding: const EdgeInsets.all(6),
-                              child: const Icon(Icons.add, color: Colors.white, size: 22),
+                              child: const Icon(
+                                Icons.add,
+                                color: Colors.white,
+                                size: 22,
+                              ),
                             ),
                           ),
                         ),
@@ -280,51 +345,103 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     return Stack(
                       children: [
                         Card(
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(22),
+                          ),
                           elevation: 10,
                           margin: const EdgeInsets.only(bottom: 28),
                           color: Colors.white.withOpacity(0.96),
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 26),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 28,
+                              vertical: 26,
+                            ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 Text(
                                   user?.email ?? 'Kullanıcı',
-                                  style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: Color(0xFF1565C0)),
+                                  style: const TextStyle(
+                                    fontSize: 19,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF1565C0),
+                                  ),
                                   textAlign: TextAlign.center,
                                 ),
                                 if (data != null && data['name'] != null)
                                   Padding(
-                                    padding: const EdgeInsets.only(top: 2.0, bottom: 8),
-                                    child: Text('${data['name']}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                                    padding: const EdgeInsets.only(
+                                      top: 2.0,
+                                      bottom: 8,
+                                    ),
+                                    child: Text(
+                                      '${data['name']}',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
                                   ),
-                                Divider(height: 22, thickness: 1, color: Colors.blue[50]),
+                                Divider(
+                                  height: 22,
+                                  thickness: 1,
+                                  color: Colors.blue[50],
+                                ),
                                 if (data != null && data['phoneCode'] != null)
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      const Icon(Icons.phone, size: 18, color: Colors.grey),
+                                      const Icon(
+                                        Icons.phone,
+                                        size: 18,
+                                        color: Colors.grey,
+                                      ),
                                       const SizedBox(width: 8),
-                                      Text('${data['phoneCode']}', style: const TextStyle(fontSize: 15, color: Colors.black87)),
+                                      Text(
+                                        '${data['phoneCode']}',
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 if (data != null && data['department'] != null)
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      const Icon(Icons.business, size: 18, color: Colors.grey),
+                                      const Icon(
+                                        Icons.business,
+                                        size: 18,
+                                        color: Colors.grey,
+                                      ),
                                       const SizedBox(width: 8),
-                                      Text('${data['department']}', style: const TextStyle(fontSize: 15, color: Colors.black87)),
+                                      Text(
+                                        '${data['department']}',
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 if (data != null && data['floor'] != null)
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      const Icon(Icons.location_on, size: 18, color: Colors.grey),
+                                      const Icon(
+                                        Icons.location_on,
+                                        size: 18,
+                                        color: Colors.grey,
+                                      ),
                                       const SizedBox(width: 8),
-                                      Text('Kat: ${data['floor']}', style: const TextStyle(fontSize: 15, color: Colors.black87)),
+                                      Text(
+                                        'Kat: ${data['floor']}',
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
                                     ],
                                   ),
                               ],
@@ -341,7 +458,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             child: const CircleAvatar(
                               backgroundColor: Colors.blue,
                               radius: 18,
-                              child: Icon(Icons.edit, size: 18, color: Colors.white),
+                              child: Icon(
+                                Icons.edit,
+                                size: 18,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
@@ -351,17 +472,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
 
                 // Butonlar
-                _buildProfileButton(text: 'Geçmiş Siparişlerim', icon: Icons.history, onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const GecmisSiparislerScreen()));
-                }),
+                _buildProfileButton(
+                  text: 'Geçmiş Siparişlerim',
+                  icon: Icons.history,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const GecmisSiparislerScreen(),
+                      ),
+                    );
+                  },
+                ),
                 const SizedBox(height: 14),
-                _buildProfileButton(text: 'Şifremi Değiştir', icon: Icons.lock_outline, onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const ChangePasswordScreen()));
-                }),
+                _buildProfileButton(
+                  text: 'Şifremi Değiştir',
+                  icon: Icons.lock_outline,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ChangePasswordScreen(),
+                      ),
+                    );
+                  },
+                ),
                 const SizedBox(height: 14),
-                _buildProfileButton(text: 'Çıkış Yap', icon: Icons.exit_to_app, onPressed: _logout),
+                _buildProfileButton(
+                  text: 'Çıkış Yap',
+                  icon: Icons.exit_to_app,
+                  onPressed: _logout,
+                ),
                 const SizedBox(height: 14),
-                _buildProfileButton(text: 'Hesabı Sil', icon: Icons.delete_forever, onPressed: _deleteAccount, isDestructive: true),
+                _buildProfileButton(
+                  text: 'Hesabı Sil',
+                  icon: Icons.delete_forever,
+                  onPressed: _deleteAccount,
+                  isDestructive: true,
+                ),
               ],
             ),
           ),
@@ -370,7 +518,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildProfileButton({required String text, required IconData icon, required VoidCallback onPressed, bool isDestructive = false}) {
+  Widget _buildProfileButton({
+    required String text,
+    required IconData icon,
+    required VoidCallback onPressed,
+    bool isDestructive = false,
+  }) {
     final style = ElevatedButton.styleFrom(
       backgroundColor: isDestructive ? Colors.red[700] : Colors.white,
       foregroundColor: isDestructive ? Colors.white : Colors.blue[800],
@@ -381,6 +534,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       shadowColor: Colors.black.withOpacity(0.2),
     );
 
-    return ElevatedButton.icon(icon: Icon(icon), label: Text(text), onPressed: onPressed, style: style);
+    return ElevatedButton.icon(
+      icon: Icon(icon),
+      label: Text(text),
+      onPressed: onPressed,
+      style: style,
+    );
   }
 }

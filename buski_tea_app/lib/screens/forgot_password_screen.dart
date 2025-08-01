@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -16,18 +15,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   bool _isLoading = false;
   bool _emailVerifiedAndSent = false;
-  String? _infoMessage;
   bool _showSuccess = false;
 
   Future<void> _sendResetEmail() async {
     final email = _emailController.text.trim();
     if (email.isEmpty) {
-      setState(() => _infoMessage = 'Lütfen e-posta adresinizi giriniz.');
       return;
     }
     setState(() {
       _isLoading = true;
-      _infoMessage = null;
       _emailVerifiedAndSent = false;
       _showSuccess = false;
     });
@@ -36,23 +32,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
       setState(() {
         _emailVerifiedAndSent = true;
-        _infoMessage =
-            'Kod e-posta adresinize gönderildi. Lütfen mailinizi kontrol edin.';
         _showSuccess = true;
       });
       // Otomatik yönlendirme kaldırıldı
     } on FirebaseAuthException catch (e) {
       setState(() {
         if (e.code == 'invalid-email' || e.code == 'user-not-found') {
-          _infoMessage = 'E-posta adresi geçersiz.';
-        } else {
-          _infoMessage = 'Hata: ${e.message}';
-        }
+        } else {}
         _emailVerifiedAndSent = false;
       });
     } catch (e) {
       setState(() {
-        _infoMessage = 'Hata: $e';
         _emailVerifiedAndSent = false;
       });
     } finally {
@@ -74,8 +64,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Şifremi Unuttum',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Şifremi Unuttum',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: Colors.blue,
@@ -90,9 +82,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text('E-posta Adresi',
-                    style:
-                        TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                const Text(
+                  'E-posta Adresi',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                ),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _emailController,
@@ -113,7 +106,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 if (_showSuccess)
                   const Text(
                     'Şifre sıfırlama linki mailinize gönderildi.',
-                    style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 16),
+                    style: TextStyle(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 if (_showSuccess) const SizedBox(height: 16),
@@ -122,16 +119,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     backgroundColor: Colors.blue[800],
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   onPressed: _isLoading ? null : _sendResetEmail,
                   child: _isLoading
                       ? const CircularProgressIndicator()
-                      : const Text('Kod Gönder',
+                      : const Text(
+                          'Kod Gönder',
                           style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16)),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
                 ),
               ],
             ),

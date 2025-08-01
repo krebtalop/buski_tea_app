@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -12,8 +11,10 @@ class ChangePasswordScreen extends StatefulWidget {
 class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _newPasswordController = TextEditingController();
-  final TextEditingController _repeatPasswordController = TextEditingController();
-  final TextEditingController _currentPasswordController = TextEditingController();
+  final TextEditingController _repeatPasswordController =
+      TextEditingController();
+  final TextEditingController _currentPasswordController =
+      TextEditingController();
 
   bool _obscurePassword = true;
   bool _obscureRepeatPassword = true;
@@ -32,7 +33,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     final currentUser = FirebaseAuth.instance.currentUser;
 
     if (currentUser == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Kullanıcı oturumu yok!')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Kullanıcı oturumu yok!')));
       return;
     }
 
@@ -52,7 +55,13 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       );
       Navigator.of(context).pop();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Şifre güncellenemedi! Mevcut şifrenizi doğru girdiğinizden emin olun.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Şifre güncellenemedi! Mevcut şifrenizi doğru girdiğinizden emin olun.',
+          ),
+        ),
+      );
     }
   }
 
@@ -121,14 +130,22 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         border: blueBorder,
                         focusedBorder: blueBorder,
                         enabledBorder: blueBorder,
-                        prefixIcon: const Icon(Icons.lock_outline_rounded, color: Color(0xFF1565C0)),
+                        prefixIcon: const Icon(
+                          Icons.lock_outline_rounded,
+                          color: Color(0xFF1565C0),
+                        ),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscureCurrentPassword ? Icons.visibility_off : Icons.visibility,
+                            _obscureCurrentPassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                             color: Colors.grey,
                           ),
                           onPressed: () {
-                            setState(() => _obscureCurrentPassword = !_obscureCurrentPassword);
+                            setState(
+                              () => _obscureCurrentPassword =
+                                  !_obscureCurrentPassword,
+                            );
                           },
                         ),
                       ),
@@ -148,14 +165,21 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         border: blueBorder,
                         focusedBorder: blueBorder,
                         enabledBorder: blueBorder,
-                        prefixIcon: const Icon(Icons.lock, color: Color(0xFF1565C0)),
+                        prefixIcon: const Icon(
+                          Icons.lock,
+                          color: Color(0xFF1565C0),
+                        ),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                            _obscurePassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                             color: Colors.grey,
                           ),
                           onPressed: () {
-                            setState(() => _obscurePassword = !_obscurePassword);
+                            setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            );
                           },
                         ),
                       ),
@@ -170,14 +194,22 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         border: blueBorder,
                         focusedBorder: blueBorder,
                         enabledBorder: blueBorder,
-                        prefixIcon: const Icon(Icons.lock, color: Color(0xFF1565C0)),
+                        prefixIcon: const Icon(
+                          Icons.lock,
+                          color: Color(0xFF1565C0),
+                        ),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscureRepeatPassword ? Icons.visibility_off : Icons.visibility,
+                            _obscureRepeatPassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                             color: Colors.grey,
                           ),
                           onPressed: () {
-                            setState(() => _obscureRepeatPassword = !_obscureRepeatPassword);
+                            setState(
+                              () => _obscureRepeatPassword =
+                                  !_obscureRepeatPassword,
+                            );
                           },
                         ),
                       ),

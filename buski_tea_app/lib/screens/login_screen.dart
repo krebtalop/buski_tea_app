@@ -4,7 +4,6 @@ import 'package:buski_tea_app/screens/order_screen.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'dart:math';
 import 'package:buski_tea_app/screens/forgot_password_screen.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -118,12 +117,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       hintText: 'örn: ornek@mail.com',
                       border: OutlineInputBorder(),
                     ),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w500,
-                    ),
+                    style: const TextStyle(fontWeight: FontWeight.w500),
                     textAlign: TextAlign.center,
                     validator: (value) {
-                      if (value == null || value.isEmpty || !value.contains('@')) {
+                      if (value == null ||
+                          value.isEmpty ||
+                          !value.contains('@')) {
                         return 'Geçerli bir e-posta giriniz';
                       }
                       return null;
@@ -175,16 +174,21 @@ class _LoginScreenState extends State<LoginScreen> {
                           final email = _emailController.text.trim();
                           final password = _passwordController.text;
                           try {
-                            await FirebaseAuth.instance.signInWithEmailAndPassword(
-                              email: email,
-                              password: password,
-                            );
+                            await FirebaseAuth.instance
+                                .signInWithEmailAndPassword(
+                                  email: email,
+                                  password: password,
+                                );
                             Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(builder: (context) => const OrderScreen()),
+                              MaterialPageRoute(
+                                builder: (context) => const OrderScreen(),
+                              ),
                             );
                           } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('E-posta veya şifre yanlış!')),
+                              const SnackBar(
+                                content: Text('E-posta veya şifre yanlış!'),
+                              ),
                             );
                           }
                         }

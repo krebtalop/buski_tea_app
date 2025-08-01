@@ -30,9 +30,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
   Map<String, double> _categoryData = {};
   Map<String, int> _categoryCounts = {}; // Her kategorinin sipariş sayısı
   String? _selectedCategory; // Seçili kategori
-  int? _touchedIndex; // Dokunulan dilim indeksi
-  String? _selectedProduct;
-  int? _selectedProductCount;
+  // Dokunulan dilim indeksi
   List<Color> _pieColors = [
     Colors.blue,
     Colors.green,
@@ -961,40 +959,6 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                                       ),
                                     ),
                                     const SizedBox(height: 8),
-                                    // Garson seçimi dropdown'u
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        border: Border.all(
-                                          color: Colors.grey[300]!,
-                                        ),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: DropdownButton<String>(
-                                        value: _secilenGarsonlar[data['id']],
-                                        hint: const Text(
-                                          'Siparişi getiren garsonu seçin',
-                                        ),
-                                        isExpanded: true,
-                                        underline:
-                                            Container(), // Alt çizgiyi kaldır
-                                        items: _garsonlar.map((String garson) {
-                                          return DropdownMenuItem<String>(
-                                            value: garson,
-                                            child: Text(garson),
-                                          );
-                                        }).toList(),
-                                        onChanged: (String? yeniGarson) {
-                                          setState(() {
-                                            _secilenGarsonlar[data['id']] =
-                                                yeniGarson;
-                                          });
-                                        },
-                                      ),
-                                    ),
                                     // Garson bilgisi gösterimi
                                     if (garson.isNotEmpty) ...[
                                       const SizedBox(height: 8),
@@ -1075,42 +1039,35 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Row(
-                                              children: [
-                                                const Text(
-                                                  'Puanınız: ',
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                ),
-                                                Row(
-                                                  children: List.generate(5, (
-                                                    index,
-                                                  ) {
-                                                    return Icon(
-                                                      index < rating
-                                                          ? Icons.star
-                                                          : Icons.star_border,
-                                                      color: index < rating
-                                                          ? Colors.amber
-                                                          : Colors.grey,
-                                                      size: 20,
-                                                    );
-                                                  }),
-                                                ),
-                                                if (rating > 0) ...[
-                                                  const SizedBox(width: 8),
-                                                  Text(
-                                                    '($rating/5)',
-                                                    style: const TextStyle(
-                                                      fontSize: 12,
-                                                      color: Colors.grey,
+                                            if (rating > 0) ...[
+                                              Row(
+                                                children: [
+                                                  const Text(
+                                                    'Puanınız: ',
+                                                    style: TextStyle(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.w500,
                                                     ),
                                                   ),
+                                                  Row(
+                                                    children: List.generate(5, (
+                                                      index,
+                                                    ) {
+                                                      return Icon(
+                                                        index < rating
+                                                            ? Icons.star
+                                                            : Icons.star_border,
+                                                        color: index < rating
+                                                            ? Colors.amber
+                                                            : Colors.grey,
+                                                        size: 20,
+                                                      );
+                                                    }),
+                                                  ),
                                                 ],
-                                              ],
-                                            ),
+                                              ),
+                                            ],
                                             ElevatedButton.icon(
                                               onPressed: () => _showRatingModal(
                                                 _orders[i].id,
