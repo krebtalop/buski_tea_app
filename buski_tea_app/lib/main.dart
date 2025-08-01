@@ -33,6 +33,16 @@ class MyApp extends StatelessWidget {
      
       home: const AuthGate(),
       theme: ThemeData(fontFamily: 'SourceSansPro'),
+      routes: {
+        '/register': (context) => RegisterScreen(),
+        '/login': (context) => LoginScreen(),
+        '/order': (context) => OrderScreen(),
+        '/profile': (context) => ProfileScreen(),
+        '/order_panel': (context) => OrderPanelScreen(),
+        '/forgot_password': (context) => ForgotPasswordScreen(),
+        '/gecmis_siparisler': (context) => GecmisSiparislerScreen(),
+        '/web_order': (context) => WebOrderScreen(),
+      },
     );
   }
 }

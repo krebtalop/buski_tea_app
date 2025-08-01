@@ -584,20 +584,81 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _selectedRating > 0 ? _saveRating : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[700],
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _selectedRating > 0 ? _saveRating : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue[700],
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text('Puanı Kaydet'),
                     ),
                   ),
-                  child: const Text('Puanı Kaydet'),
-                ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        if (_selectedOrderId == null) return;
+                        try {
+                          final user = FirebaseAuth.instance.currentUser;
+                          if (user == null) return;
+                          final updateData = {
+                            'rating': 0,
+                            'comment': '',
+                            'ratingDate': null,
+                          };
+                          await Future.wait([
+                            FirebaseFirestore.instance
+                                .collection('siparisler')
+                                .doc(_selectedOrderId)
+                                .update(updateData),
+                            FirebaseFirestore.instance
+                                .collection('user_orders')
+                                .doc(user.uid)
+                                .collection('orders')
+                                .doc(_selectedOrderId)
+                                .update(updateData),
+                          ]);
+                          await _fetchOrders();
+                          setState(() {
+                            _showRatingDialog = false;
+                            _selectedOrderId = null;
+                            _selectedRating = 0;
+                            _commentController.clear();
+                          });
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Puanınız kaldırıldı.'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Puan kaldırılırken hata oluştu: $e'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text('Temizle'),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
