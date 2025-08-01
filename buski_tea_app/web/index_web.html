@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Buski Çay - Online Sipariş</title>
   <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
   
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
@@ -26,7 +29,7 @@
     }
     
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: linear-gradient(135deg, #87CEEB 0%, #4682B4 100%);
       color: #1e293b;
       line-height: 1.6;
@@ -228,7 +231,7 @@
     
     .btn {
       width: 100%;
-      padding: 14px 24px;
+      padding: 16px 32px;
       background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
       color: white;
       border: none;
@@ -243,6 +246,7 @@
       -moz-user-select: none;
       -ms-user-select: none;
       user-select: none;
+      min-width: 200px;
     }
     
     .btn:hover {
@@ -1195,12 +1199,14 @@
       background: #dc2626;
       color: white;
       border: none;
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
+      padding: 16px 32px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
+      min-width: 200px;
+      width: 100%;
     }
 
     .btn-danger:hover {
@@ -1212,17 +1218,19 @@
       background: #64748b;
       color: white;
       border: none;
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
+      padding: 16px 32px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
-      margin-right: 12px;
+      min-width: 200px;
+      width: 100%;
     }
 
     .btn-secondary:hover {
       background: #475569;
+      transform: translateY(-1px);
     }
 
 
@@ -1338,6 +1346,15 @@
 
   <!-- Login Screen -->
   <div id="loginScreen" class="screen active">
+    <!-- Cloud Animation Background -->
+    <div class="cloud-bg">
+      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud1">
+      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud2">
+      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud3">
+      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud4">
+      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud5">
+      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud6">
+    </div>
     <div class="auth-container">
       <div class="auth-card">
         <div class="logo-section">
@@ -1374,9 +1391,9 @@
         </form>
         
         <div style="margin-top: 20px;">
-          <button class="link-btn" onclick="showRegister()">Hesabınız yok mu? Kayıt olun</button>
+          <button class="link-btn" onclick="showRegister()" style="font-weight: 700;">Hesabınız yok mu? Kayıt olun</button>
           <br>
-          <button class="link-btn" onclick="showForgotPassword()">Şifrenizi mi unuttunuz?</button>
+          <button class="link-btn" onclick="showForgotPassword()" style="font-weight: 700;">Şifrenizi mi unuttunuz?</button>
         </div>
       </div>
     </div>
@@ -1384,6 +1401,15 @@
 
   <!-- Register Screen -->
   <div id="registerScreen" class="screen">
+    <!-- Cloud Animation Background -->
+    <div class="cloud-bg">
+      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud1">
+      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud2">
+      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud3">
+      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud4">
+      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud5">
+      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud6">
+    </div>
     <div class="auth-container">
       <div class="auth-card">
         <div class="logo-section">
@@ -1465,7 +1491,7 @@
         </form>
         
         <div style="margin-top: 20px;">
-          <button class="link-btn" onclick="showLogin()">Zaten hesabınız var mı? Giriş yapın</button>
+          <button class="link-btn" onclick="showLogin()" style="font-weight: 700;">Zaten hesabınız var mı? Giriş yapın</button>
         </div>
       </div>
     </div>
@@ -1473,6 +1499,15 @@
 
   <!-- Forgot Password Screen -->
   <div id="forgotPasswordScreen" class="screen">
+    <!-- Cloud Animation Background -->
+    <div class="cloud-bg">
+      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud1">
+      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud2">
+      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud3">
+      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud4">
+      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud5">
+      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud6">
+    </div>
     <div class="auth-container">
       <div class="auth-card">
         <div class="logo-section">
@@ -1496,7 +1531,7 @@
         </form>
         
         <div style="margin-top: 20px;">
-          <button class="link-btn" onclick="showLogin()">Giriş sayfasına dön</button>
+          <button class="link-btn" onclick="showLogin()" style="font-weight: 700;">Giriş sayfasına dön</button>
         </div>
       </div>
     </div>
@@ -1527,8 +1562,8 @@
       <!-- Bottom Navigation -->
       <nav class="bottom-nav">
         <div class="nav-item active" onclick="showOrderTab()">
-          <span class="nav-icon">🍽️</span>
-          <span class="nav-text">Menü</span>
+          <span class="nav-icon">🛒</span>
+          <span class="nav-text">Sipariş</span>
         </div>
         <div class="nav-item" onclick="showProfileTab()">
           <span class="nav-icon">👤</span>
@@ -1720,12 +1755,13 @@
                   <option value="10">10. Kat</option>
                 </select>
               </div>
-              <button type="submit" class="btn">Bilgileri Güncelle</button>
+              <button type="submit" class="btn" style="margin-bottom: 20px;">Bilgileri Güncelle</button>
             </form>
 
-            <!-- Delete Account Button -->
-            <div style="text-align: center; margin-top: 30px;">
-              <button class="btn-danger" onclick="deleteAccount()">Hesabı Sil</button>
+            <!-- Logout and Delete Account Buttons -->
+            <div style="text-align: center; margin-top: 0px; display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%;">
+              <button class="btn-secondary" onclick="logout()" style="width: 100%; margin: 0;">Çıkış Yap</button>
+              <button class="btn-danger" onclick="deleteAccount()" style="width: 100%; margin: 0;">Hesabı Sil</button>
             </div>
           </div>
         </div>
@@ -1733,8 +1769,8 @@
       <!-- Bottom Navigation (Profil için) -->
       <nav class="bottom-nav profile-bottom-nav">
         <div class="nav-item" onclick="showOrderTab()">
-          <span class="nav-icon">🍽️</span>
-          <span class="nav-text">Menü</span>
+          <span class="nav-icon">🛒</span>
+          <span class="nav-text">Sipariş Yap</span>
         </div>
         <div class="nav-item active" onclick="showProfileTab()">
           <span class="nav-icon">👤</span>

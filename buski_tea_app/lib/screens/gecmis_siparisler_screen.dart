@@ -12,6 +12,10 @@ class GecmisSiparislerScreen extends StatefulWidget {
 }
 
 class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
+  final List<String> _garsonlar = ['Ahmet', 'Mehmet', 'Ayşe', 'Fatma'];
+  // Her sipariş için seçilen garsonu tutacak map
+  final Map<String, String?> _secilenGarsonlar = {};
+
   String _filter = '1ay';
   List<QueryDocumentSnapshot<Map<String, dynamic>>> _orders = [];
   bool _loading = true;
@@ -21,7 +25,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
   int _selectedRating = 0;
   bool _showRatingDialog = false;
   final TextEditingController _commentController = TextEditingController();
-  
+
   // Pasta grafiği için değişkenler
   Map<String, double> _categoryData = {};
   Map<String, int> _categoryCounts = {}; // Her kategorinin sipariş sayısı
@@ -51,7 +55,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
       _loading = true;
       _errorMessage = null;
     });
-    
+
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       setState(() {
@@ -81,18 +85,18 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
       _totalSpent = 0;
       _categoryData.clear();
       _categoryCounts.clear();
-      
+
       for (var doc in _orders) {
         final data = doc.data();
         _totalSpent += (data['toplamFiyat'] ?? 0).toDouble();
-        
+
         // Kategori verilerini hesapla
         final items = List<Map<String, dynamic>>.from(data['items'] ?? []);
         for (var item in items) {
           final category = item['name'] ?? 'Diğer';
           final price = (item['price'] ?? 0).toDouble() * (item['adet'] ?? 1);
           final int adet = (item['adet'] ?? 1).toInt();
-          
+
           _categoryData[category] = (_categoryData[category] ?? 0) + price;
           final currentCount = _categoryCounts[category] ?? 0;
           _categoryCounts[category] = currentCount + adet;
@@ -117,7 +121,9 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Siparişleri Sil'),
-          content: const Text('Tüm sipariş geçmişinizi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.'),
+          content: const Text(
+            'Tüm sipariş geçmişinizi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
@@ -147,7 +153,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
 
       // Batch işlemi ile tüm siparişleri sil
       final batch = FirebaseFirestore.instance.batch();
-      
+
       for (var doc in snapshot.docs) {
         batch.delete(doc.reference);
       }
@@ -197,11 +203,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.pie_chart_outline,
-                size: 32,
-                color: Colors.grey,
-              ),
+              Icon(Icons.pie_chart_outline, size: 32, color: Colors.grey),
               SizedBox(height: 8),
               Text(
                 'Henüz sipariş verisi yok',
@@ -219,21 +221,21 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
 
     final pieChartSections = <PieChartSectionData>[];
     final categories = _categoryData.keys.toList();
-    
+
     for (int i = 0; i < categories.length; i++) {
       final category = categories[i];
       final value = _categoryData[category]!;
       final isSelected = _selectedCategory == category;
-      
+
       pieChartSections.add(
         PieChartSectionData(
           color: _pieColors[i % _pieColors.length],
           value: value,
           title: '', // Başlık yok
           radius: isSelected ? 45 : 35, // Seçili olan büyük
-          borderSide: isSelected 
-            ? const BorderSide(color: Colors.white, width: 2)
-            : BorderSide.none,
+          borderSide: isSelected
+              ? const BorderSide(color: Colors.white, width: 2)
+              : BorderSide.none,
         ),
       );
     }
@@ -279,11 +281,16 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                   sectionsSpace: 1,
                   pieTouchData: PieTouchData(
                     touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                      if (event is! FlPointerHoverEvent && pieTouchResponse?.touchedSection != null) {
-                        final touchedIndex = pieTouchResponse!.touchedSection!.touchedSectionIndex;
+                      if (event is! FlPointerHoverEvent &&
+                          pieTouchResponse?.touchedSection != null) {
+                        final touchedIndex = pieTouchResponse!
+                            .touchedSection!
+                            .touchedSectionIndex;
                         final category = categories[touchedIndex];
                         setState(() {
-                          _selectedCategory = _selectedCategory == category ? null : category;
+                          _selectedCategory = _selectedCategory == category
+                              ? null
+                              : category;
                         });
                       }
                     },
@@ -331,7 +338,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
           .collection('users')
           .doc(user.uid)
           .get();
-      
+
       final userData = userDoc.data() ?? {};
 
       // Yeni sipariş oluştur
@@ -357,10 +364,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
           .doc(user.uid)
           .collection('orders')
           .doc(orderRef.id)
-          .set({
-        ...newOrder,
-        'id': orderRef.id,
-      });
+          .set({...newOrder, 'id': orderRef.id});
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -402,6 +406,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
         'rating': _selectedRating,
         'ratingDate': Timestamp.now(),
         'comment': _commentController.text.trim(),
+        'garson': _secilenGarsonlar[_selectedOrderId],
       };
 
       await Future.wait([
@@ -564,6 +569,35 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                 ),
               ),
               const SizedBox(height: 20),
+              // Garson seçimi dropdown'u
+              Container(
+                width: double.infinity,
+                child: DropdownButtonFormField<String>(
+                  value: _secilenGarsonlar[_selectedOrderId],
+                  decoration: const InputDecoration(
+                    labelText: 'Siparişi getiren garson',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                      borderSide: BorderSide(color: Colors.blue),
+                    ),
+                  ),
+                  items: _garsonlar.map((String garson) {
+                    return DropdownMenuItem<String>(
+                      value: garson,
+                      child: Text(garson),
+                    );
+                  }).toList(),
+                  onChanged: (String? yeniGarson) {
+                    setState(() {
+                      _secilenGarsonlar[_selectedOrderId!] = yeniGarson;
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(height: 20),
               // Yorum alanı
               Container(
                 width: double.infinity,
@@ -572,7 +606,8 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                   maxLines: 3,
                   maxLength: 200,
                   decoration: const InputDecoration(
-                    hintText: 'Siparişiniz hakkında yorum yazın (isteğe bağlı)...',
+                    hintText:
+                        'Siparişiniz hakkında yorum yazın (isteğe bağlı)...',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(8)),
                     ),
@@ -612,6 +647,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                             'rating': 0,
                             'comment': '',
                             'ratingDate': null,
+                            'garson': null,
                           };
                           await Future.wait([
                             FirebaseFirestore.instance
@@ -641,7 +677,9 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                         } catch (e) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Puan kaldırılırken hata oluştu: $e'),
+                              content: Text(
+                                'Puan kaldırılırken hata oluştu: $e',
+                              ),
                               backgroundColor: Colors.red,
                             ),
                           );
@@ -854,6 +892,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                             );
                             final rating = data['rating'] ?? 0;
                             final comment = data['comment'] ?? '';
+                            final garson = data['garson'] ?? '';
 
                             return Card(
                               color: Colors.white,
@@ -868,7 +907,8 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
                                           '${tarih.day.toString().padLeft(2, '0')}.${tarih.month.toString().padLeft(2, '0')}.${tarih.year}',
@@ -889,17 +929,24 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                                     const SizedBox(height: 8),
                                     ...items.map(
                                       (item) => Padding(
-                                        padding: const EdgeInsets.symmetric(vertical: 2.0),
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 2.0,
+                                        ),
                                         child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
                                           children: [
                                             Text(
                                               '${item['name']} ${item['option'] != null && item['option'] != '' ? '(${item['option']})' : ''}',
-                                              style: const TextStyle(fontSize: 15),
+                                              style: const TextStyle(
+                                                fontSize: 15,
+                                              ),
                                             ),
                                             Text(
                                               'x${item['adet']}',
-                                              style: const TextStyle(fontWeight: FontWeight.w600),
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -913,6 +960,75 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                                         color: Colors.black54,
                                       ),
                                     ),
+                                    const SizedBox(height: 8),
+                                    // Garson seçimi dropdown'u
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          color: Colors.grey[300]!,
+                                        ),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: DropdownButton<String>(
+                                        value: _secilenGarsonlar[data['id']],
+                                        hint: const Text(
+                                          'Siparişi getiren garsonu seçin',
+                                        ),
+                                        isExpanded: true,
+                                        underline:
+                                            Container(), // Alt çizgiyi kaldır
+                                        items: _garsonlar.map((String garson) {
+                                          return DropdownMenuItem<String>(
+                                            value: garson,
+                                            child: Text(garson),
+                                          );
+                                        }).toList(),
+                                        onChanged: (String? yeniGarson) {
+                                          setState(() {
+                                            _secilenGarsonlar[data['id']] =
+                                                yeniGarson;
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                    // Garson bilgisi gösterimi
+                                    if (garson.isNotEmpty) ...[
+                                      const SizedBox(height: 8),
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green[50],
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                          border: Border.all(
+                                            color: Colors.green[200]!,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.person,
+                                              size: 16,
+                                              color: Colors.green[700],
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              'Garson: $garson',
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w500,
+                                                color: Colors.green[700],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
                                     // Yorum gösterimi
                                     if (comment.isNotEmpty) ...[
                                       const SizedBox(height: 8),
@@ -920,11 +1036,16 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                                         padding: const EdgeInsets.all(8),
                                         decoration: BoxDecoration(
                                           color: Colors.blue[50],
-                                          borderRadius: BorderRadius.circular(6),
-                                          border: Border.all(color: Colors.blue[200]!),
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                          border: Border.all(
+                                            color: Colors.blue[200]!,
+                                          ),
                                         ),
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             const Text(
                                               'Yorumunuz:',
@@ -951,7 +1072,8 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                                     Column(
                                       children: [
                                         Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
                                           children: [
                                             Row(
                                               children: [
@@ -963,7 +1085,9 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                                                   ),
                                                 ),
                                                 Row(
-                                                  children: List.generate(5, (index) {
+                                                  children: List.generate(5, (
+                                                    index,
+                                                  ) {
                                                     return Icon(
                                                       index < rating
                                                           ? Icons.star
@@ -997,19 +1121,23 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                                                 size: 16,
                                               ),
                                               label: Text(
-                                                rating > 0 ? 'Puanı Değiştir' : 'Puanla',
+                                                rating > 0
+                                                    ? 'Puanı Değiştir'
+                                                    : 'Puanla',
                                               ),
                                               style: ElevatedButton.styleFrom(
                                                 backgroundColor: rating > 0
                                                     ? Colors.orange
                                                     : Colors.blue[700],
                                                 foregroundColor: Colors.white,
-                                                padding: const EdgeInsets.symmetric(
-                                                  horizontal: 12,
-                                                  vertical: 6,
-                                                ),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 12,
+                                                      vertical: 6,
+                                                    ),
                                                 shape: RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(6),
+                                                  borderRadius:
+                                                      BorderRadius.circular(6),
                                                 ),
                                               ),
                                             ),
@@ -1025,16 +1153,21 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                                               Icons.replay,
                                               size: 16,
                                             ),
-                                            label: const Text('Bu Siparişi Tekrarla'),
+                                            label: const Text(
+                                              'Bu Siparişi Tekrarla',
+                                            ),
                                             style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.green[600],
+                                              backgroundColor:
+                                                  Colors.green[600],
                                               foregroundColor: Colors.white,
-                                              padding: const EdgeInsets.symmetric(
-                                                horizontal: 16,
-                                                vertical: 8,
-                                              ),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 16,
+                                                    vertical: 8,
+                                                  ),
                                               shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(6),
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
                                               ),
                                             ),
                                           ),
