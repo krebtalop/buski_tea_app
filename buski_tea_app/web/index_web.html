@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Buski Çay - Online Sipariş</title>
-  <link rel="icon" type="image/png" href="favicon.png">
+      <title>Buski Çay Saati</title>
+      <link rel="icon" type="image/png" href="favicon.png?v=6">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -13,6 +13,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-storage-compat.js"></script>
   
   <!-- Chart.js for Pasta Grafiği -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -30,100 +31,67 @@
     
     body {
       font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #87CEEB 0%, #4682B4 100%);
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
       color: #1e293b;
       line-height: 1.6;
       position: relative;
+      min-height: 100vh;
     }
 
-    /* Cloud Animation Background */
-    .cloud-bg {
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+   
+
+    /* Menü ve sipariş sayfaları için gökyüzü temalı arka plan */
+    #orderScreen,
+    #profileScreen {
+      background: linear-gradient(135deg, #87CEEB 0%, #4682B4 100%);
+      position: relative;
+    }
+
+    /* Buski arka plan resmi - Sadece menü ve profil sayfalarında */
+    /* Buski binası fotoğrafı kaldırıldı */
+
+
+
+    /* Bursa tarihi güzellikleri arka plan videoları */
+    .background-video {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      pointer-events: none;
+      object-fit: cover;
+      z-index: -2;
+      opacity: 0;
+      transition: opacity 1.5s ease-in-out;
+    }
+
+    .background-video.active {
+      opacity: 0.8;
+    }
+
+    .background-video-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.1) 100%);
       z-index: -1;
-      overflow: hidden;
     }
 
-    .cloud {
-      position: absolute;
-      opacity: 0.6;
-      animation: float 20s infinite linear;
-    }
 
-    .cloud1 {
-      top: 5%;
-      left: -100px;
-      width: 120px;
-      height: 60px;
-      animation-delay: 0s;
-      animation-duration: 25s;
-    }
 
-    .cloud2 {
-      top: 20%;
-      left: -150px;
-      width: 180px;
-      height: 90px;
-      animation-delay: 3s;
-      animation-duration: 30s;
-    }
 
-    .cloud3 {
-      top: 40%;
-      left: -200px;
-      width: 150px;
-      height: 75px;
-      animation-delay: 6s;
-      animation-duration: 35s;
-    }
 
-    .cloud4 {
-      top: 60%;
-      left: -120px;
-      width: 140px;
-      height: 70px;
-      animation-delay: 9s;
-      animation-duration: 28s;
-    }
 
-    .cloud5 {
-      top: 75%;
-      left: -180px;
-      width: 160px;
-      height: 80px;
-      animation-delay: 12s;
-      animation-duration: 32s;
-    }
 
-    .cloud6 {
-      top: 85%;
-      left: -160px;
-      width: 130px;
-      height: 65px;
-      animation-delay: 15s;
-      animation-duration: 26s;
-    }
 
-    @keyframes float {
-      0% {
-        transform: translateX(-100px) translateY(0px);
-        opacity: 0;
-      }
-      10% {
-        opacity: 0.6;
-      }
-      90% {
-        opacity: 0.6;
-      }
-      100% {
-        transform: translateX(calc(100vw + 200px)) translateY(-20px);
-        opacity: 0;
-      }
-    }
+
     
     .screen {
       display: none;
@@ -140,18 +108,21 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #87CEEB 0%, #4682B4 100%);
       padding: 20px;
+      position: relative;
+      z-index: 1;
     }
     
     .auth-card {
-      background: white;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
       border-radius: 20px;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
       padding: 40px;
       width: 100%;
       max-width: 400px;
       text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.2);
     }
     
     .logo-section {
@@ -285,21 +256,657 @@
     
     .notification {
       position: fixed;
-      top: 20px;
-      right: 20px;
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
       background: #10b981;
       color: white;
       padding: 16px 24px;
       border-radius: 12px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-      transform: translateX(400px);
-      transition: transform 0.3s ease;
+      transition: top 0.5s ease;
       z-index: 1000;
       font-weight: 500;
+      min-width: 300px;
+      text-align: center;
     }
     
     .notification.show {
-      transform: translateX(0);
+      top: 20px;
+    }
+
+    /* Buski Logo Loading Animation */
+    .buski-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+    }
+
+    .buski-logo-container {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      margin-bottom: 20px;
+    }
+
+    .buski-logo-outline {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 3px solid #e2e8f0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .buski-logo-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 3px solid transparent;
+      border-top: 3px solid #3b82f6;
+      border-radius: 50%;
+      animation: buskiRotate 2s linear infinite;
+    }
+
+    .buski-logo-image {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 60px;
+      height: 60px;
+      opacity: 0.8;
+    }
+
+    .buski-loading-text {
+      color: #64748b;
+      font-size: 16px;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    @keyframes buskiRotate {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Reorder Modal Styles */
+    .reorder-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+    }
+
+    .reorder-modal {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      position: relative;
+    }
+
+    .reorder-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #f1f5f9;
+    }
+
+    .reorder-modal-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0;
+    }
+
+    .reorder-modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #64748b;
+      padding: 5px;
+      border-radius: 50%;
+      transition: all 0.3s ease;
+    }
+
+    .reorder-modal-close:hover {
+      background: #f1f5f9;
+      color: #1e293b;
+    }
+
+    .reorder-items-list {
+      margin-bottom: 25px;
+    }
+
+    .reorder-item {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 10px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .reorder-item-name {
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+
+    .reorder-item-details {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .reorder-item-info {
+      color: #64748b;
+      font-size: 14px;
+    }
+
+    .reorder-item-option {
+      background: #3b82f6;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .reorder-total {
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .reorder-total-label {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 5px;
+    }
+
+    .reorder-total-amount {
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .reorder-modal-actions {
+      display: flex;
+      gap: 15px;
+    }
+
+    .reorder-btn-cancel {
+      flex: 1;
+      padding: 12px 24px;
+      background: #f1f5f9;
+      color: #64748b;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .reorder-btn-cancel:hover {
+      background: #e2e8f0;
+      color: #475569;
+    }
+
+    .reorder-btn-confirm {
+      flex: 1;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .reorder-btn-confirm:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+    }
+
+    /* Clear History Modal Styles */
+    .clear-history-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+    }
+
+    .clear-history-modal {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      position: relative;
+    }
+
+    .clear-history-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .clear-history-icon svg {
+      width: 40px;
+      height: 40px;
+      color: white;
+    }
+
+    .clear-history-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 15px;
+    }
+
+    .clear-history-message {
+      color: #64748b;
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 25px;
+    }
+
+    .clear-history-warning {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 25px;
+      color: #dc2626;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .clear-history-actions {
+      display: flex;
+      gap: 15px;
+    }
+
+    .clear-history-btn-cancel {
+      flex: 1;
+      padding: 12px 24px;
+      background: #f1f5f9;
+      color: #64748b;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .clear-history-btn-cancel:hover {
+      background: #e2e8f0;
+      color: #475569;
+    }
+
+    .clear-history-btn-confirm {
+      flex: 1;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .clear-history-btn-confirm:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+    }
+
+    /* Profile Animations */
+    @keyframes profileSlideIn {
+      0% {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes orderHistoryFadeIn {
+      0% {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes orderItemSlideIn {
+      0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes statsPulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.05);
+      }
+    }
+
+    @keyframes chartGrow {
+      0% {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* Profile Screen Animations */
+    /* Konteyner animasyonları kaldırıldı - sadece içerik animasyonları kalacak */
+
+    .order-history {
+      animation: orderHistoryFadeIn 0.8s ease-out 0.2s both;
+    }
+
+    .order-item {
+      animation: orderItemSlideIn 0.5s ease-out;
+      transition: all 0.3s ease;
+    }
+
+    .order-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .stats-card {
+      animation: statsPulse 2s ease-in-out infinite;
+      transition: all 0.3s ease;
+    }
+
+    .stats-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px rgba(59, 130, 246, 0.15);
+    }
+
+    .chart-container {
+      animation: chartGrow 1s ease-out 0.5s both;
+    }
+
+
+
+    /* Staggered animations for order items */
+    .order-item:nth-child(1) { animation-delay: 0.1s; }
+    .order-item:nth-child(2) { animation-delay: 0.2s; }
+    .order-item:nth-child(3) { animation-delay: 0.3s; }
+    .order-item:nth-child(4) { animation-delay: 0.4s; }
+    .order-item:nth-child(5) { animation-delay: 0.5s; }
+    .order-item:nth-child(6) { animation-delay: 0.6s; }
+    .order-item:nth-child(7) { animation-delay: 0.7s; }
+    .order-item:nth-child(8) { animation-delay: 0.8s; }
+    .order-item:nth-child(9) { animation-delay: 0.9s; }
+    .order-item:nth-child(10) { animation-delay: 1.0s; }
+
+    /* Profil sekmesi animasyonları - Yukarıdan aşağı */
+    .info-card,
+    .password-card,
+    .settings-card,
+    .history-card {
+      animation: profileSlideIn 0.5s ease-out;
+    }
+
+    /* Loading animation for profile */
+    .profile-loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+      animation: profileSlideIn 0.6s ease-out;
+    }
+
+    .profile-loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #e2e8f0;
+      border-top: 4px solid #3b82f6;
+      border-radius: 50%;
+      animation: buskiRotate 1s linear infinite;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      padding: 0;
+      max-width: 450px;
+      width: 90%;
+      min-height: 200px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      animation: modalSlideIn 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @keyframes modalSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      padding: 24px 24px 16px 24px;
+      border-bottom: 1px solid #e5e7eb;
+      flex-shrink: 0;
+    }
+
+    .modal-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+    }
+
+    .modal-icon.success {
+      background: #10b981;
+      color: white;
+    }
+
+    .modal-icon.danger {
+      background: #ef4444;
+      color: white;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    .modal-body {
+      padding: 20px 24px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .modal-body p {
+      margin: 0;
+      font-size: 16px;
+      color: #6b7280;
+      line-height: 1.5;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 16px 24px 24px 24px;
+      border-top: 1px solid #e5e7eb;
+      flex-shrink: 0;
+    }
+
+    /* Success Modal Styles */
+    .success-modal {
+      border: 2px solid #10b981;
+      box-shadow: 0 10px 25px rgba(16, 185, 129, 0.2);
+    }
+
+    .success-modal .modal-header {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      border-bottom: none;
+      border-radius: 10px 10px 0 0;
+    }
+
+    .success-modal .modal-header h3 {
+      color: white;
+    }
+
+    .success-modal .modal-body {
+      background: #f0fdf4;
+    }
+
+    .success-modal .modal-body p {
+      color: #065f46;
+      font-weight: 500;
+    }
+
+    .success-modal .modal-footer {
+      background: #f0fdf4;
+      border-top: 1px solid #bbf7d0;
+      border-radius: 0 0 10px 10px;
+    }
+
+    .success-modal .btn-primary {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border: none;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 100%;
+    }
+
+    .success-modal .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .modal-footer .btn,
+    .modal-footer .btn-secondary,
+    .modal-footer .btn-danger {
+      min-width: 120px;
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      flex: 1;
+      width: 100%;
+      height: 44px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-footer .btn-danger {
+      background: #ef4444;
+      color: white;
+      border: none;
+    }
+
+    .modal-footer .btn-danger:hover {
+      background: #dc2626;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
     }
     
     .notification.error {
@@ -325,7 +932,7 @@
     /* E-commerce Order Screen Styles */
     .order-container {
       min-height: 100vh;
-      background: #f8fafc;
+      background: white;
       position: relative;
       max-width: 1200px;
       margin: 0 auto;
@@ -333,7 +940,8 @@
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
       overflow: visible;
       padding-bottom: 100px;
-      margin-bottom: 20px;
+      margin-bottom: 0;
+      z-index: 10;
     }
 
     .header {
@@ -383,6 +991,95 @@
       -moz-user-select: none;
       -ms-user-select: none;
       user-select: none;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: menuItemFadeIn 0.6s ease forwards;
+    }
+
+    .menu-item:nth-child(1) { animation-delay: 0.1s; }
+    .menu-item:nth-child(2) { animation-delay: 0.2s; }
+    .menu-item:nth-child(3) { animation-delay: 0.3s; }
+    .menu-item:nth-child(4) { animation-delay: 0.4s; }
+    .menu-item:nth-child(5) { animation-delay: 0.5s; }
+    .menu-item:nth-child(6) { animation-delay: 0.6s; }
+    .menu-item:nth-child(7) { animation-delay: 0.7s; }
+    .menu-item:nth-child(8) { animation-delay: 0.8s; }
+    .menu-item:nth-child(9) { animation-delay: 0.9s; }
+    .menu-item:nth-child(10) { animation-delay: 1.0s; }
+    .menu-item:nth-child(11) { animation-delay: 1.1s; }
+    .menu-item:nth-child(12) { animation-delay: 1.2s; }
+
+    @keyframes menuItemFadeIn {
+      0% {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .menu-icon {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 12px;
+      color: #3b82f6;
+    }
+
+    .menu-icon svg {
+      width: 32px;
+      height: 32px;
+    }
+
+    .menu-image {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s ease;
+    }
+
+    .menu-image:hover {
+      transform: scale(1.05);
+    }
+
+    .controls-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 12px 0;
+    }
+
+    .sugar-options {
+      display: flex;
+      align-items: center;
+      flex: 1;
+    }
+
+    .sugar-select {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background: white;
+      font-size: 14px;
+      color: #374151;
+      cursor: pointer;
+      transition: border-color 0.2s ease;
+    }
+
+    .sugar-select:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .sugar-select:hover {
+      border-color: #9ca3af;
     }
 
     .menu-item::before {
@@ -399,6 +1096,51 @@
       transform: translateY(-4px);
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
       border-color: #3b82f6;
+    }
+
+    /* Stokta olmayan ürünler için stiller */
+    .menu-item.out-of-stock {
+      opacity: 0.6;
+      filter: grayscale(100%);
+      position: relative;
+      background: #f8f9fa;
+      border-color: #e2e8f0;
+    }
+
+    .menu-item.out-of-stock:hover {
+      transform: none;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      border-color: #e2e8f0;
+    }
+
+    .out-of-stock-banner {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: center;
+      border-radius: 12px 12px 0 0;
+      z-index: 10;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .menu-item.out-of-stock .quantity-btn:disabled,
+    .menu-item.out-of-stock .add-to-cart-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background: #9ca3af;
+      color: #6b7280;
+    }
+
+    .menu-item.out-of-stock .add-to-cart-btn:disabled:hover {
+      transform: none;
+      box-shadow: none;
     }
 
     .menu-item h3 {
@@ -432,7 +1174,6 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-bottom: 16px;
       background: #f8fafc;
       padding: 12px;
       border-radius: 12px;
@@ -500,6 +1241,39 @@
     .add-to-cart-btn:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 25px rgba(5, 150, 105, 0.4);
+    }
+
+    .add-to-cart-btn.added {
+      background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+      transform: scale(1.05);
+      box-shadow: 0 8px 25px rgba(5, 150, 105, 0.6);
+    }
+
+    .add-to-cart-btn.added::after {
+      content: '✓';
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      font-weight: bold;
+      color: white;
+      animation: checkmark 0.5s ease;
+    }
+
+    @keyframes checkmark {
+      0% {
+        opacity: 0;
+        transform: translateY(-50%) scale(0);
+      }
+      50% {
+        opacity: 1;
+        transform: translateY(-50%) scale(1.2);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(-50%) scale(1);
+      }
     }
 
     .cart-fab {
@@ -791,7 +1565,7 @@
     /* Profile Screen Styles */
     .profile-container {
       min-height: 100vh;
-      background: #f8fafc;
+      background: white;
       padding-bottom: 100px;
       max-width: 1200px;
       margin: 0 auto;
@@ -799,12 +1573,13 @@
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
       overflow: hidden;
       margin-bottom: 20px;
+      z-index: 20;
     }
 
     .profile-header {
       background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
       color: white;
-      padding: 30px 20px;
+      padding: 20px;
       text-align: center;
       border-radius: 0 0 20px 20px;
       margin: 0 20px;
@@ -812,18 +1587,19 @@
 
     .profile-info {
       display: flex;
-      flex-direction: column;
       align-items: center;
-      gap: 12px;
+      justify-content: center;
+      gap: 15px;
     }
 
     .profile-avatar {
-      width: 70px;
-      height: 70px;
+      width: 60px;
+      height: 60px;
       border-radius: 50%;
       overflow: hidden;
       border: 3px solid white;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+      flex-shrink: 0;
     }
 
     .profile-avatar img {
@@ -833,15 +1609,9 @@
     }
 
     .profile-details h2 {
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 600;
-      margin-bottom: 6px;
-    }
-
-    .profile-details p {
-      font-size: 13px;
-      opacity: 0.9;
-      margin-bottom: 3px;
+      margin: 0;
     }
 
     .profile-tabs {
@@ -856,16 +1626,16 @@
 
     .tab-btn {
       flex: 1;
-      padding: 14px 10px;
+      padding: 16px 12px;
       background: none;
       border: none;
       color: #64748b;
-      font-size: 13px;
-      font-weight: 500;
+      font-size: 16px;
+      font-weight: 700;
       cursor: pointer;
       transition: all 0.3s ease;
       white-space: nowrap;
-      border-bottom: 2px solid transparent;
+      border-bottom: 3px solid transparent;
     }
 
     .tab-btn:hover {
@@ -877,12 +1647,13 @@
       color: #3b82f6;
       border-bottom-color: #3b82f6;
       background: #eff6ff;
+      font-weight: 800;
     }
 
     .tab-content {
       padding: 20px;
       margin: 0 20px;
-      max-width: 600px;
+      max-width: 900px;
       margin-left: auto;
       margin-right: auto;
     }
@@ -917,6 +1688,37 @@
       margin-bottom: 16px;
     }
 
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .clear-history-btn {
+      background: none;
+      border: none;
+      font-size: 20px;
+      color: #9ca3af;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .clear-history-btn:hover {
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.1);
+      transform: scale(1.1);
+    }
+
+    .clear-history-btn:active {
+      transform: scale(0.95);
+    }
+
     .info-item {
       display: flex;
       justify-content: space-between;
@@ -935,8 +1737,16 @@
     }
 
     .order-history {
-      max-height: 400px;
+      max-height: 700px;
       overflow-y: auto;
+      width: 100%;
+      padding: 0 20px;
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* Internet Explorer 10+ */
+    }
+
+    .order-history::-webkit-scrollbar {
+      display: none; /* Chrome, Safari, Opera */
     }
 
     .order-item {
@@ -995,36 +1805,282 @@
       max-width: 400px;
     }
 
-    .order-item-with-rating {
-      background: #f8fafc;
+    .order-item-compact {
+      background: white;
       border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       border: 1px solid #e2e8f0;
-      position: relative;
+      overflow: hidden;
+      width: 100%;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
     }
 
-    .rating-section {
-      margin-top: 12px;
-      padding-top: 12px;
+    .order-header {
+      padding: 16px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f8fafc;
+      transition: background-color 0.2s ease;
+    }
+
+    .order-header:hover {
+      background: #f1f5f9;
+    }
+
+    .order-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .order-toggle {
+      color: #64748b;
+      font-size: 12px;
+    }
+
+    .order-header-rating {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 18px;
+      color: #fbbf24;
+      margin-left: auto;
+      margin-right: 20px;
+    }
+
+    .order-header-rating .stars {
+      display: flex;
+      gap: 2px;
+    }
+
+    .order-header-rating .star {
+      font-size: 18px;
+      color: #fbbf24;
+    }
+
+    .order-details {
+      padding: 16px;
       border-top: 1px solid #e2e8f0;
+    }
+
+    .order-feedback-container {
+      margin-top: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fafafa;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .feedback-section {
+      padding: 0;
+    }
+
+    .feedback-header {
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      color: white;
+      padding: 8px 12px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .feedback-header h4 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .feedback-content {
+      padding: 12px;
+    }
+
+    .delivery-personnel {
+      margin-bottom: 12px;
+      padding: 8px;
+      background: white;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .delivery-personnel label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: #6b7280;
+      margin-bottom: 6px;
+    }
+
+    .personnel-select {
+      width: 100%;
+      padding: 6px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      background: white;
+      font-size: 13px;
+      color: #374151;
+      cursor: pointer;
+      transition: border-color 0.2s ease;
+    }
+
+    .personnel-select:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .personnel-select:hover {
+      border-color: #9ca3af;
+    }
+
+
+
+    .rating-section {
+      margin-top: 0;
+      padding-top: 0;
+    }
+
+    .rating-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #6b7280;
+      margin-bottom: 6px;
     }
 
     .rating-stars {
       display: flex;
-      gap: 4px;
-      margin-bottom: 8px;
+      gap: 3px;
+      margin-bottom: 6px;
     }
 
     .star {
-      font-size: 20px;
+      font-size: 18px;
       cursor: pointer;
       color: #d1d5db;
       transition: color 0.2s ease;
+      position: relative;
     }
 
     .star.active {
       color: #fbbf24;
+    }
+
+    .order-actions {
+      margin: 12px 0;
+      display: flex;
+      justify-content: center;
+    }
+
+    .reorder-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .reorder-btn:hover {
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .reorder-btn:active {
+      transform: translateY(0);
+    }
+
+    /* İstatistik Kartları Stilleri */
+    .stats-container {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      border-color: #cbd5e1;
+    }
+
+    .stat-icon {
+      font-size: 32px;
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      color: white;
+      border-radius: 12px;
+      flex-shrink: 0;
+    }
+
+    .stat-content {
+      flex: 1;
+    }
+
+    .stat-number {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 4px;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+      .stats-container {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+      
+      .stat-card {
+        padding: 16px;
+        gap: 12px;
+      }
+      
+      .stat-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 24px;
+      }
+      
+      .stat-number {
+        font-size: 20px;
+      }
+      
+      .stat-label {
+        font-size: 12px;
+      }
     }
 
     .star:hover {
@@ -1037,12 +2093,12 @@
 
     .comment-input {
       width: 100%;
-      padding: 8px 12px;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      font-size: 14px;
+      padding: 6px 10px;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      font-size: 13px;
       resize: vertical;
-      min-height: 60px;
+      min-height: 50px;
       font-family: inherit;
       -webkit-user-select: text;
       -moz-user-select: text;
@@ -1052,21 +2108,21 @@
 
     .comment-input:focus {
       outline: none;
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      border-color: #6366f1;
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
     }
 
     .submit-rating-btn {
-      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
       color: white;
       border: none;
-      padding: 8px 16px;
-      border-radius: 8px;
-      font-size: 14px;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 12px;
       font-weight: 500;
       cursor: pointer;
-      transition: all 0.3s ease;
-      margin-top: 8px;
+      transition: all 0.2s ease;
+      margin-top: 6px;
     }
 
     .submit-rating-btn:hover {
@@ -1087,6 +2143,12 @@
       background: #f0f9ff;
       border-radius: 8px;
       border-left: 4px solid #3b82f6;
+      display: block !important;
+      min-height: 20px;
+    }
+
+    .rating-display:empty {
+      display: none !important;
     }
 
     .rating-display .stars {
@@ -1228,9 +2290,36 @@
       width: 100%;
     }
 
+    .modal-footer .btn-secondary {
+      background: #6b7280;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      min-width: 120px;
+      flex: 1;
+      width: 100%;
+      height: 44px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-footer .btn-secondary:hover {
+      background: #4b5563;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
+    }
+
     .btn-secondary:hover {
       background: #475569;
       transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3);
     }
 
 
@@ -1334,27 +2423,16 @@
   </style>
 </head>
 <body>
-  <!-- Cloud Animation Background -->
-  <div class="cloud-bg">
-    <img src="../assets/images/cloud.png" alt="Cloud" class="cloud cloud1">
-    <img src="../assets/images/cloud.png" alt="Cloud" class="cloud cloud2">
-    <img src="../assets/images/cloud.png" alt="Cloud" class="cloud cloud3">
-    <img src="../assets/images/cloud.png" alt="Cloud" class="cloud cloud4">
-    <img src="../assets/images/cloud.png" alt="Cloud" class="cloud cloud5">
-    <img src="../assets/images/cloud.png" alt="Cloud" class="cloud cloud6">
-  </div>
+
 
   <!-- Login Screen -->
   <div id="loginScreen" class="screen active">
-    <!-- Cloud Animation Background -->
-    <div class="cloud-bg">
-      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud1">
-      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud2">
-      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud3">
-      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud4">
-      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud5">
-      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud6">
-    </div>
+    <!-- Bursa Tarihi Güzellikleri Arka Plan -->
+    <video class="background-video" id="loginVideo" muted loop playsinline preload="metadata">
+      <source src="assets/sounds/videos/bursa1.mp4" type="video/mp4">
+    </video>
+    <div class="background-video-overlay"></div>
+    
     <div class="auth-container">
       <div class="auth-card">
         <div class="logo-section">
@@ -1375,8 +2453,8 @@
               <input type="password" id="loginPassword" required>
               <button type="button" class="password-toggle" onclick="togglePassword('loginPassword')">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
                 </svg>
               </button>
             </div>
@@ -1401,15 +2479,12 @@
 
   <!-- Register Screen -->
   <div id="registerScreen" class="screen">
-    <!-- Cloud Animation Background -->
-    <div class="cloud-bg">
-      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud1">
-      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud2">
-      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud3">
-      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud4">
-      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud5">
-      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud6">
-    </div>
+    <!-- Bursa Tarihi Güzellikleri Arka Plan -->
+    <video class="background-video" id="registerVideo" muted loop playsinline preload="metadata">
+      <source src="assets/sounds/videos/bursa2.mp4" type="video/mp4">
+    </video>
+    <div class="background-video-overlay"></div>
+    
     <div class="auth-container">
       <div class="auth-card">
         <div class="logo-section">
@@ -1438,6 +2513,7 @@
             <label for="registerFloor">Kat</label>
             <select id="registerFloor" required>
               <option value="">Kat seçin</option>
+              <option value="0">Zemin</option>
               <option value="1">1. Kat</option>
               <option value="2">2. Kat</option>
               <option value="3">3. Kat</option>
@@ -1462,8 +2538,8 @@
               <input type="password" id="registerPassword" required>
               <button type="button" class="password-toggle" onclick="togglePassword('registerPassword')">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
                 </svg>
               </button>
             </div>
@@ -1475,8 +2551,8 @@
               <input type="password" id="registerPasswordRepeat" required>
               <button type="button" class="password-toggle" onclick="togglePassword('registerPasswordRepeat')">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
                 </svg>
               </button>
             </div>
@@ -1499,15 +2575,12 @@
 
   <!-- Forgot Password Screen -->
   <div id="forgotPasswordScreen" class="screen">
-    <!-- Cloud Animation Background -->
-    <div class="cloud-bg">
-      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud1">
-      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud2">
-      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud3">
-      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud4">
-      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud5">
-      <img src="assets/images/cloud.png" alt="Cloud" class="cloud cloud6">
-    </div>
+    <!-- Bursa Tarihi Güzellikleri Arka Plan -->
+    <video class="background-video" id="forgotPasswordVideo" muted loop playsinline preload="metadata">
+      <source src="assets/sounds/videos/bursa3.mp4" type="video/mp4">
+    </video>
+    <div class="background-video-overlay"></div>
+    
     <div class="auth-container">
       <div class="auth-card">
         <div class="logo-section">
@@ -1539,11 +2612,12 @@
 
   <!-- Order Screen -->
   <div id="orderScreen" class="screen">
+    
     <div class="order-container">
       <!-- Header -->
       <header class="header">
         <div class="header-content">
-          <h1>Buski Çay</h1>
+          <h1>Buski Çay Saati</h1>
           <p>Hoş geldiniz, <span id="userName">Kullanıcı</span>!</p>
         </div>
       </header>
@@ -1555,18 +2629,35 @@
 
       <!-- Cart FAB -->
       <div class="cart-fab" onclick="toggleCart()">
-        <span class="cart-icon">🛒</span>
+        <span class="cart-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <path d="M16 10a4 4 0 0 1-8 0"></path>
+          </svg>
+        </span>
         <span class="cart-count" id="cartCount">0</span>
       </div>
 
       <!-- Bottom Navigation -->
       <nav class="bottom-nav">
         <div class="nav-item active" onclick="showOrderTab()">
-          <span class="nav-icon">🛒</span>
+          <span class="nav-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="9" cy="21" r="1"></circle>
+              <circle cx="20" cy="21" r="1"></circle>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+          </span>
           <span class="nav-text">Sipariş</span>
         </div>
         <div class="nav-item" onclick="showProfileTab()">
-          <span class="nav-icon">👤</span>
+          <span class="nav-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </span>
           <span class="nav-text">Profil</span>
         </div>
       </nav>
@@ -1597,7 +2688,8 @@
 
   <!-- Profile Screen -->
   <div id="profileScreen" class="screen">
-    <div class="profile-container">
+    
+    <div class="order-container">
       <!-- Profile Header -->
       <div class="profile-header">
         <div class="profile-info">
@@ -1606,9 +2698,6 @@
           </div>
           <div class="profile-details">
             <h2 id="profileUserName">Kullanıcı</h2>
-            <p id="profileUserEmail">kullanici@email.com</p>
-            <p id="profileUserFloor">Kat: -</p>
-            <p id="profileUserDepartment">Departman: -</p>
           </div>
         </div>
       </div>
@@ -1649,7 +2738,44 @@
         <!-- History Tab -->
         <div id="history-section" class="tab-panel">
           <div class="history-card">
-            <h3>Sipariş Geçmişi</h3>
+            <div class="history-header">
+              <h3>Sipariş Geçmişi</h3>
+              <button class="clear-history-btn" onclick="clearAllHistory()" title="Tüm Siparişleri Temizle">
+                🗑️
+              </button>
+            </div>
+            
+            <!-- İstatistik Kartları -->
+            <div class="stats-container">
+              <div class="stat-card">
+                <div class="stat-icon">📦</div>
+                <div class="stat-content">
+                  <div class="stat-number" id="totalOrders">0</div>
+                  <div class="stat-label">Toplam Sipariş</div>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon">💰</div>
+                <div class="stat-content">
+                  <div class="stat-number" id="totalSpent">0 ₺</div>
+                  <div class="stat-label">Toplam Harcama</div>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-content">
+                  <div class="stat-number" id="avgOrderValue">0 ₺</div>
+                  <div class="stat-label">Ortalama Sipariş</div>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon">🏆</div>
+                <div class="stat-content">
+                  <div class="stat-number" id="favoriteItem">-</div>
+                  <div class="stat-label">Favori Ürün</div>
+                </div>
+              </div>
+            </div>
             
             <!-- Pasta Grafiği -->
             <div class="chart-container">
@@ -1676,8 +2802,8 @@
                   <input type="password" id="currentPassword" required>
                   <button type="button" class="password-toggle" onclick="togglePassword('currentPassword')">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                      <line x1="1" y1="1" x2="23" y2="23"></line>
                     </svg>
                   </button>
                 </div>
@@ -1688,8 +2814,8 @@
                   <input type="password" id="newPassword" required>
                   <button type="button" class="password-toggle" onclick="togglePassword('newPassword')">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                      <line x1="1" y1="1" x2="23" y2="23"></line>
                     </svg>
                   </button>
                 </div>
@@ -1700,8 +2826,8 @@
                   <input type="password" id="confirmPassword" required>
                   <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword')">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                      <line x1="1" y1="1" x2="23" y2="23"></line>
                     </svg>
                   </button>
                 </div>
@@ -1727,6 +2853,10 @@
                 </div>
               </div>
               <input type="file" id="profileImageInput" accept="image/*" style="display: none;" onchange="handleProfileImageUpload()">
+              <div id="profileImageLoading" style="display: none; margin-top: 10px;">
+                <div style="display: inline-block; width: 20px; height: 20px; border: 2px solid #f3f3f3; border-top: 2px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <span style="margin-left: 10px; color: #666;">Resim yükleniyor...</span>
+              </div>
             </div>
 
             <!-- Edit Profile Form -->
@@ -1742,7 +2872,8 @@
               </div>
               <div class="form-group">
                 <label for="editFloor">Kat</label>
-                <select id="editFloor" required>
+                <select id="editFloor" required disabled style="background-color: #f3f4f6; color: #6b7280;">
+                  <option value="0">Zemin</option>
                   <option value="1">1. Kat</option>
                   <option value="2">2. Kat</option>
                   <option value="3">3. Kat</option>
@@ -1769,11 +2900,22 @@
       <!-- Bottom Navigation (Profil için) -->
       <nav class="bottom-nav profile-bottom-nav">
         <div class="nav-item" onclick="showOrderTab()">
-          <span class="nav-icon">🛒</span>
+          <span class="nav-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="9" cy="21" r="1"></circle>
+              <circle cx="20" cy="21" r="1"></circle>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+          </span>
           <span class="nav-text">Sipariş Yap</span>
         </div>
         <div class="nav-item active" onclick="showProfileTab()">
-          <span class="nav-icon">👤</span>
+          <span class="nav-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </span>
           <span class="nav-text">Profil</span>
         </div>
       </nav>
@@ -1783,6 +2925,122 @@
 
   <!-- Notification -->
   <div id="notification" class="notification"></div>
+
+  <!-- Logout Confirmation Modal -->
+  <div id="logoutModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-icon success">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22,4 12,14.01 9,11.01"></polyline>
+          </svg>
+        </div>
+        <h3>Çıkış Yap</h3>
+      </div>
+      <div class="modal-body">
+        <p>Çıkış yapmak istediğinizden emin misiniz?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeLogoutModal()">İptal</button>
+        <button class="btn" onclick="confirmLogout()">Çıkış Yap</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Alert Modal -->
+  <div id="successAlertModal" class="modal-overlay">
+    <div class="modal-content success-modal">
+      <div class="modal-header">
+        <div class="modal-icon success">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22,4 12,14.01 9,11.01"></polyline>
+          </svg>
+        </div>
+        <h3 id="successAlertTitle">Başarılı!</h3>
+      </div>
+      <div class="modal-body">
+        <p id="successAlertMessage">İşlem başarıyla tamamlandı.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-primary" onclick="closeSuccessAlert()">Tamam</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Account Confirmation Modal -->
+  <div id="deleteAccountModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-icon danger">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 6h18"></path>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            <line x1="10" y1="11" x2="10" y2="17"></line>
+            <line x1="14" y1="11" x2="14" y2="17"></line>
+          </svg>
+        </div>
+        <h3>Hesabı Sil</h3>
+      </div>
+      <div class="modal-body">
+        <p>Hesabınızı silmek istediğinizden emin misiniz?</p>
+        <p style="color: #ef4444; font-size: 14px; margin-top: 8px;">Bu işlem geri alınamaz!</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeDeleteAccountModal()">İptal</button>
+        <button class="btn-danger" onclick="confirmDeleteAccount()">Hesabı Sil</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reorder Modal -->
+  <div id="reorderModal" class="reorder-modal-overlay">
+    <div class="reorder-modal">
+      <div class="reorder-modal-header">
+        <h3 class="reorder-modal-title">Siparişi Tekrarla</h3>
+        <button class="reorder-modal-close" onclick="closeReorderModal()">✕</button>
+      </div>
+      <div class="reorder-items-list" id="reorderItemsList">
+        <!-- Items will be populated here -->
+      </div>
+      <div class="reorder-total">
+        <div class="reorder-total-label">Genel Toplam</div>
+        <div class="reorder-total-amount" id="reorderTotalAmount">0 ₺</div>
+      </div>
+      <div class="reorder-modal-actions">
+        <button class="reorder-btn-cancel" onclick="closeReorderModal()">İptal</button>
+        <button class="reorder-btn-confirm" onclick="confirmReorder()">Siparişi Tekrarla</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clear History Modal -->
+  <div id="clearHistoryModal" class="clear-history-modal-overlay">
+    <div class="clear-history-modal">
+      <div class="clear-history-icon">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 6h18"></path>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+          <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          <line x1="10" y1="11" x2="10" y2="17"></line>
+          <line x1="14" y1="11" x2="14" y2="17"></line>
+        </svg>
+      </div>
+      <h3 class="clear-history-title">Sipariş Geçmişini Sil</h3>
+      <p class="clear-history-message">
+        Tüm sipariş geçmişinizi kalıcı olarak silmek istediğinizden emin misiniz?
+      </p>
+      <div class="clear-history-warning">
+        ⚠️ Bu işlem geri alınamaz ve tüm sipariş verileriniz kaybolacaktır!
+      </div>
+      <div class="clear-history-actions">
+        <button class="clear-history-btn-cancel" onclick="closeClearHistoryModal()">İptal</button>
+        <button class="clear-history-btn-confirm" onclick="confirmClearHistory()">Geçmişi Sil</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Firebase Config -->
   <script src="firebase-config.js"></script>
@@ -1797,17 +3055,23 @@
     let orderChart = null;
     let orderHistoryData = [];
     let ratings = {};
+    let isRegistering = false; // Kayıt işlemi flag'i
 
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     
     // DOM Content Loaded
     document.addEventListener('DOMContentLoaded', function() {
+      console.log("DOM yüklendi, uygulama başlatılıyor...");
       initializeApp();
       checkAuth();
+      
+
     });
 
     function initializeApp() {
+      console.log("Uygulama başlatılıyor...");
+      
       // Set random sentence for animated text
       const sentences = [
         "Çay keyfinizi keşfedin! ☕",
@@ -1821,20 +3085,56 @@
       document.getElementById('loginForm').addEventListener('submit', handleLogin);
       document.getElementById('registerForm').addEventListener('submit', handleRegister);
       document.getElementById('forgotPasswordForm').addEventListener('submit', handleForgotPassword);
+      
+      // Başlangıçta giriş sayfasını göster
+      showScreen('loginScreen');
+      console.log("Başlangıçta giriş sayfası gösteriliyor");
     }
 
     function checkAuth() {
+      console.log("Kimlik doğrulama kontrol ediliyor...");
+      
+      // Firebase kimlik doğrulama durumunu dinle
       firebase.auth().onAuthStateChanged(function(user) {
         if (user) {
+          console.log("Kullanıcı giriş yapmış:", user.email);
+          
+          // Eğer kayıt işlemi sırasındaysa menü sayfasına yönlendirme
+          if (isRegistering) {
+            console.log("Kayıt işlemi sırasında, menü sayfasına yönlendirme atlanıyor");
+            return;
+          }
+          
           currentUser = user;
-          loadUserData();
           showScreen('orderScreen');
+          
+          // Buski resmi kaldırıldı
+          
+          // Menü grid'ine Buski loading animasyonu göster
+          const menuGrid = document.getElementById('menuGrid');
+          if (menuGrid) {
+            menuGrid.innerHTML = `
+              <div class="buski-loading">
+                <div class="buski-logo-container">
+                  <div class="buski-logo-outline"></div>
+                  <div class="buski-logo-fill"></div>
+                  <img src="../assets/images/logo1.png" alt="Buski" class="buski-logo-image">
+                </div>
+                <div class="buski-loading-text">Menü yükleniyor...</div>
+              </div>
+            `;
+          }
+          
+          // Önce kullanıcı verisini yükle, sonra menüyü yükle
+          loadUserData();
         } else {
+          console.log("Kullanıcı giriş yapmamış, giriş sayfasında kalıyor");
           currentUser = null;
           userData = {};
           menu = [];
           cartItems = [];
-          showScreen('loginScreen');
+          // Giriş yapmamış kullanıcılar için menü yükleme
+          loadMenu();
         }
       });
     }
@@ -1842,104 +3142,344 @@
     function loadUserData() {
       console.log("loadUserData çağrıldı, currentUser:", currentUser);
       
-      if (!currentUser) return;
+      if (!currentUser) {
+        console.log("Kullanıcı yok, userData temizleniyor");
+        userData = {};
+        loadMenu();
+        return;
+      }
+      
+      console.log("Firebase'den kullanıcı verisi çekiliyor, UID:", currentUser.uid);
       
       firebase.firestore().collection('users').doc(currentUser.uid).get()
         .then((doc) => {
           console.log("Firestore'dan gelen user data:", doc.data());
           if (doc.exists) {
             userData = doc.data();
-            console.log("userData set edildi:", userData);
+            console.log("userData başarıyla set edildi:", userData);
+            console.log("Kullanıcı bilgileri:", {
+              name: userData.name,
+              surname: userData.surname,
+              email: userData.email,
+              floor: userData.floor,
+              department: userData.department
+            });
             updateUserInterface();
+            loadMenu();
+          } else {
+            console.log("Kullanıcı verisi Firestore'da bulunamadı");
+            userData = {};
             loadMenu();
           }
         })
         .catch((error) => {
-          console.error("Error loading user data:", error);
+          console.error("Firebase'den kullanıcı verisi çekilirken hata:", error);
+          userData = {};
+          loadMenu();
         });
     }
 
     function updateUserInterface() {
+      console.log("updateUserInterface çağrıldı, userData:", userData);
+      
       // Update order screen
-      document.getElementById('userName').textContent = userData.name || 'Kullanıcı';
+      const userNameElement = document.getElementById('userName');
+      if (userNameElement) {
+        userNameElement.textContent = userData.name || 'Kullanıcı';
+        console.log("Order screen userName güncellendi:", userData.name || 'Kullanıcı');
+      }
       
-      // Update profile screen data
-      document.getElementById('profileUserName').textContent = userData.name || 'Kullanıcı';
-      document.getElementById('profileUserEmail').textContent = userData.email || 'kullanici@email.com';
-      document.getElementById('profileUserFloor').textContent = `Kat: ${userData.floor || '-'}`;
-      document.getElementById('profileUserDepartment').textContent = `Departman: ${userData.department || '-'}`;
+      // Update profile screen data - sadece isim
+      const profileUserNameElement = document.getElementById('profileUserName');
+      if (profileUserNameElement) {
+        profileUserNameElement.textContent = userData.name || 'Kullanıcı';
+        console.log("Profile screen userName güncellendi:", userData.name || 'Kullanıcı');
+      }
       
-      document.getElementById('profileFullName').textContent = `${userData.name || ''} ${userData.surname || ''}`;
-      document.getElementById('profileEmail').textContent = userData.email || '-';
-      document.getElementById('profileFloor').textContent = userData.floor || '-';
-      document.getElementById('profileDept').textContent = userData.department || '-';
+      // Update detailed profile info (bilgiler sekmesinde)
+      const profileFullNameElement = document.getElementById('profileFullName');
+      if (profileFullNameElement) {
+        const fullName = `${userData.name || ''} ${userData.surname || ''}`.trim();
+        profileFullNameElement.textContent = fullName || '-';
+        console.log("Profile fullName güncellendi:", fullName || '-');
+      }
+      
+      const profileEmailElement = document.getElementById('profileEmail');
+      if (profileEmailElement) {
+        profileEmailElement.textContent = userData.email || '-';
+        console.log("Profile email güncellendi:", userData.email || '-');
+      }
+      
+      const profileFloorElement = document.getElementById('profileFloor');
+      if (profileFloorElement) {
+        profileFloorElement.textContent = userData.floor || '-';
+        console.log("Profile floor güncellendi:", userData.floor || '-');
+      }
+      
+      const profileDeptElement = document.getElementById('profileDept');
+      if (profileDeptElement) {
+        profileDeptElement.textContent = userData.department || '-';
+        console.log("Profile department güncellendi:", userData.department || '-');
+      }
       
       // Update profile image if exists
-      if (userData.profileImage) {
-        document.getElementById('profileImagePreview').src = userData.profileImage;
-        document.getElementById('profileImagePreview2').src = userData.profileImage;
+                          if (userData.profileImage) {
+                      const profileImagePreview = document.getElementById('profileImagePreview');
+                      const profileImagePreview2 = document.getElementById('profileImagePreview2');
+                      
+                      // Base64 veya URL kontrolü
+                      if (userData.profileImage.startsWith('data:image')) {
+                        // Base64 formatında
+                        if (profileImagePreview) profileImagePreview.src = userData.profileImage;
+                        if (profileImagePreview2) profileImagePreview2.src = userData.profileImage;
+                      } else if (userData.profileImage.startsWith('http')) {
+                        // URL formatında
+                        if (profileImagePreview) profileImagePreview.src = userData.profileImage;
+                        if (profileImagePreview2) profileImagePreview2.src = userData.profileImage;
+                      }
+                      
+                      console.log("Profile image güncellendi:", userData.profileImage.substring(0, 50) + "...");
+                    }
+      
+      // Update settings form fields (ayarlar sekmesindeki form alanları)
+      const editNameElement = document.getElementById('editName');
+      const editDepartmentElement = document.getElementById('editDepartment');
+      const editFloorElement = document.getElementById('editFloor');
+      
+      if (editNameElement) {
+        editNameElement.value = userData.name || '';
+        console.log("Settings form editName güncellendi:", userData.name || '');
       }
+      
+      if (editDepartmentElement) {
+        editDepartmentElement.value = userData.department || '';
+        console.log("Settings form editDepartment güncellendi:", userData.department || '');
+      }
+      
+      if (editFloorElement) {
+        editFloorElement.value = userData.floor || '1';
+        console.log("Settings form editFloor güncellendi:", userData.floor || '1');
+      }
+      
+      console.log("updateUserInterface tamamlandı");
     }
+
+    // Gerçek zamanlı menü dinleyicisi
+    let menuListener = null;
 
     function loadMenu() {
       console.log("loadMenu çağrıldı, userData:", userData);
       
+      // Kullanıcı giriş yapmamışsa veya floor bilgisi yoksa menü yükleme
       if (!userData || !userData.floor) {
-        console.log("userData veya floor bilgisi eksik, varsayılan menü yükleniyor");
-        // Varsayılan menü yükle
-        menu = [
-          { name: 'Çay', price: 5, description: 'Sıcak çay' },
-          { name: 'Kahve', price: 8, description: 'Sıcak kahve' },
-          { name: 'Su', price: 2, description: 'Soğuk su' },
-          { name: 'Sandviç', price: 15, description: 'Taze sandviç' }
-        ];
-        displayMenu();
+        if (currentUser) {
+          console.log("Kullanıcı giriş yapmış ama verisi henüz yüklenmemiş, loading mesajı gösteriliyor");
+          menu = [];
+          displayMenu();
+        } else {
+          console.log("Kullanıcı giriş yapmamış, menü yüklenmiyor");
+          menu = [];
+          displayMenu();
+        }
         return;
       }
 
-      let menuCollection = 'kat123';
+      // Kat bazlı menü koleksiyonu belirleme
+      let menuCollection = 'kat123'; // Zemin, 1, 2, 3 katları için
       if (userData.floor >= 4 && userData.floor <= 6) {
-        menuCollection = 'kat456';
-      } else if (userData.floor >= 7) {
-        menuCollection = 'kat78910';
+        menuCollection = 'kat456'; // 4, 5, 6 katları için
+      } else if (userData.floor >= 7 && userData.floor <= 10) {
+        menuCollection = 'kat78910'; // 7, 8, 9, 10 katları için
       }
 
-      console.log("Menü koleksiyonu:", menuCollection);
+      console.log("Kullanıcı katı:", userData.floor, "Menü koleksiyonu:", menuCollection);
 
-      firebase.firestore().collection('menu').doc(menuCollection).get()
-        .then((docSnapshot) => {
-          console.log("Firebase'den gelen veri:", docSnapshot.data());
+      // Önceki dinleyiciyi temizle
+      if (menuListener) {
+        menuListener();
+        menuListener = null;
+      }
+
+      // Gerçek zamanlı dinleyici ekle
+      menuListener = firebase.firestore().collection('menu').doc(menuCollection)
+        .onSnapshot((docSnapshot) => {
+          console.log("Firebase'den gerçek zamanlı menü güncellemesi:", docSnapshot.data());
           if (docSnapshot.exists) {
             const menuData = docSnapshot.data();
             menu = menuData.items || menuData.menu || [];
             console.log("Toplam menü öğesi:", menu.length);
+            
+            // Stok durumunu kontrol et ve logla
+            const stoktaOlanlar = menu.filter(item => item.inStock !== false);
+            const stoktaOlmayanlar = menu.filter(item => item.inStock === false);
+            console.log("Stokta olan ürünler:", stoktaOlanlar.length);
+            console.log("Stokta olmayan ürünler:", stoktaOlmayanlar.length);
+            if (stoktaOlmayanlar.length > 0) {
+              console.log("Stokta olmayan ürünler:", stoktaOlmayanlar.map(item => item.name));
+            }
+            
             displayMenu();
           } else {
-            console.log("Menü dokümanı bulunamadı, varsayılan menü yükleniyor");
-            // Varsayılan menü yükle
-            menu = [
-              { name: 'Çay', price: 5, description: 'Sıcak çay' },
-              { name: 'Kahve', price: 8, description: 'Sıcak kahve' },
-              { name: 'Su', price: 2, description: 'Soğuk su' },
-              { name: 'Sandviç', price: 15, description: 'Taze sandviç' }
-            ];
+            console.log("Menü dokümanı bulunamadı, boş menü gösteriliyor");
+            menu = [];
             displayMenu();
           }
-        })
-        .catch((error) => {
-          console.error("Error loading menu:", error);
-          // Hata durumunda varsayılan menü göster
-          menu = [
-            { name: 'Çay', price: 5, description: 'Sıcak çay' },
-            { name: 'Kahve', price: 8, description: 'Sıcak kahve' },
-            { name: 'Su', price: 2, description: 'Soğuk su' },
-            { name: 'Sandviç', price: 15, description: 'Taze sandviç' }
-          ];
+        }, (error) => {
+          console.error("Menü dinlenirken hata oluştu:", error);
+          menu = [];
           displayMenu();
         });
     }
 
+    // Global ürün mapping'leri - displayMenu dışında tanımlanmalı
+    const nameToId = {
+      // Kahve Kategorisi
+      'TÜRK Kahvesi': 'turk_kahvesi',
+      'TURK Kahvesi': 'turk_kahvesi',
+      'Nescafe': 'nescafe',
+      
+      // Çay Kategorisi
+      'Çay': 'cay',
+      'Büyük Çay': 'buyuk_cay',
+      'Çiçek': 'ihlamur',
+      'Çiçek (Ihlamur)': 'ihlamur',
+      'Ihlamur': 'ihlamur',
+      'Kuşburnu': 'kusburnu',
+      'Adaçayı': 'adacayi',
+      'Oralet': 'oralet',
+      
+              // İçecek Kategorisi
+        'Maden Suyu': 'maden_suyu',
+        'Sade Gazoz': 'sade_gazoz',
+        'Sade': 'sade_gazoz',
+        'Sarı Gazoz': 'sari_gazoz',
+        'Limonlu Soda': 'limonlu_soda',
+        'Narlı Soda': 'narli_soda',
+        'Elmalı Soda': 'elmalı_soda',
+      
+      // Çay Fişi
+      'Çay Fişi 100\'lü': 'cay_fisi',
+      'Çay Fişi': 'cay_fisi'
+    };
+
+    const itemImages = {
+      // Kahve Kategorisi
+      'turk_kahvesi': 'assets/sounds/images/tk.jpg',
+      'nescafe': 'assets/sounds/images/nescafe.jpg',
+      
+      // Çay Kategorisi
+      'cay': 'assets/sounds/images/cay.png',
+      'buyuk_cay': 'assets/sounds/images/buyukcay.png',
+      'ihlamur': 'assets/sounds/images/ihlamur.jpg',
+      'kusburnu': 'assets/sounds/images/kuşburnu.jpg',
+      'adacayi': 'assets/sounds/images/adacayi.jpg',
+      'oralet': 'assets/sounds/images/oralet.jpg',
+      
+      // İçecek Kategorisi
+      'maden_suyu': 'assets/sounds/images/madensuyu.jpg',
+      'sade_gazoz': 'assets/sounds/images/sadegazoz.jpg',
+      'sari_gazoz': 'assets/sounds/images/sarıgazoz.jpg',
+      'limonlu_soda': 'assets/sounds/images/limonlusoda.jpg',
+      'narli_soda': 'assets/sounds/images/narlısoda.jpg',
+      'elmalı_soda': 'assets/sounds/images/elmalısoda.jpg',
+      
+      // Çay Fişi
+      'cay_fisi': 'assets/sounds/images/çay fişi.jpg'
+    };
+
+    // Ürün isimlerini ID'lere eşleştiren fonksiyon - Akıllı eşleştirme
+    function getItemId(itemName) {
+      // Önce tam eşleşme ara
+      if (nameToId[itemName]) {
+        return nameToId[itemName];
+      }
+      
+      // Tam eşleşme yoksa akıllı eşleştirme yap
+      const normalizedName = itemName.toLowerCase()
+        .replace(/ç/g, 'c')
+        .replace(/ğ/g, 'g')
+        .replace(/ı/g, 'i')
+        .replace(/ö/g, 'o')
+        .replace(/ş/g, 's')
+        .replace(/ü/g, 'u')
+        .replace(/\s+/g, '')
+        .replace(/[^a-z0-9]/g, '');
+      
+      // Mevcut ID'leri kontrol et
+      for (const [name, id] of Object.entries(nameToId)) {
+        const normalizedExistingName = name.toLowerCase()
+          .replace(/ç/g, 'c')
+          .replace(/ğ/g, 'g')
+          .replace(/ı/g, 'i')
+          .replace(/ö/g, 'o')
+          .replace(/ş/g, 's')
+          .replace(/ü/g, 'u')
+          .replace(/\s+/g, '')
+          .replace(/[^a-z0-9]/g, '');
+        
+        // Eğer normalize edilmiş isimler benzer ise eşleştir
+        if (normalizedName.includes(normalizedExistingName) || 
+            normalizedExistingName.includes(normalizedName) ||
+            normalizedName === normalizedExistingName) {
+          console.log(`🔄 Akıllı eşleştirme: "${itemName}" -> "${name}" (ID: ${id})`);
+          return id;
+        }
+      }
+      
+      console.log(`❌ Eşleştirme bulunamadı: "${itemName}"`);
+      return null;
+    }
+
+    // Yeni ürün eklemek için kolay fonksiyon
+    function addNewProduct(productName, imagePath) {
+      // ID oluştur (Türkçe karakterleri kaldır, boşlukları _ yap)
+      const productId = productName.toLowerCase()
+        .replace(/ç/g, 'c')
+        .replace(/ğ/g, 'g')
+        .replace(/ı/g, 'i')
+        .replace(/ö/g, 'o')
+        .replace(/ş/g, 's')
+        .replace(/ü/g, 'u')
+        .replace(/\s+/g, '_')
+        .replace(/[^a-z0-9_]/g, '');
+      
+      // itemImages'e ekle
+      itemImages[productId] = imagePath;
+      
+      // nameToId mapping'e ekle
+      nameToId[productName] = productId;
+      
+      console.log(`Yeni ürün eklendi: ${productName} -> ${productId}`);
+    }
+
+    // Otomatik fotoğraf bulma fonksiyonu
+    function findSimilarImage(productName) {
+      const normalizedName = productName.toLowerCase()
+        .replace(/ç/g, 'c')
+        .replace(/ğ/g, 'g')
+        .replace(/ı/g, 'i')
+        .replace(/ö/g, 'o')
+        .replace(/ş/g, 's')
+        .replace(/ü/g, 'u')
+        .replace(/\s+/g, '')
+        .replace(/[^a-z0-9]/g, '');
+      
+      // Mevcut fotoğrafları kontrol et
+      for (const [id, imagePath] of Object.entries(itemImages)) {
+        const normalizedId = id.replace(/_/g, '');
+        
+        if (normalizedName.includes(normalizedId) || 
+            normalizedId.includes(normalizedName)) {
+          console.log(`🖼️ Benzer fotoğraf bulundu: "${productName}" -> ${imagePath}`);
+          return imagePath;
+        }
+      }
+      
+      return null;
+    }
+
     function displayMenu() {
+      console.log("displayMenu çağrıldı, menu:", menu);
       const menuGrid = document.getElementById('menuGrid');
       
       if (!menuGrid) {
@@ -1949,55 +3489,112 @@
       
       menuGrid.innerHTML = '';
       
-      const itemEmojis = {
-        'Çay': '☕',
-        'Kahve': '☕',
-        'Türk Kahvesi': '☕',
-        'Espresso': '☕',
-        'Cappuccino': '☕',
-        'Latte': '☕',
-        'Mocha': '☕',
-        'Americano': '☕',
-        'Sıcak Çikolata': '🍫',
-        'Süt': '🥛',
-        'Su': '💧',
-        'Meyve Suyu': '🍹',
-        'Limonata': '🍋',
-        'Çorba': '🍲',
-        'Sandviç': '🥪',
-        'Tost': '🥪',
-        'Pasta': '🍰',
-        'Kurabiye': '🍪',
-        'Börek': '🥐',
-        'Simit': '🥨',
-        'Çay Fişi 100\'lü': '🎫'
-      };
+      // Eğer menü boşsa uygun mesaj göster
+      if (!menu || menu.length === 0) {
+        if (!userData || !userData.floor) {
+          // Kullanıcı giriş yapmış ama verisi henüz yüklenmemiş
+          menuGrid.innerHTML = `
+            <div class="buski-loading">
+              <div class="buski-logo-container">
+                <div class="buski-logo-outline"></div>
+                <div class="buski-logo-fill"></div>
+                <img src="../assets/images/logo1.png" alt="Buski" class="buski-logo-image">
+              </div>
+              <div class="buski-loading-text">Menü yükleniyor...</div>
+            </div>
+          `;
+        } else {
+          menuGrid.innerHTML = '<div style="text-align: center; padding: 40px; color: #64748b; font-size: 16px;">Bu kat için henüz menü bulunmuyor</div>';
+        }
+        console.log("Boş menü gösteriliyor");
+        return;
+      }
 
       menu.forEach((item, index) => {
-        const emoji = itemEmojis[item.name] || '🍽️';
-        const menuItem = document.createElement('div');
-        menuItem.className = 'menu-item';
-        menuItem.setAttribute('data-emoji', emoji);
+        // Stok durumunu kontrol et
+        const isOutOfStock = item.inStock === false;
+        if (isOutOfStock) {
+          console.log(`Ürün stokta yok, gri gösteriliyor: ${item.name}`);
+        }
+        
+        const itemId = getItemId(item.name);
+        let imagePath = itemId ? itemImages[itemId] : null;
+        
+        // Eğer fotoğraf bulunamadıysa, benzer fotoğraf ara
+        if (!imagePath) {
+          const similarImage = findSimilarImage(item.name);
+          if (similarImage) {
+            imagePath = similarImage;
+            console.log(`✅ Benzer fotoğraf kullanıldı: "${item.name}" -> ${similarImage}`);
+          } else {
+            console.log(`⚠️ Fotoğraf bulunamadı: "${item.name}" (ID: ${itemId})`);
+          }
+        }
+        const imageHtml = imagePath ? `<img src="${imagePath}" alt="${item.name}" class="menu-image">` : '<div class="menu-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg></div>';
         
         // Escape single quotes in item name for onclick handlers
         const escapedItemName = item.name.replace(/'/g, "\\'");
         
+        // Dinamik opsiyon seçenekleri
+        let optionsHtml = '';
+        if (item.options && Array.isArray(item.options) && item.options.length > 0) {
+          // Panelden eklenen opsiyonlar varsa onları kullan
+          console.log(`🔄 Ürün "${item.name}" için opsiyonlar yükleniyor:`, item.options);
+          optionsHtml = `
+            <div class="sugar-options">
+              <select id="sugar-${item.name}" class="sugar-select">
+                ${item.options.map((option, index) => 
+                  `<option value="${option}" ${index === 0 ? 'selected' : ''}>${option}</option>`
+                ).join('')}
+              </select>
+            </div>
+          `;
+        } else if (item.name.toLowerCase().includes('türk kahvesi') || item.name.toLowerCase().includes('turk kahvesi')) {
+          // Türk kahvesi için varsayılan şeker seçenekleri
+          console.log(`☕ Türk kahvesi için varsayılan şeker seçenekleri yükleniyor: "${item.name}"`);
+          optionsHtml = `
+            <div class="sugar-options">
+              <select id="sugar-${item.name}" class="sugar-select">
+                <option value="sade">Sade</option>
+                <option value="orta">Orta</option>
+                <option value="şekerli">Şekerli</option>
+              </select>
+            </div>
+          `;
+        } else {
+          console.log(`ℹ️ Ürün "${item.name}" için opsiyon yok`);
+        }
+        
+        const menuItem = document.createElement('div');
+        menuItem.className = `menu-item ${isOutOfStock ? 'out-of-stock' : ''}`;
         menuItem.innerHTML = `
+          ${isOutOfStock ? '<div class="out-of-stock-banner">Elimizde Yok</div>' : ''}
+          ${imageHtml}
           <h3>${item.name}</h3>
           <p>${item.description || 'Lezzetli içecek'}</p>
           <div class="price">${item.price} ₺</div>
-          <div class="quantity-controls">
-            <button class="quantity-btn" onclick="changeQuantity('${escapedItemName}', -1)">-</button>
-            <span class="quantity-display" id="quantity-${item.name}">1</span>
-            <button class="quantity-btn" onclick="changeQuantity('${escapedItemName}', 1)">+</button>
+          <div class="controls-row">
+            <div class="quantity-controls">
+              <button class="quantity-btn" onclick="changeQuantity('${escapedItemName}', -1)" ${isOutOfStock ? 'disabled' : ''}>-</button>
+              <span class="quantity-display" id="quantity-${item.name}">1</span>
+              <button class="quantity-btn" onclick="changeQuantity('${escapedItemName}', 1)" ${isOutOfStock ? 'disabled' : ''}>+</button>
+            </div>
+            ${optionsHtml}
           </div>
-          <button class="add-to-cart-btn" onclick="addToCart('${escapedItemName}')">
-            🛒 Sepete Ekle
+          <button class="add-to-cart-btn" onclick="addToCart('${escapedItemName}')" ${isOutOfStock ? 'disabled' : ''}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+            ${isOutOfStock ? 'Stokta Yok' : 'Sepete Ekle'}
           </button>
         `;
         
         menuGrid.appendChild(menuItem);
       });
+      
+      const gosterilenUrunler = menu.filter(item => item.inStock !== false).length;
+      console.log("Menü başarıyla yüklendi, gösterilen ürün sayısı:", gosterilenUrunler);
+      
+      // Menü yüklendikten sonra buski resmini göster
+      // Buski resmi kaldırıldı
     }
 
     function handleLogin(e) {
@@ -2015,11 +3612,15 @@
       loading.style.display = 'inline-block';
       btnText.textContent = 'Giriş yapılıyor...';
 
+      console.log("Giriş denemesi yapılıyor:", email);
+
       firebase.auth().signInWithEmailAndPassword(email, password)
         .then(() => {
+          console.log("Giriş başarılı, sipariş sayfasına yönlendiriliyor");
           showNotification('Giriş başarılı!', 'success');
         })
         .catch((error) => {
+          console.log("Giriş hatası:", error.code);
           let errorMessage = 'Giriş yapılamadı';
           if (error.code === 'auth/user-not-found') {
             errorMessage = 'Bu e-posta adresi kayıtlı değil';
@@ -2040,9 +3641,11 @@
       const toggle = input.nextElementSibling;
       
       if (input.type === 'password') {
+        // Şifre gizliyse, göster ve göz ikonunu normal yap
         input.type = 'text';
         toggle.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
       } else {
+        // Şifre görünüyorsa, gizle ve göz ikonunu çizgili yap
         input.type = 'password';
         toggle.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
       }
@@ -2076,10 +3679,51 @@
     }
 
     function showScreen(screenId) {
+      console.log("Ekran değiştiriliyor:", screenId);
+      
+      // Mevcut aktif ekranı bul
+      const currentActiveScreen = document.querySelector('.screen.active');
+      
       document.querySelectorAll('.screen').forEach(screen => {
         screen.classList.remove('active');
       });
       document.getElementById(screenId).classList.add('active');
+      
+
+      
+      // Ekran değişikliği logları ve işlemler
+      if (screenId === 'loginScreen') {
+        console.log("Giriş sayfası gösteriliyor");
+      } else if (screenId === 'orderScreen') {
+        console.log("Sipariş sayfası gösteriliyor");
+      } else if (screenId === 'profileScreen') {
+        console.log("Profil sayfası gösteriliyor");
+        // Buski resmi kaldırıldı
+        // Profil sayfasına geçildiğinde kullanıcı bilgilerini güncelle
+        if (currentUser) {
+          if (userData) {
+            console.log("Mevcut userData ile profil güncelleniyor");
+            updateUserInterface();
+            loadOrderHistory();
+            
+            // Aktif sekme ayarlar ise form alanlarını güncelle
+            const activeTab = document.querySelector('.tab-btn.active');
+            if (activeTab && activeTab.getAttribute('onclick')?.includes('settings')) {
+              console.log("Aktif sekme settings, form alanları güncelleniyor");
+              const editNameElement = document.getElementById('editName');
+              const editDepartmentElement = document.getElementById('editDepartment');
+              const editFloorElement = document.getElementById('editFloor');
+              
+              if (editNameElement) editNameElement.value = userData.name || '';
+              if (editDepartmentElement) editDepartmentElement.value = userData.department || '';
+              if (editFloorElement) editFloorElement.value = userData.floor || '1';
+            }
+          } else {
+            console.log("userData yok, yeniden yükleniyor");
+            loadUserData();
+          }
+        }
+      }
     }
 
     function showNotification(message, type = 'success') {
@@ -2090,7 +3734,7 @@
       
       setTimeout(() => {
         notification.classList.remove('show');
-      }, 3000);
+      }, 2000);
     }
 
     // Register and Forgot Password Functions
@@ -2113,6 +3757,9 @@
       submitBtn.disabled = true;
       loading.style.display = 'inline-block';
       btnText.textContent = 'Kayıt yapılıyor...';
+      
+      // Kayıt işlemi başladığını işaretle
+      isRegistering = true;
 
       firebase.auth().createUserWithEmailAndPassword(email, password)
         .then((userCredential) => {
@@ -2127,10 +3774,20 @@
           });
         })
         .then(() => {
-          showNotification('Kayıt başarılı! Giriş yapabilirsiniz.', 'success');
-          showLogin();
+          // Kayıt işlemi tamamlandı, flag'i sıfırla
+          isRegistering = false;
+          
+          // Kullanıcıyı çıkış yaptır ki giriş sayfasına yönlendirilebilsin
+          firebase.auth().signOut().then(() => {
+            // Üstten bildirim göster ve giriş sayfasına yönlendir
+            showNotification('Kayıt başarılı! Giriş yapabilirsiniz.', 'success');
+            showLogin();
+          });
         })
         .catch((error) => {
+          // Kayıt işlemi başarısız, flag'i sıfırla
+          isRegistering = false;
+          
           let errorMessage = 'Kayıt yapılamadı';
           if (error.code === 'auth/email-already-in-use') {
             errorMessage = 'Bu e-posta adresi zaten kullanılıyor';
@@ -2214,21 +3871,49 @@
       const quantity = parseInt(document.getElementById(`quantity-${itemName}`).textContent);
       const menuItem = menu.find(item => item.name === itemName);
       
+      // Stok kontrolü
+      if (menuItem && menuItem.inStock === false) {
+        showNotification('Bu ürün şu anda stokta yok!', 'error');
+        return;
+      }
+      
+      // Opsiyon seçeneğini al (Türk kahvesi veya panelden eklenen opsiyonlar için)
+      let selectedOption = null;
+      const optionSelect = document.getElementById(`sugar-${itemName}`);
+      if (optionSelect && optionSelect.value) {
+        selectedOption = optionSelect.value;
+        console.log(`🔄 Seçilen opsiyon: "${selectedOption}" (Ürün: ${itemName})`);
+      }
+      
       if (menuItem) {
-        const existingItem = cartItems.find(item => item.name === itemName);
+        // Opsiyon seçeneğini de kontrol et
+        const existingItem = cartItems.find(item => 
+          item.name === itemName && 
+          item.option === selectedOption
+        );
+        
         if (existingItem) {
           existingItem.quantity += quantity;
         } else {
           const newItem = {
             name: itemName,
             price: menuItem.price,
-            quantity: quantity
+            quantity: quantity,
+            option: selectedOption
           };
           cartItems.push(newItem);
         }
         
         updateCartCount();
-        showNotification(`${itemName} sepete eklendi!`, 'success');
+        
+        // Buton animasyonu - tik işareti
+        const addButton = event.target.closest('.add-to-cart-btn');
+        if (addButton) {
+          addButton.classList.add('added');
+          setTimeout(() => {
+            addButton.classList.remove('added');
+          }, 1000);
+        }
         
         // Add pulse animation to cart FAB
         const cartFab = document.querySelector('.cart-fab');
@@ -2260,14 +3945,11 @@
 
     function toggleCart() {
       const cartDropdown = document.getElementById('cartDropdown');
-      const cartIcon = document.querySelector('.cart-icon');
       
       if (cartDropdown.classList.contains('show')) {
         hideCart();
-        cartIcon.textContent = '🛒';
       } else {
         showCart();
-        cartIcon.textContent = '▼';
       }
     }
 
@@ -2296,9 +3978,13 @@
           
           const cartItem = document.createElement('div');
           cartItem.className = 'cart-item';
+          
+          // Türk kahvesi için şeker bilgisini göster
+          const sugarInfo = item.sugar ? ` (${item.sugar})` : '';
+          
           cartItem.innerHTML = `
             <div class="cart-item-info">
-              <div class="cart-item-name">${item.name}</div>
+              <div class="cart-item-name">${item.name}${sugarInfo}</div>
               <div class="cart-item-price">${item.price} ₺ x ${item.quantity}</div>
             </div>
             <div class="cart-item-quantity">
@@ -2318,9 +4004,7 @@
 
     function hideCart() {
       const cartDropdown = document.getElementById('cartDropdown');
-      const cartIcon = document.querySelector('.cart-icon');
       cartDropdown.classList.remove('show');
-      cartIcon.textContent = '🛒';
     }
 
     // Close cart dropdown when clicking outside
@@ -2385,7 +4069,7 @@
         'items': cartItems.map(item => ({
           'name': item.name,
           'adet': item.quantity,
-          'option': '',
+          'option': item.option || '',
           'price': item.price
         }))
       };
@@ -2398,6 +4082,13 @@
       ])
       .then(() => {
         console.log('Sipariş başarıyla kaydedildi');
+        console.log('Sipariş ID:', orderRef.id);
+        console.log('Kullanıcı UID:', currentUser.uid);
+        console.log('Sipariş detayları:', {
+          toplamFiyat: newOrder.toplamFiyat,
+          itemCount: newOrder.items.length,
+          tarih: newOrder.tarih
+        });
         cartItems = [];
         updateCartCount();
         hideCart();
@@ -2424,128 +4115,336 @@
     }
 
     function showProfileSubTab(tabName) {
+      console.log("showProfileSubTab çağrıldı, tabName:", tabName);
+      
       // Hide all tab panels
       document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       
       // Show selected panel
-      document.getElementById(`${tabName}-section`).classList.add('active');
+      const selectedPanel = document.getElementById(`${tabName}-section`);
+      selectedPanel.classList.add('active');
       document.querySelector(`[onclick="showProfileSubTab('${tabName}')"]`).classList.add('active');
       
+      // Profil sekmesi animasyonları
+      if (tabName === 'info' || tabName === 'password' || tabName === 'settings' || tabName === 'history') {
+        // Kart animasyonunu tetikle
+        const card = selectedPanel.querySelector('.info-card, .password-card, .settings-card, .history-card');
+        if (card) {
+          card.style.animation = 'none';
+          setTimeout(() => {
+            card.style.animation = 'profileSlideIn 0.5s ease-out';
+          }, 10);
+        }
+      }
+      
       if (tabName === 'history') {
+        console.log("History sekmesi açılıyor, sipariş geçmişi yükleniyor");
         loadOrderHistory();
       } else if (tabName === 'settings') {
+        console.log("Settings sekmesi açılıyor, form alanları güncelleniyor");
         // Populate edit form with current user data
-        document.getElementById('editName').value = userData.name || '';
-        document.getElementById('editDepartment').value = userData.department || '';
-        document.getElementById('editFloor').value = userData.floor || '1';
+        const editNameElement = document.getElementById('editName');
+        const editDepartmentElement = document.getElementById('editDepartment');
+        const editFloorElement = document.getElementById('editFloor');
+        
+        if (editNameElement) {
+          editNameElement.value = userData.name || '';
+          console.log("Settings form editName güncellendi:", userData.name || '');
+        }
+        
+        if (editDepartmentElement) {
+          editDepartmentElement.value = userData.department || '';
+          console.log("Settings form editDepartment güncellendi:", userData.department || '');
+        }
+        
+        if (editFloorElement) {
+          editFloorElement.value = userData.floor || '1';
+          console.log("Settings form editFloor güncellendi:", userData.floor || '1');
+        }
       }
     }
 
     // Profile Functions
     function loadOrderHistory() {
+      console.log("loadOrderHistory çağrıldı, currentUser:", currentUser);
+      
+      if (!currentUser) {
+        console.log("Kullanıcı giriş yapmamış, sipariş geçmişi yüklenemiyor");
+        const orderHistoryDiv = document.getElementById('orderHistory');
+        if (orderHistoryDiv) {
+          orderHistoryDiv.innerHTML = '<p style="text-align: center; color: #64748b;">Giriş yapmanız gerekiyor</p>';
+        }
+        return;
+      }
+      
       const orderHistoryDiv = document.getElementById('orderHistory');
+      if (!orderHistoryDiv) {
+        console.error("orderHistory elementi bulunamadı!");
+        return;
+      }
+      
       orderHistoryDiv.innerHTML = '<p style="text-align: center; color: #64748b;">Yükleniyor...</p>';
+      
+      console.log("Firebase'den kullanıcı siparişleri çekiliyor, UID:", currentUser.uid);
       
       firebase.firestore().collection('user_orders').doc(currentUser.uid).collection('orders')
         .orderBy('tarih', 'desc')
         .get()
         .then((querySnapshot) => {
+          console.log("Firebase'den gelen sipariş sayısı:", querySnapshot.size);
           orderHistoryData = [];
           
           if (querySnapshot.empty) {
-            // Show sample orders for demonstration
-            const sampleOrders = [
-              {
-                id: 'sample1',
-                tarih: new Date(),
-                toplamFiyat: 25,
-                items: [
-                  { name: 'Pasta', adet: 1, price: 15 },
-                  { name: 'Çay', adet: 2, price: 5 }
-                ]
-              },
-              {
-                id: 'sample2',
-                tarih: new Date(Date.now() - 86400000),
-                toplamFiyat: 15,
-                items: [
-                  { name: 'Kahve', adet: 1, price: 8 },
-                  { name: 'Kurabiye', adet: 1, price: 7 }
-                ]
-              }
-            ];
-            
-            orderHistoryData = sampleOrders;
-            displayOrderHistory(sampleOrders);
-            createOrderChart(sampleOrders);
+            console.log("Kullanıcının sipariş geçmişi boş");
+            orderHistoryDiv.innerHTML = '<p style="text-align: center; color: #64748b;">Henüz sipariş geçmişiniz bulunmuyor</p>';
+            displayOrderHistory([]);
+            createOrderChart([]);
+            updateOrderStats([]);
             return;
           }
           
           querySnapshot.forEach((doc) => {
             const order = doc.data();
             orderHistoryData.push(order);
+            console.log("Sipariş yüklendi:", {
+              id: doc.id,
+              tarih: order.tarih,
+              toplamFiyat: order.toplamFiyat,
+              itemCount: order.items ? order.items.length : 0
+            });
           });
           
+          console.log("Toplam yüklenen sipariş sayısı:", orderHistoryData.length);
           displayOrderHistory(orderHistoryData);
           createOrderChart(orderHistoryData);
+          updateOrderStats(orderHistoryData);
         })
         .catch((error) => {
-          console.error('Error loading order history:', error);
+          console.error('Firebase\'den sipariş geçmişi çekilirken hata:', error);
           orderHistoryDiv.innerHTML = '<p style="text-align: center; color: #ef4444;">Sipariş geçmişi yüklenirken hata oluştu</p>';
         });
     }
 
-    function displayOrderHistory(orders) {
+    function clearAllHistory() {
+      // Show the modal instead of confirm
+      document.getElementById('clearHistoryModal').style.display = 'flex';
+    }
+
+    function closeClearHistoryModal() {
+      document.getElementById('clearHistoryModal').style.display = 'none';
+    }
+
+    function confirmClearHistory() {
       const orderHistoryDiv = document.getElementById('orderHistory');
-      orderHistoryDiv.innerHTML = '';
+      orderHistoryDiv.innerHTML = '<p style="text-align: center; color: #64748b;">Temizleniyor...</p>';
       
-      if (orders.length === 0) {
-        orderHistoryDiv.innerHTML = '<div class="no-orders-message">Henüz sipariş geçmişiniz bulunmuyor.</div>';
+      // Close modal
+      closeClearHistoryModal();
+      
+      firebase.firestore().collection('user_orders').doc(currentUser.uid).collection('orders')
+        .get()
+        .then((querySnapshot) => {
+          const deletePromises = [];
+          querySnapshot.forEach((doc) => {
+            deletePromises.push(doc.ref.delete());
+          });
+          
+          return Promise.all(deletePromises);
+        })
+        .then(() => {
+          orderHistoryData = [];
+          displayOrderHistory([]);
+          createOrderChart([]);
+          updateOrderStats([]);
+          showNotification('Sipariş geçmişi başarıyla temizlendi!', 'success');
+        })
+        .catch((error) => {
+          console.error('Error clearing order history:', error);
+          showNotification('Sipariş geçmişi temizlenirken hata oluştu!', 'error');
+          loadOrderHistory(); // Reload the history
+        });
+    }
+
+    function updateOrderStats(orders) {
+      console.log("updateOrderStats çağrıldı, sipariş sayısı:", orders.length);
+      
+      // Toplam sipariş sayısı
+      const totalOrders = orders.length;
+      
+      // Toplam harcama
+      const totalSpent = orders.reduce((sum, order) => sum + (order.toplamFiyat || 0), 0);
+      
+      // Ortalama sipariş değeri
+      const avgOrderValue = totalOrders > 0 ? (totalSpent / totalOrders).toFixed(2) : 0;
+      
+      // Favori ürün hesaplama
+      const itemCounts = {};
+      orders.forEach(order => {
+        if (order.items && Array.isArray(order.items)) {
+          order.items.forEach(item => {
+            const itemName = item.name;
+            itemCounts[itemName] = (itemCounts[itemName] || 0) + item.adet;
+          });
+        }
+      });
+      
+      let favoriteItem = '-';
+      let maxCount = 0;
+      Object.keys(itemCounts).forEach(itemName => {
+        if (itemCounts[itemName] > maxCount) {
+          maxCount = itemCounts[itemName];
+          favoriteItem = itemName;
+        }
+      });
+      
+      console.log("Hesaplanan istatistikler:", {
+        totalOrders,
+        totalSpent: totalSpent.toFixed(2),
+        avgOrderValue,
+        favoriteItem,
+        itemCounts
+      });
+      
+      // İstatistikleri güncelle
+      const totalOrdersElement = document.getElementById('totalOrders');
+      const totalSpentElement = document.getElementById('totalSpent');
+      const avgOrderValueElement = document.getElementById('avgOrderValue');
+      const favoriteItemElement = document.getElementById('favoriteItem');
+      
+      if (totalOrdersElement) {
+        totalOrdersElement.textContent = totalOrders;
+        totalOrdersElement.style.animation = 'statsPulse 0.6s ease-out';
+      }
+      if (totalSpentElement) {
+        totalSpentElement.textContent = `${totalSpent.toFixed(2)} ₺`;
+        totalSpentElement.style.animation = 'statsPulse 0.6s ease-out 0.1s both';
+      }
+      if (avgOrderValueElement) {
+        avgOrderValueElement.textContent = `${avgOrderValue} ₺`;
+        avgOrderValueElement.style.animation = 'statsPulse 0.6s ease-out 0.2s both';
+      }
+      if (favoriteItemElement) {
+        favoriteItemElement.textContent = favoriteItem;
+        favoriteItemElement.style.animation = 'statsPulse 0.6s ease-out 0.3s both';
+      }
+      
+      console.log("İstatistikler güncellendi");
+    }
+
+    function displayOrderHistory(orders) {
+      console.log("displayOrderHistory çağrıldı, sipariş sayısı:", orders.length);
+      
+      const orderHistoryDiv = document.getElementById('orderHistory');
+      if (!orderHistoryDiv) {
+        console.error("orderHistory elementi bulunamadı!");
         return;
       }
       
+      // Animasyonlu yükleme göster
+      orderHistoryDiv.innerHTML = `
+        <div class="profile-loading">
+          <div class="profile-loading-spinner"></div>
+        </div>
+      `;
+      
+      // Kısa bir gecikme ile animasyonlu gösterim
+      setTimeout(() => {
+        orderHistoryDiv.innerHTML = '';
+        
+        if (orders.length === 0) {
+          console.log("Sipariş listesi boş, mesaj gösteriliyor");
+          orderHistoryDiv.innerHTML = '<div class="no-orders-message" style="animation: orderHistoryFadeIn 0.6s ease-out;">Henüz sipariş geçmişiniz bulunmuyor.</div>';
+          return;
+        }
+      
       orders.forEach((order) => {
         const orderDate = order.tarih.toDate ? order.tarih.toDate().toLocaleString('tr-TR') : new Date(order.tarih).toLocaleString('tr-TR');
-        const orderItems = order.items.map(item => `${item.name} (${item.adet} adet)`).join(', ');
+        const orderItems = order.items.map(item => {
+          const sugarInfo = item.option ? ` (${item.option})` : '';
+          return `${item.name}${sugarInfo} (${item.adet} adet)`;
+        }).join(', ');
         const orderId = order.id || order.id;
         
         const orderElement = document.createElement('div');
-        orderElement.className = 'order-item-with-rating';
+        orderElement.className = 'order-item';
         orderElement.innerHTML = `
-          <div class="order-header">
-            <span class="order-date">${orderDate}</span>
-            <span class="order-total">${order.toplamFiyat} ₺</span>
+          <div class="order-header" onclick="toggleOrderDetails('${orderId}')">
+            <div class="order-info">
+              <span class="order-date">${orderDate}</span>
+              <span class="order-total">${order.toplamFiyat} ₺</span>
+            </div>
+            <div class="order-header-rating" id="header-rating-${orderId}"></div>
+            <div class="order-toggle">
+              <span class="toggle-icon">▼</span>
+            </div>
           </div>
-          <div class="order-items">${orderItems}</div>
           
-          <div class="rating-section">
-            <div class="rating-stars" data-order-id="${orderId}">
-              <span class="star" data-rating="1">⭐</span>
-              <span class="star" data-rating="2">⭐</span>
-              <span class="star" data-rating="3">⭐</span>
-              <span class="star" data-rating="4">⭐</span>
-              <span class="star" data-rating="5">⭐</span>
+          <div class="order-details" id="order-details-${orderId}" style="display: none;">
+            <div class="order-items">${orderItems}</div>
+            
+            <div class="order-actions">
+              <button class="reorder-btn" onclick="reorderItems('${orderId}')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+                  <path d="M21 3v5h-5"></path>
+                  <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+                  <path d="M3 21v-5h5"></path>
+                </svg>
+                Siparişi Tekrarla
+              </button>
             </div>
-            <div class="comment-section">
-              <textarea class="comment-input" placeholder="Yorumunuzu yazın..." data-order-id="${orderId}"></textarea>
-              <button class="submit-rating-btn" onclick="submitRating('${orderId}')">Değerlendirme Gönder</button>
-            </div>
-            <div id="rating-display-${orderId}" class="rating-display" style="display: none;">
-              <div class="stars"></div>
-              <div class="comment"></div>
+            
+            <div class="order-feedback-container">
+              <div class="feedback-section">
+                <div class="feedback-header">
+                  <h4>Sipariş Değerlendirmesi</h4>
+                </div>
+                
+                <div class="feedback-content">
+                  <div class="delivery-personnel">
+                    <label for="personnel-${orderId}">Siparişi Getiren Personel:</label>
+                    <select id="personnel-${orderId}" class="personnel-select" onchange="updatePersonnel('${orderId}', this.value)">
+                      <option value="">Seçiniz...</option>
+                      <option value="Ayşe">Ayşe</option>
+                      <option value="Fatma">Fatma</option>
+                      <option value="Hayriye">Hayriye</option>
+                    </select>
+                  </div>
+                  
+                  <div class="rating-section" id="rating-section-${orderId}">
+                    <div class="rating-label">Puanınız:</div>
+                    <div class="rating-stars" data-order-id="${orderId}">
+                      <span class="star" data-rating="1">☆</span>
+                      <span class="star" data-rating="2">☆</span>
+                      <span class="star" data-rating="3">☆</span>
+                      <span class="star" data-rating="4">☆</span>
+                      <span class="star" data-rating="5">☆</span>
+                    </div>
+                    <div class="comment-section">
+                      <textarea class="comment-input" placeholder="Yorumunuzu yazın..." data-order-id="${orderId}"></textarea>
+                      <button class="submit-rating-btn" onclick="submitRating('${orderId}')">Değerlendirme Gönder</button>
+                    </div>
+                    <div id="rating-display-${orderId}" class="rating-display">
+                      <div class="stars"></div>
+                      <div class="comment"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         `;
         
         orderHistoryDiv.appendChild(orderElement);
         
-        // Load existing rating if any
+        // Load existing rating if any (this will also display in header)
         loadExistingRating(orderId);
       });
       
       // Add event listeners for stars
       addStarEventListeners();
+      }, 300); // setTimeout kapanışı
     }
 
     function createOrderChart(orders) {
@@ -2581,7 +4480,40 @@
         '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
       ];
       
-      orderChart = new Chart(ctx, {
+              let selectedSlice = null; // Seçili dilimi takip etmek için
+        
+        orderChart = new Chart(ctx, {
+          onClick: function(event, elements) {
+            if (elements.length > 0) {
+              const element = elements[0];
+              const index = element.index;
+              
+              // Önceki seçili dilimi normale döndür
+              if (selectedSlice !== null && selectedSlice !== index) {
+                const prevElement = this.getDatasetMeta(0).data[selectedSlice];
+                if (prevElement) {
+                  prevElement._model.outerRadius = this.chartArea.width / 2;
+                  prevElement._model.innerRadius = (this.chartArea.width / 2) * 0.6;
+                }
+              }
+              
+              // Yeni dilimi seç
+              if (selectedSlice === index) {
+                // Aynı dilime tekrar tıklanırsa normale döndür
+                element._model.outerRadius = this.chartArea.width / 2;
+                element._model.innerRadius = (this.chartArea.width / 2) * 0.6;
+                selectedSlice = null;
+              } else {
+                // Yeni dilimi büyük yap
+                element._model.outerRadius = (this.chartArea.width / 2) + 80;
+                element._model.innerRadius = ((this.chartArea.width / 2) * 0.6) + 50;
+                selectedSlice = index;
+              }
+              
+              this.update('none');
+            }
+          },
+
         type: 'doughnut',
         data: {
           labels: labels,
@@ -2595,6 +4527,50 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          animation: {
+            duration: 1000,
+            easing: 'easeOutQuart'
+          },
+                      hover: {
+              animationDuration: 200,
+              mode: 'nearest',
+              intersect: true,
+              onHover: function(event, elements) {
+                const chart = this;
+                const canvas = chart.canvas;
+                
+                if (elements.length > 0) {
+                  canvas.style.cursor = 'pointer';
+                  // Hover'da ek büyüme efekti
+                  elements.forEach(element => {
+                    const index = element.index;
+                    const isSelected = selectedSlice === index;
+                    
+                    if (isSelected) {
+                      // Seçili dilim üzerinde hover - daha da büyüt
+                      element._model.outerRadius += 150;
+                      element._model.innerRadius += 90;
+                    } else {
+                      // Normal dilim üzerinde hover - normal büyüt
+                      element._model.outerRadius += 100;
+                      element._model.innerRadius += 60;
+                    }
+                  });
+                  chart.update('none');
+                } else {
+                  canvas.style.cursor = 'default';
+                  // Normal boyuta dön (seçili dilim hariç)
+                  chart.data.datasets[0].data.forEach((value, index) => {
+                    const element = chart.getDatasetMeta(0).data[index];
+                    if (element && selectedSlice !== index) {
+                      element._model.outerRadius = chart.chartArea.width / 2;
+                      element._model.innerRadius = (chart.chartArea.width / 2) * 0.6;
+                    }
+                  });
+                  chart.update('none');
+                }
+              }
+            },
           plugins: {
             legend: {
               position: 'bottom',
@@ -2607,13 +4583,30 @@
               }
             },
             tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              titleColor: '#fff',
+              bodyColor: '#fff',
+              borderColor: '#3b82f6',
+              borderWidth: 1,
+              cornerRadius: 8,
+              padding: 12,
+              displayColors: false,
+              titleFont: {
+                size: 14,
+                weight: 'bold'
+              },
+              bodyFont: {
+                size: 12
+              },
               callbacks: {
+                title: function(context) {
+                  return context[0].label;
+                },
                 label: function(context) {
-                  const label = context.label || '';
                   const value = context.parsed;
                   const total = context.dataset.data.reduce((a, b) => a + b, 0);
                   const percentage = ((value / total) * 100).toFixed(1);
-                  return `${label}: ${value} adet (${percentage}%)`;
+                  return `${value} adet (%${percentage})`;
                 }
               }
             }
@@ -2657,10 +4650,101 @@
       stars.forEach((star, index) => {
         if (index < rating) {
           star.classList.add('active');
+          star.textContent = '★';
         } else {
           star.classList.remove('active');
+          star.textContent = '☆';
         }
       });
+    }
+
+    let currentReorderOrder = null; // Global variable to store current reorder order
+
+
+
+    function reorderItems(orderId) {
+      // Find the order in the order history
+      const order = orderHistoryData.find(o => o.id === orderId);
+      if (!order) {
+        showNotification('Sipariş bulunamadı', 'error');
+        return;
+      }
+      
+      currentReorderOrder = order; // Store the order for later use
+      
+      // Populate modal with order details
+      const reorderItemsList = document.getElementById('reorderItemsList');
+      const reorderTotalAmount = document.getElementById('reorderTotalAmount');
+      
+      let itemsHtml = '';
+      order.items.forEach((item, index) => {
+        // Check for both option and sugar fields (for backward compatibility)
+        const option = item.option || item.sugar || null;
+        
+        // Debug: Log the item structure
+        console.log(`Reorder Item ${index + 1}:`, {
+          name: item.name,
+          option: item.option,
+          sugar: item.sugar,
+          finalOption: option
+        });
+        
+        itemsHtml += `
+          <div class="reorder-item">
+            <div class="reorder-item-name">${index + 1}. ${item.name}</div>
+            <div class="reorder-item-details">
+              <div class="reorder-item-info">
+                Adet: ${item.adet} | Fiyat: ${item.price} ₺ | Toplam: ${item.adet * item.price} ₺
+              </div>
+              ${option ? `<div class="reorder-item-option">${option}</div>` : ''}
+            </div>
+          </div>
+        `;
+      });
+      
+      reorderItemsList.innerHTML = itemsHtml;
+      reorderTotalAmount.textContent = `${order.toplamFiyat} ₺`;
+      
+      // Show modal
+      document.getElementById('reorderModal').style.display = 'flex';
+    }
+
+    function closeReorderModal() {
+      document.getElementById('reorderModal').style.display = 'none';
+      currentReorderOrder = null;
+    }
+
+    function confirmReorder() {
+      if (!currentReorderOrder) {
+        showNotification('Sipariş bulunamadı', 'error');
+        return;
+      }
+      
+      // Clear current cart
+      cartItems = [];
+      
+      // Add all items from the order to cart
+      currentReorderOrder.items.forEach(item => {
+        const cartItem = {
+          name: item.name,
+          price: item.price,
+          quantity: item.adet,
+          option: item.option || item.sugar || null // For Türk Kahvesi sugar options
+        };
+        cartItems.push(cartItem);
+      });
+      
+      // Update cart display
+      updateCartDisplay();
+      
+      // Close modal
+      closeReorderModal();
+      
+      // Switch to order screen
+      showScreen('orderScreen');
+      
+      // Show success notification
+      showNotification('Sipariş sepete eklendi! Sipariş sayfasına yönlendiriliyorsunuz...', 'success');
     }
 
     function submitRating(orderId) {
@@ -2690,9 +4774,21 @@
         timestamp: firebase.firestore.Timestamp.now()
       };
       
-      firebase.firestore().collection('ratings').doc(orderId).set(ratingData)
+      // Save rating to both ratings collection and the order itself
+      Promise.all([
+        firebase.firestore().collection('ratings').doc(orderId).set(ratingData),
+        firebase.firestore().collection('siparisler').doc(orderId).update({
+          rating: rating,
+          comment: comment,
+          ratingDate: firebase.firestore.Timestamp.now(),
+          userName: userData.name,
+          userFloor: userData.floor,
+          userDepartment: userData.department
+        })
+      ])
         .then(() => {
           showNotification('Değerlendirmeniz başarıyla gönderildi!', 'success');
+          console.log('Rating saved, calling displayRating with:', orderId, rating, comment);
           displayRating(orderId, rating, comment);
           commentInput.value = '';
           submitBtn.disabled = false;
@@ -2706,15 +4802,90 @@
         });
     }
 
-    function loadExistingRating(orderId) {
-      firebase.firestore().collection('ratings').doc(orderId).get()
+    function toggleOrderDetails(orderId) {
+      const orderDetails = document.getElementById(`order-details-${orderId}`);
+      const toggleIcon = document.querySelector(`#order-details-${orderId}`).previousElementSibling.querySelector('.toggle-icon');
+      
+      if (orderDetails.style.display === 'none') {
+        orderDetails.style.display = 'block';
+        toggleIcon.textContent = '▲';
+        // Load existing rating and personnel when order details are opened
+        loadExistingRating(orderId);
+        loadExistingPersonnel(orderId);
+      } else {
+        orderDetails.style.display = 'none';
+        toggleIcon.textContent = '▼';
+      }
+    }
+
+
+
+    function updatePersonnel(orderId, personnelName) {
+      if (!personnelName) return;
+      
+      // Update the order in Firestore with personnel information
+      firebase.firestore().collection('siparisler').doc(orderId).update({
+        deliveryPersonnel: personnelName,
+        personnelUpdatedAt: firebase.firestore.Timestamp.now()
+      })
+      .then(() => {
+        showNotification(`${personnelName} personel olarak atandı`, 'success');
+      })
+      .catch((error) => {
+        console.error('Error updating personnel:', error);
+        showNotification('Personel güncellenirken hata oluştu', 'error');
+      });
+    }
+
+    function loadExistingPersonnel(orderId) {
+      firebase.firestore().collection('siparisler').doc(orderId).get()
         .then((doc) => {
           if (doc.exists) {
-            const ratingData = doc.data();
+            const orderData = doc.data();
+            if (orderData.deliveryPersonnel) {
+              const personnelSelect = document.getElementById(`personnel-${orderId}`);
+              if (personnelSelect) {
+                personnelSelect.value = orderData.deliveryPersonnel;
+              }
+            }
+          }
+        })
+        .catch((error) => {
+          console.error('Error loading personnel:', error);
+        });
+    }
+
+    function loadExistingRating(orderId) {
+      // Try to load from ratings collection first, then from siparisler
+      Promise.all([
+        firebase.firestore().collection('ratings').doc(orderId).get(),
+        firebase.firestore().collection('siparisler').doc(orderId).get()
+      ])
+        .then(([ratingDoc, orderDoc]) => {
+          let ratingData = null;
+          
+          // Check ratings collection first
+          if (ratingDoc.exists) {
+            ratingData = ratingDoc.data();
+          }
+          // If no rating in ratings collection, check siparisler
+          else if (orderDoc.exists) {
+            const orderData = orderDoc.data();
+            if (orderData.rating && orderData.rating > 0) {
+              ratingData = {
+                rating: orderData.rating,
+                comment: orderData.comment || ''
+              };
+            }
+          }
+          
+          if (ratingData) {
             displayRating(orderId, ratingData.rating, ratingData.comment);
             ratings[orderId] = ratingData.rating;
             const starContainer = document.querySelector(`[data-order-id="${orderId}"]`);
-            highlightStars(starContainer, ratingData.rating);
+            if (starContainer) {
+              highlightStars(starContainer, ratingData.rating);
+            }
           }
         })
         .catch((error) => {
@@ -2723,14 +4894,29 @@
     }
 
     function displayRating(orderId, rating, comment) {
+      console.log('displayRating called with:', orderId, rating, comment);
+      
+      // Display rating in details section
       const ratingDisplay = document.getElementById(`rating-display-${orderId}`);
+      console.log('ratingDisplay element:', ratingDisplay);
       if (ratingDisplay) {
-        const stars = '⭐'.repeat(rating);
+        const stars = '★'.repeat(rating) + '☆'.repeat(5 - rating);
         ratingDisplay.innerHTML = `
           <div class="stars">${stars}</div>
           <div class="comment">${comment}</div>
         `;
         ratingDisplay.style.display = 'block';
+        console.log('Rating display updated');
+      }
+      
+      // Display rating in header
+      const headerRating = document.getElementById(`header-rating-${orderId}`);
+      if (headerRating) {
+        const stars = '★'.repeat(rating) + '☆'.repeat(5 - rating);
+        headerRating.innerHTML = `
+          <div class="stars">${stars}</div>
+        `;
+        headerRating.style.display = 'flex';
       }
     }
 
@@ -2776,16 +4962,131 @@
         });
     }
 
-    function handleProfileImageUpload() {
+    async function handleProfileImageUpload() {
       const file = document.getElementById('profileImageInput').files[0];
-      if (file) {
+      if (!file) return;
+
+      // Dosya boyutu kontrolü (800KB limit - Firestore 1MB limiti için)
+      if (file.size > 800 * 1024) {
+        showNotification('Dosya boyutu 800KB\'dan küçük olmalıdır', 'error');
+        return;
+      }
+
+      // Dosya tipi kontrolü
+      if (!file.type.startsWith('image/')) {
+        showNotification('Lütfen geçerli bir resim dosyası seçin', 'error');
+        return;
+      }
+
+      try {
+        // Loading göster
+        document.getElementById('profileImageLoading').style.display = 'block';
+        showNotification('Resim yükleniyor...', 'info');
+
+        // CORS sorunu için alternatif yöntem - Base64 olarak sakla
         const reader = new FileReader();
         reader.onload = function(e) {
-          document.getElementById('profileImagePreview').src = e.target.result;
-          document.getElementById('profileImagePreview2').src = e.target.result;
+          let base64Image = e.target.result;
+          
+          // Resim boyutunu küçült
+          const img = new Image();
+          img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Maksimum boyut
+            const maxSize = 400;
+            let width = img.width;
+            let height = img.height;
+            
+            // Boyut oranını koru
+            if (width > height) {
+              if (width > maxSize) {
+                height = (height * maxSize) / width;
+                width = maxSize;
+              }
+            } else {
+              if (height > maxSize) {
+                width = (width * maxSize) / height;
+                height = maxSize;
+              }
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            
+            // Resmi çiz
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Kaliteli JPEG olarak dönüştür
+            const resizedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+          
+            // Firestore'da Base64 olarak sakla
+            firebase.firestore().collection('users').doc(currentUser.uid).update({
+              profileImage: resizedBase64,
+              profileImageUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            })
+                      .then(() => {
+              // UI'yi güncelle
+              document.getElementById('profileImagePreview').src = resizedBase64;
+              document.getElementById('profileImagePreview2').src = resizedBase64;
+
+              // userData'yı güncelle
+              if (userData) {
+                userData.profileImage = resizedBase64;
+              }
+
+              showNotification('Profil fotoğrafı başarıyla güncellendi!', 'success');
+              document.getElementById('profileImageLoading').style.display = 'none';
+            })
+            .catch((error) => {
+              console.error('Profil resmi kaydetme hatası:', error);
+              showNotification('Resim kaydedilirken hata oluştu', 'error');
+              document.getElementById('profileImageLoading').style.display = 'none';
+            });
+          };
+          
+          img.src = e.target.result;
         };
+        
         reader.readAsDataURL(file);
-        showNotification('Profil fotoğrafı güncellendi!', 'success');
+
+        /* 
+        // Firebase Storage kısmı - CORS sorunu nedeniyle geçici olarak devre dışı
+        // Firebase Storage referansı
+        const storage = firebase.storage();
+        const storageRef = storage.ref();
+        
+        // Base64 resimler için eski resim silme işlemi gerekmez
+        // Profil resmi Firestore'da saklandığı için otomatik olarak güncellenir
+
+        const profileImageRef = storageRef.child(`profile-images/${currentUser.uid}/${Date.now()}_${file.name}`);
+
+        // Resmi yükle
+        const snapshot = await profileImageRef.put(file);
+        const downloadURL = await snapshot.ref.getDownloadURL();
+
+        // Firestore'da kullanıcı dokümanını güncelle
+        await firebase.firestore().collection('users').doc(currentUser.uid).update({
+          profileImage: downloadURL,
+          profileImageUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // UI'yi güncelle
+        document.getElementById('profileImagePreview').src = downloadURL;
+        document.getElementById('profileImagePreview2').src = downloadURL;
+
+        // userData'yı güncelle
+        if (userData) {
+          userData.profileImage = downloadURL;
+        }
+
+        showNotification('Profil fotoğrafı başarıyla güncellendi!', 'success');
+        */
+      } catch (error) {
+        console.error('Profil resmi yükleme hatası:', error);
+        showNotification('Resim yüklenirken hata oluştu', 'error');
+        document.getElementById('profileImageLoading').style.display = 'none';
       }
     }
 
@@ -2816,36 +5117,141 @@
     }
 
     function deleteAccount() {
-      if (confirm('Hesabınızı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!')) {
+      document.getElementById('deleteAccountModal').classList.add('show');
+    }
+
+    // Success Alert Functions
+    function showSuccessAlert(title, message) {
+      document.getElementById('successAlertTitle').textContent = title;
+      document.getElementById('successAlertMessage').textContent = message;
+      document.getElementById('successAlertModal').classList.add('show');
+      
+      // 3 saniye sonra otomatik olarak giriş sayfasına yönlendir
+      setTimeout(() => {
+        closeSuccessAlert();
+        showLogin();
+      }, 3000);
+    }
+
+    function closeSuccessAlert() {
+      document.getElementById('successAlertModal').classList.remove('show');
+    }
+
+    function closeDeleteAccountModal() {
+      document.getElementById('deleteAccountModal').classList.remove('show');
+    }
+
+    async function confirmDeleteAccount() {
+      try {
+        // Base64 resimler için Firebase Storage silme işlemi gerekmez
+        // Profil resmi Firestore'da saklandığı için otomatik olarak silinecek
+        
+        /* 
+        // Firebase Storage'dan silme işlemi - CORS sorunu nedeniyle geçici olarak devre dışı
+        // Profil resmini sil
+        if (userData && userData.profileImage && userData.profileImage.includes('firebasestorage.app')) {
+          try {
+            const storage = firebase.storage();
+            const oldImageRef = storage.refFromURL(userData.profileImage);
+            await oldImageRef.delete();
+          } catch (deleteError) {
+            console.log('Profil resmi silinemedi:', deleteError);
+          }
+        }
+
+        // Kullanıcının tüm profil resimlerini sil
+        try {
+          const storage = firebase.storage();
+          const profileImagesRef = storage.ref(`profile-images/${currentUser.uid}`);
+          const result = await profileImagesRef.listAll();
+          const deletePromises = result.items.map(item => item.delete());
+          await Promise.all(deletePromises);
+        } catch (deleteError) {
+          console.log('Profil resimleri silinemedi:', deleteError);
+        }
+        */
+
         // Delete user data from Firestore
-        firebase.firestore().collection('users').doc(currentUser.uid).delete()
-          .then(() => {
-            // Delete user account from Firebase Auth
-            return currentUser.delete();
-          })
-          .then(() => {
-            showNotification('Hesabınız başarıyla silindi', 'success');
-            logout();
-          })
-          .catch((error) => {
-            console.error('Error deleting account:', error);
-            showNotification('Hesap silinirken hata oluştu', 'error');
-          });
+        await firebase.firestore().collection('users').doc(currentUser.uid).delete();
+        
+        // Delete user account from Firebase Auth
+        await currentUser.delete();
+        
+        closeDeleteAccountModal();
+        logout();
+      } catch (error) {
+        console.error('Error deleting account:', error);
+        showNotification('Hesap silinirken hata oluştu', 'error');
       }
     }
 
     function logout() {
+      document.getElementById('logoutModal').classList.add('show');
+    }
+
+    function closeLogoutModal() {
+      document.getElementById('logoutModal').classList.remove('show');
+    }
+
+    function confirmLogout() {
+      // Menü dinleyicisini temizle
+      if (menuListener) {
+        menuListener();
+        menuListener = null;
+      }
+      
       firebase.auth().signOut()
         .then(() => {
           currentUser = null;
           cartItems = [];
           userData = {};
+          closeLogoutModal();
           showScreen('loginScreen');
-          showNotification('Başarıyla çıkış yapıldı', 'success');
         })
         .catch((error) => {
           console.error('Error signing out:', error);
         });
+    }
+
+    // Bursa tarihi güzellikleri arka plan videoları
+    const bursaVideos = [
+      'assets/sounds/videos/bursa1.mp4',
+      'assets/sounds/videos/bursa2.mp4',
+      'assets/sounds/videos/bursa3.mp4',
+      'assets/sounds/videos/bursa4.mp4',
+      'assets/sounds/videos/bursa5.mp4',
+      'assets/sounds/videos/bursa6.mp4',
+      'assets/sounds/videos/bursa7.mp4',
+      'assets/sounds/videos/bursa8.mp4'
+    ];
+
+    function setRandomBackground(screenId) {
+      const backgroundElement = document.getElementById(screenId + 'Background');
+      const videoElement = document.getElementById(screenId + 'Video');
+      
+      if (!videoElement) return;
+      
+      // Rastgele video seç
+      const randomVideo = bursaVideos[Math.floor(Math.random() * bursaVideos.length)];
+      
+      // Video yüklendiğinde göster
+      videoElement.addEventListener('loadeddata', function() {
+        videoElement.classList.add('active');
+        if (backgroundElement) {
+          backgroundElement.style.opacity = '0';
+        }
+      }, { once: true });
+      
+      // Video yükle ve oynat
+      videoElement.src = randomVideo;
+      videoElement.load();
+      
+      // Video oynatmayı dene
+      setTimeout(() => {
+        videoElement.play().catch(e => {
+          console.log('Video oynatılamadı:', e);
+        });
+      }, 100);
     }
 
     // Event Listeners
@@ -2859,7 +5265,60 @@
         e.preventDefault();
         editProfile();
       });
+
+      // Modal overlay click to close
+      document.getElementById('logoutModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeLogoutModal();
+        }
+      });
+
+      document.getElementById('deleteAccountModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeDeleteAccountModal();
+        }
+      });
+
+      // Reorder modal click outside to close
+      document.getElementById('reorderModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeReorderModal();
+        }
+      });
+
+      // Clear history modal click outside to close
+      document.getElementById('clearHistoryModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeClearHistoryModal();
+        }
+      });
+
+      document.getElementById('successAlertModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeSuccessAlert();
+        }
+      });
+
+      // Sayfa yüklendiğinde arka plan resimlerini ayarla
+      setRandomBackground('login');
+      setRandomBackground('register');
+      setRandomBackground('forgotPassword');
     });
+
+    // showScreen fonksiyonunu güncelle
+    const originalShowScreen = showScreen;
+    showScreen = function(screenId) {
+      originalShowScreen(screenId);
+      
+      // Auth sayfaları için arka plan resmi değiştir
+      if (screenId === 'loginScreen') {
+        setRandomBackground('login');
+      } else if (screenId === 'registerScreen') {
+        setRandomBackground('register');
+      } else if (screenId === 'forgotPasswordScreen') {
+        setRandomBackground('forgotPassword');
+      }
+    };
   </script>
 </body>
 </html> 
