@@ -984,30 +984,18 @@
       border: 1px solid #e2e8f0;
       position: relative;
       overflow: hidden;
-      min-height: 200px;
+      min-height: 280px;
       display: flex;
       flex-direction: column;
       -webkit-user-select: none;
       -moz-user-select: none;
       -ms-user-select: none;
       user-select: none;
-      opacity: 0;
-      transform: translateY(20px);
-      animation: menuItemFadeIn 0.6s ease forwards;
+      opacity: 1;
+      transform: translateY(0);
     }
 
-    .menu-item:nth-child(1) { animation-delay: 0.1s; }
-    .menu-item:nth-child(2) { animation-delay: 0.2s; }
-    .menu-item:nth-child(3) { animation-delay: 0.3s; }
-    .menu-item:nth-child(4) { animation-delay: 0.4s; }
-    .menu-item:nth-child(5) { animation-delay: 0.5s; }
-    .menu-item:nth-child(6) { animation-delay: 0.6s; }
-    .menu-item:nth-child(7) { animation-delay: 0.7s; }
-    .menu-item:nth-child(8) { animation-delay: 0.8s; }
-    .menu-item:nth-child(9) { animation-delay: 0.9s; }
-    .menu-item:nth-child(10) { animation-delay: 1.0s; }
-    .menu-item:nth-child(11) { animation-delay: 1.1s; }
-    .menu-item:nth-child(12) { animation-delay: 1.2s; }
+
 
     @keyframes menuItemFadeIn {
       0% {
@@ -1389,13 +1377,13 @@
     /* Cart Dropdown */
     .cart-dropdown {
       position: fixed;
-      bottom: 170px;
+      bottom: 180px;
       right: 20px;
       background: white;
       border-radius: 16px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
       width: 320px;
-      max-height: 400px;
+      max-height: 70vh;
       overflow: hidden;
       display: none;
       z-index: 140;
@@ -1424,12 +1412,12 @@
         width: calc(100% - 40px);
         right: 20px;
         left: 20px;
-        max-height: 60vh;
-        bottom: 170px;
+        max-height: 80vh;
+        bottom: 180px;
       }
       
       .cart-items {
-        max-height: 200px;
+        max-height: calc(80vh - 200px);
       }
     }
 
@@ -1437,7 +1425,7 @@
       background: white;
       border-radius: 16px;
       width: 100%;
-      max-height: 400px;
+      max-height: 70vh;
       overflow: hidden;
     }
 
@@ -1474,7 +1462,7 @@
 
     .cart-items {
       padding: 16px 20px;
-      max-height: 250px;
+      max-height: calc(70vh - 200px);
       overflow-y: auto;
     }
 
@@ -1528,7 +1516,7 @@
     }
 
     .cart-footer {
-      padding: 16px 20px;
+      padding: 16px 20px 20px 20px;
       border-top: 1px solid #e2e8f0;
       background: #f8fafc;
     }
@@ -1560,6 +1548,33 @@
     .place-order-btn:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 25px rgba(5, 150, 105, 0.4);
+    }
+
+    .place-order-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .place-order-btn:disabled:hover {
+      transform: none;
+      box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3);
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top: 2px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-left: 8px;
+      display: inline-block;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
     /* Profile Screen Styles */
@@ -2002,22 +2017,27 @@
 
     /* İstatistik Kartları Stilleri */
     .stats-container {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
       margin-bottom: 24px;
+      flex-wrap: wrap;
     }
 
     .stat-card {
       background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
       border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      padding: 16px;
+      border-radius: 16px;
+      padding: 24px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 16px;
       transition: all 0.3s ease;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      min-width: 200px;
+      flex: 1;
+      max-width: 280px;
     }
 
     .stat-card:hover {
@@ -2027,15 +2047,15 @@
     }
 
     .stat-icon {
-      font-size: 32px;
-      width: 60px;
-      height: 60px;
+      font-size: 36px;
+      width: 70px;
+      height: 70px;
       display: flex;
       align-items: center;
       justify-content: center;
       background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
       color: white;
-      border-radius: 12px;
+      border-radius: 14px;
       flex-shrink: 0;
     }
 
@@ -2047,7 +2067,7 @@
       font-size: 24px;
       font-weight: 700;
       color: #1e293b;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
       line-height: 1;
     }
 
@@ -2059,19 +2079,22 @@
 
     @media (max-width: 768px) {
       .stats-container {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
       }
       
       .stat-card {
-        padding: 16px;
-        gap: 12px;
+        padding: 20px;
+        gap: 14px;
+        min-width: auto;
+        max-width: none;
       }
       
       .stat-icon {
-        width: 50px;
-        height: 50px;
-        font-size: 24px;
+        width: 60px;
+        height: 60px;
+        font-size: 28px;
       }
       
       .stat-number {
@@ -2677,8 +2700,9 @@
               <span>Toplam:</span>
               <span id="cartTotal">0 ₺</span>
             </div>
-            <button class="place-order-btn" onclick="placeOrder()">
-              Sipariş Ver
+            <button class="place-order-btn" id="placeOrderBtn" onclick="placeOrder()">
+              <span id="placeOrderText">Sipariş Ver</span>
+              <div id="placeOrderSpinner" class="spinner" style="display: none;"></div>
             </button>
           </div>
         </div>
@@ -2761,13 +2785,7 @@
                   <div class="stat-label">Toplam Harcama</div>
                 </div>
               </div>
-              <div class="stat-card">
-                <div class="stat-icon">📊</div>
-                <div class="stat-content">
-                  <div class="stat-number" id="avgOrderValue">0 ₺</div>
-                  <div class="stat-label">Ortalama Sipariş</div>
-                </div>
-              </div>
+
               <div class="stat-card">
                 <div class="stat-icon">🏆</div>
                 <div class="stat-content">
@@ -3056,6 +3074,12 @@
     let orderHistoryData = [];
     let ratings = {};
     let isRegistering = false; // Kayıt işlemi flag'i
+
+    // Fiyat formatını düzenleyen yardımcı fonksiyon
+    function formatPrice(price) {
+      // JavaScript'te tam sayı kontrolü
+      return price.toFixed(Math.floor(price) === price ? 0 : 2);
+    }
 
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
@@ -3532,8 +3556,19 @@
         }
         const imageHtml = imagePath ? `<img src="${imagePath}" alt="${item.name}" class="menu-image">` : '<div class="menu-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg></div>';
         
-        // Escape single quotes in item name for onclick handlers
-        const escapedItemName = item.name.replace(/'/g, "\\'");
+        // Escape special characters in item name for onclick handlers and IDs
+        const escapedItemName = item.name
+          .replace(/'/g, "\\'")
+          .replace(/"/g, '\\"')
+          .replace(/ç/g, 'c')
+          .replace(/ğ/g, 'g')
+          .replace(/ı/g, 'i')
+          .replace(/ö/g, 'o')
+          .replace(/ş/g, 's')
+          .replace(/ü/g, 'u')
+          .replace(/\s+/g, '_')
+          .replace(/[^a-zA-Z0-9_]/g, '');
+        console.log(`🔧 Ürün: "${item.name}" -> escapedItemName: "${escapedItemName}"`);
         
         // Dinamik opsiyon seçenekleri
         let optionsHtml = '';
@@ -3542,7 +3577,7 @@
           console.log(`🔄 Ürün "${item.name}" için opsiyonlar yükleniyor:`, item.options);
           optionsHtml = `
             <div class="sugar-options">
-              <select id="sugar-${item.name}" class="sugar-select">
+              <select id="sugar-${escapedItemName}" class="sugar-select">
                 ${item.options.map((option, index) => 
                   `<option value="${option}" ${index === 0 ? 'selected' : ''}>${option}</option>`
                 ).join('')}
@@ -3554,7 +3589,7 @@
           console.log(`☕ Türk kahvesi için varsayılan şeker seçenekleri yükleniyor: "${item.name}"`);
           optionsHtml = `
             <div class="sugar-options">
-              <select id="sugar-${item.name}" class="sugar-select">
+              <select id="sugar-${escapedItemName}" class="sugar-select">
                 <option value="sade">Sade</option>
                 <option value="orta">Orta</option>
                 <option value="şekerli">Şekerli</option>
@@ -3576,7 +3611,7 @@
           <div class="controls-row">
             <div class="quantity-controls">
               <button class="quantity-btn" onclick="changeQuantity('${escapedItemName}', -1)" ${isOutOfStock ? 'disabled' : ''}>-</button>
-              <span class="quantity-display" id="quantity-${item.name}">1</span>
+              <span class="quantity-display" id="quantity-${escapedItemName}">1</span>
               <button class="quantity-btn" onclick="changeQuantity('${escapedItemName}', 1)" ${isOutOfStock ? 'disabled' : ''}>+</button>
             </div>
             ${optionsHtml}
@@ -3617,6 +3652,11 @@
       firebase.auth().signInWithEmailAndPassword(email, password)
         .then(() => {
           console.log("Giriş başarılı, sipariş sayfasına yönlendiriliyor");
+          
+          // Login form alanlarını temizle
+          document.getElementById('loginEmail').value = '';
+          document.getElementById('loginPassword').value = '';
+          
           showNotification('Giriş başarılı!', 'success');
         })
         .catch((error) => {
@@ -3652,6 +3692,22 @@
     }
 
     function showRegister() {
+      // Register form alanlarını temizle
+      const registerFields = [
+        'registerName', 'registerSurname', 'registerEmail', 
+        'registerPassword', 'registerConfirmPassword', 
+        'registerDepartment', 'registerFloor'
+      ];
+      
+      registerFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) field.value = '';
+      });
+      
+      // Hata mesajlarını temizle
+      const registerError = document.getElementById('registerError');
+      if (registerError) registerError.textContent = '';
+      
       showScreen('registerScreen');
     }
 
@@ -3660,6 +3716,16 @@
     }
 
     function showLogin() {
+      // Login form alanlarını temizle
+      const loginEmail = document.getElementById('loginEmail');
+      const loginPassword = document.getElementById('loginPassword');
+      if (loginEmail) loginEmail.value = '';
+      if (loginPassword) loginPassword.value = '';
+      
+      // Hata mesajlarını temizle
+      const loginError = document.getElementById('loginError');
+      if (loginError) loginError.textContent = '';
+      
       showScreen('loginScreen');
     }
 
@@ -3857,19 +3923,60 @@
 
     // Cart and Order Functions
     function changeQuantity(itemName, change) {
+      console.log(`🔧 changeQuantity çağrıldı: itemName="${itemName}", change=${change}`);
       const quantityElement = document.getElementById(`quantity-${itemName}`);
+      if (!quantityElement) {
+        console.error(`Quantity element bulunamadı: quantity-${itemName}`);
+        return;
+      }
       const currentQuantity = parseInt(quantityElement.textContent);
       const newQuantity = Math.max(1, currentQuantity + change);
       quantityElement.textContent = newQuantity;
       
       // Disable minus button if quantity is 1
       const minusBtn = quantityElement.previousElementSibling;
-      minusBtn.disabled = newQuantity === 1;
+      if (minusBtn) {
+        minusBtn.disabled = newQuantity === 1;
+      }
     }
 
     function addToCart(itemName) {
-      const quantity = parseInt(document.getElementById(`quantity-${itemName}`).textContent);
-      const menuItem = menu.find(item => item.name === itemName);
+      console.log(`🔧 addToCart çağrıldı: itemName="${itemName}"`);
+      // escapedItemName'i geri çevir - bu artık sadece alfanumerik karakterler ve alt çizgi içeriyor
+      // Orijinal ismi bulmak için menu array'inde eşleşen ismi arayacağız
+      let originalItemName = null;
+      for (const menuItem of menu) {
+        const escapedMenuName = menuItem.name
+          .replace(/'/g, "\\'")
+          .replace(/"/g, '\\"')
+          .replace(/ç/g, 'c')
+          .replace(/ğ/g, 'g')
+          .replace(/ı/g, 'i')
+          .replace(/ö/g, 'o')
+          .replace(/ş/g, 's')
+          .replace(/ü/g, 'u')
+          .replace(/\s+/g, '_')
+          .replace(/[^a-zA-Z0-9_]/g, '');
+        if (escapedMenuName === itemName) {
+          originalItemName = menuItem.name;
+          break;
+        }
+      }
+              console.log(`🔧 originalItemName: "${originalItemName}"`);
+        
+        if (!originalItemName) {
+          console.error(`Orijinal ürün ismi bulunamadı: ${itemName}`);
+          showNotification('Ürün bulunamadı!', 'error');
+          return;
+        }
+        
+        const quantityElement = document.getElementById(`quantity-${itemName}`);
+        if (!quantityElement) {
+          console.error(`Quantity element bulunamadı: quantity-${itemName}`);
+          return;
+        }
+        const quantity = parseInt(quantityElement.textContent);
+        const menuItem = menu.find(item => item.name === originalItemName);
       
       // Stok kontrolü
       if (menuItem && menuItem.inStock === false) {
@@ -3882,13 +3989,13 @@
       const optionSelect = document.getElementById(`sugar-${itemName}`);
       if (optionSelect && optionSelect.value) {
         selectedOption = optionSelect.value;
-        console.log(`🔄 Seçilen opsiyon: "${selectedOption}" (Ürün: ${itemName})`);
+        console.log(`🔄 Seçilen opsiyon: "${selectedOption}" (Ürün: ${originalItemName})`);
       }
       
       if (menuItem) {
         // Opsiyon seçeneğini de kontrol et
         const existingItem = cartItems.find(item => 
-          item.name === itemName && 
+          item.name === originalItemName && 
           item.option === selectedOption
         );
         
@@ -3896,7 +4003,7 @@
           existingItem.quantity += quantity;
         } else {
           const newItem = {
-            name: itemName,
+            name: originalItemName,
             price: menuItem.price,
             quantity: quantity,
             option: selectedOption
@@ -3907,7 +4014,7 @@
         updateCartCount();
         
         // Buton animasyonu - tik işareti
-        const addButton = event.target.closest('.add-to-cart-btn');
+        const addButton = document.querySelector(`button[onclick="addToCart('${itemName}')"]`);
         if (addButton) {
           addButton.classList.add('added');
           setTimeout(() => {
@@ -3923,9 +4030,14 @@
         }, 600);
         
         // Reset quantity to 1
-        document.getElementById(`quantity-${itemName}`).textContent = '1';
-        const minusBtn = document.getElementById(`quantity-${itemName}`).previousElementSibling;
-        minusBtn.disabled = true;
+        const resetQuantityElement = document.getElementById(`quantity-${itemName}`);
+        if (resetQuantityElement) {
+          resetQuantityElement.textContent = '1';
+          const minusBtn = resetQuantityElement.previousElementSibling;
+          if (minusBtn) {
+            minusBtn.disabled = true;
+          }
+        }
       } else {
         showNotification('Ürün bulunamadı!', 'error');
       }
@@ -3996,7 +4108,7 @@
           cartItemsDiv.appendChild(cartItem);
         });
         
-        document.getElementById('cartTotal').textContent = `${total} ₺`;
+        document.getElementById('cartTotal').textContent = `${formatPrice(total)} ₺`;
       }
       
       cartDropdown.classList.add('show');
@@ -4050,6 +4162,15 @@
         return;
       }
 
+      // Show loading state
+      const placeOrderBtn = document.getElementById('placeOrderBtn');
+      const placeOrderText = document.getElementById('placeOrderText');
+      const placeOrderSpinner = document.getElementById('placeOrderSpinner');
+      
+      placeOrderBtn.disabled = true;
+      placeOrderText.textContent = 'Sipariş Veriliyor...';
+      placeOrderSpinner.style.display = 'inline-block';
+
       const totalPrice = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
       console.log('totalPrice:', totalPrice);
       
@@ -4097,6 +4218,12 @@
       .catch((error) => {
         console.error('Error placing order:', error);
         showNotification('Sipariş verilirken hata oluştu!', 'error');
+      })
+      .finally(() => {
+        // Reset button state
+        placeOrderBtn.disabled = false;
+        placeOrderText.textContent = 'Sipariş Ver';
+        placeOrderSpinner.style.display = 'none';
       });
     }
 
@@ -4275,8 +4402,7 @@
       // Toplam harcama
       const totalSpent = orders.reduce((sum, order) => sum + (order.toplamFiyat || 0), 0);
       
-      // Ortalama sipariş değeri
-      const avgOrderValue = totalOrders > 0 ? (totalSpent / totalOrders).toFixed(2) : 0;
+
       
       // Favori ürün hesaplama
       const itemCounts = {};
@@ -4300,8 +4426,7 @@
       
       console.log("Hesaplanan istatistikler:", {
         totalOrders,
-        totalSpent: totalSpent.toFixed(2),
-        avgOrderValue,
+        totalSpent: formatPrice(totalSpent),
         favoriteItem,
         itemCounts
       });
@@ -4309,7 +4434,6 @@
       // İstatistikleri güncelle
       const totalOrdersElement = document.getElementById('totalOrders');
       const totalSpentElement = document.getElementById('totalSpent');
-      const avgOrderValueElement = document.getElementById('avgOrderValue');
       const favoriteItemElement = document.getElementById('favoriteItem');
       
       if (totalOrdersElement) {
@@ -4317,13 +4441,10 @@
         totalOrdersElement.style.animation = 'statsPulse 0.6s ease-out';
       }
       if (totalSpentElement) {
-        totalSpentElement.textContent = `${totalSpent.toFixed(2)} ₺`;
+        totalSpentElement.textContent = `${formatPrice(totalSpent)} ₺`;
         totalSpentElement.style.animation = 'statsPulse 0.6s ease-out 0.1s both';
       }
-      if (avgOrderValueElement) {
-        avgOrderValueElement.textContent = `${avgOrderValue} ₺`;
-        avgOrderValueElement.style.animation = 'statsPulse 0.6s ease-out 0.2s both';
-      }
+
       if (favoriteItemElement) {
         favoriteItemElement.textContent = favoriteItem;
         favoriteItemElement.style.animation = 'statsPulse 0.6s ease-out 0.3s both';
@@ -4372,7 +4493,7 @@
           <div class="order-header" onclick="toggleOrderDetails('${orderId}')">
             <div class="order-info">
               <span class="order-date">${orderDate}</span>
-              <span class="order-total">${order.toplamFiyat} ₺</span>
+              <span class="order-total">${formatPrice(order.toplamFiyat)} ₺</span>
             </div>
             <div class="order-header-rating" id="header-rating-${orderId}"></div>
             <div class="order-toggle">
@@ -4703,7 +4824,7 @@
       });
       
       reorderItemsList.innerHTML = itemsHtml;
-      reorderTotalAmount.textContent = `${order.toplamFiyat} ₺`;
+      reorderTotalAmount.textContent = `${formatPrice(order.toplamFiyat)} ₺`;
       
       // Show modal
       document.getElementById('reorderModal').style.display = 'flex';
@@ -4720,31 +4841,59 @@
         return;
       }
       
-      // Clear current cart
-      cartItems = [];
+      if (!currentUser) {
+        showNotification('Giriş yapmanız gerekiyor!', 'error');
+        return;
+      }
       
-      // Add all items from the order to cart
-      currentReorderOrder.items.forEach(item => {
-        const cartItem = {
-          name: item.name,
-          price: item.price,
-          quantity: item.adet,
-          option: item.option || item.sugar || null // For Türk Kahvesi sugar options
-        };
-        cartItems.push(cartItem);
-      });
+      // Store the order data before closing modal
+      const orderToReorder = currentReorderOrder;
       
-      // Update cart display
-      updateCartDisplay();
-      
-      // Close modal
+      // Close modal first
       closeReorderModal();
       
-      // Switch to order screen
-      showScreen('orderScreen');
+      // Calculate total price from the reorder items
+      const totalPrice = orderToReorder.items.reduce((sum, item) => sum + (item.price * item.adet), 0);
+      console.log('Reorder totalPrice:', totalPrice);
       
-      // Show success notification
-      showNotification('Sipariş sepete eklendi! Sipariş sayfasına yönlendiriliyorsunuz...', 'success');
+      const orderRef = firebase.firestore().collection('siparisler').doc();
+      const userOrderRef = firebase.firestore().collection('user_orders').doc(currentUser.uid).collection('orders').doc(orderRef.id);
+      
+      const newOrder = {
+        'userId': currentUser.uid,
+        'email': currentUser.email,
+        'ad': userData.name || '',
+        'soyad': userData.surname || '',
+        'departman': userData.department || '',
+        'floor': userData.floor || 0,
+        'id': orderRef.id,
+        'tarih': firebase.firestore.Timestamp.now(),
+        'toplamFiyat': totalPrice,
+        'items': orderToReorder.items.map(item => ({
+          'name': item.name,
+          'adet': item.adet,
+          'option': item.option || item.sugar || '',
+          'price': item.price
+        })),
+        'isReordered': true,
+        'originalOrderId': orderToReorder.id || ''
+      };
+      
+      console.log('Reorder newOrder:', newOrder);
+
+      Promise.all([
+        orderRef.set(newOrder),
+        userOrderRef.set(newOrder)
+      ])
+      .then(() => {
+        console.log('Tekrarlanan sipariş başarıyla kaydedildi');
+        console.log('Sipariş ID:', orderRef.id);
+        showNotification('Siparişiniz başarıyla tekrarlandı!', 'success');
+      })
+      .catch((error) => {
+        console.error('Error reordering:', error);
+        showNotification('Sipariş tekrarlanırken hata oluştu!', 'error');
+      });
     }
 
     function submitRating(orderId) {
@@ -5205,12 +5354,71 @@
           currentUser = null;
           cartItems = [];
           userData = {};
+          
+          // Tüm form alanlarını temizle
+          clearAllForms();
+          
           closeLogoutModal();
           showScreen('loginScreen');
         })
         .catch((error) => {
           console.error('Error signing out:', error);
         });
+    }
+
+    function clearAllForms() {
+      // Login form alanları
+      const loginEmail = document.getElementById('loginEmail');
+      const loginPassword = document.getElementById('loginPassword');
+      if (loginEmail) loginEmail.value = '';
+      if (loginPassword) loginPassword.value = '';
+      
+      // Register form alanları
+      const registerName = document.getElementById('registerName');
+      const registerSurname = document.getElementById('registerSurname');
+      const registerEmail = document.getElementById('registerEmail');
+      const registerPassword = document.getElementById('registerPassword');
+      const registerConfirmPassword = document.getElementById('registerConfirmPassword');
+      const registerDepartment = document.getElementById('registerDepartment');
+      const registerFloor = document.getElementById('registerFloor');
+      
+      if (registerName) registerName.value = '';
+      if (registerSurname) registerSurname.value = '';
+      if (registerEmail) registerEmail.value = '';
+      if (registerPassword) registerPassword.value = '';
+      if (registerConfirmPassword) registerConfirmPassword.value = '';
+      if (registerDepartment) registerDepartment.value = '';
+      if (registerFloor) registerFloor.value = '';
+      
+      // Şifre değiştir form alanları
+      const currentPassword = document.getElementById('currentPassword');
+      const newPassword = document.getElementById('newPassword');
+      const confirmNewPassword = document.getElementById('confirmNewPassword');
+      
+      if (currentPassword) currentPassword.value = '';
+      if (newPassword) newPassword.value = '';
+      if (confirmNewPassword) confirmNewPassword.value = '';
+      
+      // Profil düzenleme form alanları
+      const editName = document.getElementById('editName');
+      const editSurname = document.getElementById('editSurname');
+      const editDepartment = document.getElementById('editDepartment');
+      const editFloor = document.getElementById('editFloor');
+      
+      if (editName) editName.value = '';
+      if (editSurname) editSurname.value = '';
+      if (editDepartment) editDepartment.value = '';
+      if (editFloor) editFloor.value = '';
+      
+      // Şifremi unuttum form alanları
+      const forgotEmail = document.getElementById('forgotEmail');
+      if (forgotEmail) forgotEmail.value = '';
+      
+      // Sepet temizle
+      updateCartCount();
+      hideCart();
+      
+      console.log('Tüm form alanları temizlendi');
     }
 
     // Bursa tarihi güzellikleri arka plan videoları
