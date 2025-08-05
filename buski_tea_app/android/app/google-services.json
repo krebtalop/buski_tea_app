@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "463802150330",
-    "project_id": "buski-1b341",
-    "storage_bucket": "buski-1b341.firebasestorage.app"
+    "project_number": "674085318891",
+    "project_id": "buski-74e3a",
+    "storage_bucket": "buski-74e3a.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:463802150330:android:211ca8c61576d4b6658183",
+        "mobilesdk_app_id": "1:674085318891:android:645d1772fac9325ea24eae",
         "android_client_info": {
           "package_name": "com.berk.buski_tea_app"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCfEf6nTfh70tldBoMAvZOoTMzTaVry28A"
+          "current_key": "AIzaSyBZl1sVfBhwniVA5xIt05PGeApvYrjnc0Q"
         }
       ],
       "services": {
@@ -26,4 +26,4 @@
     }
   ],
   "configuration_version": "1"
-}
+} 

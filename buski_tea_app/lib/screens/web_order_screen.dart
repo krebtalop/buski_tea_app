@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:math';
+import 'dart:async';
 
 class WebOrderScreen extends StatefulWidget {
   const WebOrderScreen({Key? key}) : super(key: key);
@@ -17,45 +19,143 @@ class _WebOrderScreenState extends State<WebOrderScreen> {
   bool _showNotification = false;
   String _notificationMessage = '';
   
-  // Web için basit menü
-  final List<Map<String, dynamic>> _menu = [
-    {
-      'name': 'Çay',
-      'price': 5.0,
-      'options': ['Şekerli', 'Şekersiz', 'Az Şekerli'],
-      'defaultOption': 'Şekerli',
-      'image': '🍵',
-    },
-    {
-      'name': 'Kahve',
-      'price': 8.0,
-      'options': ['Sade', 'Sütlü', 'Şekerli'],
-      'defaultOption': 'Sade',
-      'image': '☕',
-    },
-    {
-      'name': 'Su',
-      'price': 2.0,
-      'options': ['Soğuk', 'Ilık'],
-      'defaultOption': 'Soğuk',
-      'image': '💧',
-    },
-    {
-      'name': 'Meyve Suyu',
-      'price': 6.0,
-      'options': ['Portakal', 'Elma', 'Vişne'],
-      'defaultOption': 'Portakal',
-      'image': '🍊',
-    },
-  ];
+  // Kat bazlı menü
+  List<Map<String, dynamic>> _menu = [];
+  String _menuCollection = 'kat123'; // Varsayılan
+  StreamSubscription<DocumentSnapshot>? _menuSubscription;
+  
+  // Kat bazlı personel
+  List<String> _personnel = [];
+  String _personnelCollection = 'personel_z123'; // Varsayılan
 
   @override
   void initState() {
     super.initState();
-    for (var item in _menu) {
-      _quantities[item['name']] = 0;
-      _selectedOptions[item['name']] = item['defaultOption'];
+    _loadMenu();
+  }
+
+  @override
+  void dispose() {
+    _menuSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _loadMenu() {
+    // Önce kullanıcı verilerini yükle, sonra menüyü yükle
+    _loadUserData();
+  }
+
+  void _loadUserData() {
+    // Kullanıcı UID'sini al (Firebase Auth'dan)
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      // Kullanıcı giriş yapmamış, varsayılan menü
+      _loadMenuByFloor(1); // Varsayılan kat 1
+      return;
     }
+
+    // Kullanıcı verilerini Firebase'den al
+    FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .get()
+        .then((doc) {
+      if (doc.exists) {
+        final userData = doc.data();
+        final floor = userData?['floor'] as int? ?? 1;
+        
+        // Kat bazlı menü yükle
+        _loadMenuByFloor(floor);
+      } else {
+        // Kullanıcı verisi yok, varsayılan menü
+        _loadMenuByFloor(1);
+      }
+    }).catchError((error) {
+      print('Kullanıcı verisi yüklenirken hata: $error');
+      _loadMenuByFloor(1);
+    });
+  }
+
+  void _loadMenuByFloor(int floor) {
+    // Kat bazlı menü koleksiyonu belirle
+    String menuCollection = 'kat123'; // Varsayılan
+    if (floor >= 4 && floor <= 6) {
+      menuCollection = 'kat456';
+    } else if (floor >= 7 && floor <= 10) {
+      menuCollection = 'kat78910';
+    }
+
+    print('Kullanıcı katı: $floor, Menü koleksiyonu: $menuCollection');
+
+    // Menüyü Firebase'den yükle
+    _menuSubscription = FirebaseFirestore.instance
+        .collection('menu')
+        .doc(menuCollection)
+        .snapshots()
+        .listen((docSnapshot) {
+      if (docSnapshot.exists) {
+        final data = docSnapshot.data();
+        final items = data?['items'] as List<dynamic>? ?? [];
+        
+        setState(() {
+          _menu = items.map((item) => Map<String, dynamic>.from(item)).toList();
+          
+          // Yeni menü öğeleri için quantities ve options'ları ayarla
+          for (var item in _menu) {
+            if (!_quantities.containsKey(item['name'])) {
+              _quantities[item['name']] = 0;
+            }
+            if (!_selectedOptions.containsKey(item['name'])) {
+              _selectedOptions[item['name']] = item['defaultOption'] ?? 'Normal';
+            }
+          }
+        });
+      } else {
+        print('Menü dokümanı bulunamadı: $menuCollection');
+        setState(() {
+          _menu = [];
+        });
+      }
+    });
+    
+    // Personel yükle
+    _loadPersonnelByFloor(floor);
+  }
+
+  void _loadPersonnelByFloor(int floor) {
+    // Kat bazlı personel koleksiyonu belirle
+    String personnelCollection = 'personel_z123'; // Varsayılan (Kat 1-2-3)
+    if (floor >= 4 && floor <= 6) {
+      personnelCollection = 'personel_456'; // Kat 4-5-6
+    } else if (floor >= 7 && floor <= 10) {
+      personnelCollection = 'personel_78910'; // Kat 7-8-9-10
+    }
+
+    print('Kullanıcı katı: $floor, Personel koleksiyonu: $personnelCollection');
+
+    // Personeli Firebase'den yükle
+    FirebaseFirestore.instance
+        .collection(personnelCollection)
+        .get()
+        .then((querySnapshot) {
+      final personnel = <String>[];
+      for (var doc in querySnapshot.docs) {
+        final data = doc.data();
+        final name = '${data['ad']} ${data['soyad']}';
+        personnel.add(name);
+      }
+      
+      setState(() {
+        _personnel = personnel;
+      });
+      
+      print('Yüklenen personel: $_personnel');
+    }).catchError((error) {
+      print('Personel yüklenirken hata: $error');
+      setState(() {
+        _personnel = [];
+      });
+    });
   }
 
   void _addToCart(String itemName) {

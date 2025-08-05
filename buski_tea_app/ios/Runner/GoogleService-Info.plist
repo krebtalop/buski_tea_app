@@ -3,17 +3,17 @@
 <plist version="1.0">
 <dict>
 	<key>API_KEY</key>
-	<string>AIzaSyAc4HpKf7jWaWqgA1A3DBWIZqMlGN7Hntc</string>
+	<string>AIzaSyCyA--64cda1bcju76YwCHnwdahG5Wsip4</string>
 	<key>GCM_SENDER_ID</key>
-	<string>463802150330</string>
+	<string>674085318891</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>com.berk.buskiTeaApp</string>
 	<key>PROJECT_ID</key>
-	<string>buski-1b341</string>
+	<string>buski-74e3a</string>
 	<key>STORAGE_BUCKET</key>
-	<string>buski-1b341.firebasestorage.app</string>
+	<string>buski-74e3a.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:463802150330:ios:cdec9ea56cd05ed5658183</string>
+	<string>1:674085318891:ios:4f994ac359dc4476a24eae</string>
 </dict>
 </plist>

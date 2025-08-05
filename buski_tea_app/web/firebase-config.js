@@ -1,12 +1,11 @@
-// Firebase configuration
+// Firebase configuration for compat version
 const firebaseConfig = {
-  apiKey: "AIzaSyCfEf6nTfh70tldBoMAvZOoTMzTaVry28A",
-  authDomain: "buski-1b341.firebaseapp.com",
-  projectId: "buski-1b341",
-  storageBucket: "buski-1b341.firebasestorage.app",
-  messagingSenderId: "463802150330",
-  appId: "1:463802150330:web:211ca8c61576d4b6658183"
+  apiKey: "AIzaSyCVdVGdVmeP5mlikvbQF3AkdQ3JNOg_uco",
+  authDomain: "buski-74e3a.firebaseapp.com",
+  projectId: "buski-74e3a",
+  storageBucket: "buski-74e3a.firebasestorage.app",
+  messagingSenderId: "674085318891",
+  appId: "1:674085318891:web:00dfb59d7e720c1ca24eae",
+  measurementId: "G-DFB2M6XMT3"
 };
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig); 

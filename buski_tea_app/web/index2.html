@@ -71,17 +71,19 @@
       border-radius: 10px;
       border-left: 4px solid #cbd5e1;
       transition: all 0.3s ease;
+      overflow: visible;
     }
     .order-card-preparing {
-      border-left-color: var(--warning-color);
+      border-left-color: #FDBA74;
+      background-color: #FFF7ED;
+    }
+    .order-card-delivering, .order-card-delivered {
+      border-left-color: #dc2626;
+      background-color: #fee2e2;
     }
     .order-card-ready {
       border-left-color: var(--secondary-color);
       background-color: #f0fdf4;
-    }
-    .order-card-delivered {
-      border-left-color: #94a3b8;
-      background-color: #f1f5f9;
     }
     .status-btn {
       transition: all 0.2s ease;
@@ -221,11 +223,11 @@
       border-color: var(--primary-color);
     }
     .fade-out {
-      animation: fadeShrink 0.6s forwards;
+      animation: fadeOut 0.7s forwards;
     }
-    @keyframes fadeShrink {
-      0% { opacity: 1; transform: scale(1); }
-      100% { opacity: 0; transform: scale(0.9); }
+    @keyframes fadeOut {
+      0% { opacity: 1; }
+      100% { opacity: 0; }
     }
     .center-message {
       text-align: center;
@@ -248,11 +250,12 @@
     .modal-content {
       background: #fff;
       border-radius: 12px;
-      max-height: 85vh;
-      overflow-y: auto;
+      /* max-height: 85vh; */
+      /* overflow-y: auto; */
       width: 95%;
       max-width: 500px;
       box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      overflow: visible;
     }
     .menu-item {
       border-bottom: 1px solid #e2e8f0;
@@ -351,6 +354,51 @@
         font-size: 0.875rem;
       }
     }
+    .rating-badge {
+      display: inline-flex;
+      align-items: center;
+      background: #fff7ed;
+      color: #f59e0b;
+      font-weight: 600;
+      border-radius: 6px;
+      font-size: 1rem;
+      padding: 4px 10px;
+      margin-top: 8px;
+      margin-bottom: 0;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+    .rating-stars {
+      color: #f59e0b;
+      font-size: 1.2rem;
+      margin-right: 6px;
+    }
+    .btn-delivering {
+      background-color: #dc2626;
+      color: white;
+    }
+    .btn-delivering:hover:not(:disabled) {
+      background-color: #b91c1c;
+    }
+    .btn-delivering[disabled] {
+      opacity: 0.7;
+      cursor: not-allowed;
+      position: relative;
+    }
+    .btn-delivering[disabled] .fa-times {
+      display: none;
+      color: #fff;
+    }
+    @keyframes bounceOut {
+      0% { transform: scale(1) translateY(0); opacity: 1; }
+      20% { transform: scale(1.1) translateY(-30px); }
+      40% { transform: scale(1) translateY(-15px); }
+      60% { transform: scale(1.05) translateY(-5px); }
+      80% { transform: scale(0.95) translateY(0); }
+      100% { transform: scale(0.3) translateY(-100px); opacity: 0; }
+    }
+    .bounce-out {
+      animation: bounceOut 1s forwards;
+    }
   </style>
 </head>
 <body class="bg-gray-50">
@@ -433,16 +481,61 @@
       </form>
     </div>
   </div>
-  <!-- Rapor Butonu -->
-<button id="open-report-btn" class="fixed top-16 right-4 z-50 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium">
-  Rapor
-</button>
+  <!-- Rapor Butonu (sol üst) -->
+  <button id="open-report-btn" class="fixed top-4 left-4 z-50 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium">
+    Rapor
+  </button>
+  <!-- Menü ve Personel Butonları (sağ üst) -->
+  <div class="fixed top-4 right-4 z-50 flex flex-col items-end gap-2">
+    <button id="open-menu-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium">
+      Menü
+    </button>
+    <button id="open-personel-btn" class="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium">
+      Personel
+    </button>
+  </div>
 <!-- Tüm Teslim Edilenleri Sil Butonu -->
 <button id="delete-all-orders-btn" class="fixed top-36 right-4 z-50 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium hidden">
   <i class="fas fa-trash-alt mr-1"></i>Tüm Teslim Edilenleri Sil
 </button>
-<!-- Rapor Modal -->
-<div id="report-modal" class="modal-overlay">
+  <!-- Personel Modal -->
+  <div id="personel-modal" class="modal-overlay">
+    <div class="modal-content" style="max-width:600px;">
+      <div class="flex justify-between items-center p-4 border-b">
+        <h2 class="text-xl font-bold text-gray-800">Personel Yönetimi</h2>
+        <button id="close-personel-btn" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>
+      </div>
+      <div class="p-4">
+        <div class="mb-6">
+          <div class="font-semibold text-lg mb-2">Bursa Çay Ocağı Personeli</div>
+          <div id="personel-list" class="flex flex-col items-center justify-center text-gray-400 py-8">
+            <i class="fas fa-users text-4xl mb-2"></i>
+            <div>Henüz personel eklenmemiş</div>
+          </div>
+        </div>
+        <hr class="my-6">
+        <div class="mb-2 font-semibold">Yeni Personel Ekle</div>
+        <form id="add-personel-form" class="flex flex-wrap gap-2 items-center">
+          <input type="text" id="personel-ad" placeholder="Ad" class="form-input flex-1 min-w-[120px]">
+          <input type="text" id="personel-soyad" placeholder="Soyad" class="form-input flex-1 min-w-[120px]">
+          <input type="text" id="personel-tel" placeholder="Telefon" class="form-input flex-1 min-w-[120px]">
+          <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium">+ Personel Ekle</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <!-- Menü Modal -->
+  <div id="menu-modal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="flex justify-between items-center p-4 border-b">
+        <h2 class="text-xl font-bold text-gray-800">Menü</h2>
+        <button id="close-menu-btn" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>
+      </div>
+      <div id="menu-list" class="p-4 scroll-container"></div>
+    </div>
+  </div>
+  <!-- Rapor Modal -->
+  <div id="report-modal" class="modal-overlay">
   <div class="modal-content">
     <div class="flex justify-between items-center p-4 border-b">
       <h2 class="text-xl font-bold text-gray-800">Satış Raporu</h2>
@@ -709,17 +802,17 @@ async function updateReport() {
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
     import {
       getFirestore, collection, query, orderBy,
-      onSnapshot, updateDoc, doc, deleteDoc, setDoc, getDoc, getDocs, where, writeBatch
+      onSnapshot, updateDoc, doc, deleteDoc, setDoc, getDoc, getDocs, where, writeBatch, addDoc
     } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
     // Firebase config
     const firebaseConfig = {
-      apiKey: "AIzaSyCxtk5JjQiidKZtqOo0QvewUBK0W3TH2xk",
-      authDomain: "buski-1b341.firebaseapp.com",
-      projectId: "buski-1b341",
-      storageBucket: "buski-1b341.firebasestorage.app",
-      messagingSenderId: "463802150330",
-      appId: "1:463802150330:web:02d0ada7954afb51658183",
-      measurementId: "G-V072X4G0BM"
+      apiKey: "AIzaSyCVdVGdVmeP5mlikvbQF3AkdQ3JNOg_uco",
+      authDomain: "buski-74e3a.firebaseapp.com",
+      projectId: "buski-74e3a",
+      storageBucket: "buski-74e3a.firebasestorage.app",
+      messagingSenderId: "674085318891",
+      appId: "1:674085318891:web:00dfb59d7e720c1ca24eae",
+      measurementId: "G-DFB2M6XMT3"
     };
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
@@ -1150,65 +1243,74 @@ async function updateReport() {
       } else if (status === 'hazırlandı') {
         cardClass += ' order-card-ready';
       } else if (status === 'teslim edildi') {
-        cardClass += ' order-card-delivered';
+        cardClass += ' order-card-delivering';
       }
       card.className = cardClass;
+      // Ad soyad
+      const fullName = order.fullName || order.ad || '';
       // Ürünler listesi
       let itemsHtml = '-';
       if (Array.isArray(order.items) && order.items.length > 0) {
-        itemsHtml = order.items.map(item => 
-          `${escapeHtml(item.name)}${item.option ? ' (' + escapeHtml(item.option) + ')' : ''} - ${escapeHtml(item.adet.toString())} adet`
-        ).join('<br>');
+        itemsHtml = order.items.map(item =>
+          `<div class='flex justify-between items-center bg-white rounded-lg px-3 py-2 mb-2 border border-gray-100'>
+            <span class='font-medium'>${escapeHtml(item.name)}</span>
+            <span class='bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded ml-2'>${item.adet} adet</span>
+            <span class='font-bold ml-2'>${escapeHtml((item.fiyat || order.toplamFiyat || 0).toString())} ₺</span>
+          </div>`
+        ).join('');
       }
       // Buton metni ve sınıfı
       let buttonText = 'Hazırlanıyor...';
       let buttonClass = 'status-btn btn-preparing';
       let buttonIcon = '<i class="fas fa-spinner mr-2"></i>';
       let disabled = false;
+      let buttonExtra = '';
       if (status === 'hazırlandı') {
         buttonText = 'Hazırlandı';
         buttonClass = 'status-btn btn-ready';
         buttonIcon = '<i class="fas fa-check mr-2"></i>';
       } else if (status === 'teslim edildi') {
         buttonText = 'Teslim Edildi';
-        buttonClass = 'status-btn btn-delivered';
-        buttonIcon = '<i class="fas fa-check-circle mr-2"></i>';
+        buttonClass = 'status-btn btn-delivering';
+        buttonIcon = '<i class="fas fa-check-circle mr-2"></i><i class=\'fas fa-times mr-2\'></i>';
         disabled = true;
+        buttonExtra = 'data-delivered="1"';
       }
       card.innerHTML = `
-        <div class="grid grid-cols-1 gap-2 mb-3 text-sm">
-          <div><span class="font-medium">Ad:</span> ${escapeHtml(order.ad || '')}</div>
-          <div><span class="font-medium">Departman:</span> ${escapeHtml(order.departman || '')}</div>
-          <div><span class="font-medium">Tarih:</span> ${order.tarih?.toDate ? escapeHtml(order.tarih.toDate().toLocaleString('tr-TR')) : ''}</div>
+        <div class="flex items-center mb-2">
+          <i class="fas fa-user-circle text-2xl text-blue-400 mr-2"></i>
+          <div>
+            <div class="font-bold text-base">${escapeHtml(fullName)}</div>
+            <div class="text-xs text-gray-500"><i class='fas fa-building mr-1'></i>${escapeHtml(order.departman || '')}${order.floor ? ' - ' + order.floor + '. Kat' : ''}</div>
+          </div>
+          <div class="ml-auto text-right">
+            <div class="text-xs text-gray-400">${order.tarih?.toDate ? order.tarih.toDate().toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' }) : ''}</div>
+            <div class="text-lg font-bold text-gray-700">${order.tarih?.toDate ? order.tarih.toDate().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : ''}</div>
+          </div>
         </div>
-        <div class="mb-3">
-          <div class="font-medium mb-1">Sipariş İçeriği:</div>
-          <div class="ml-3 text-sm">
-            ${itemsHtml}
-          </div>
-          <div class="ml-3 mt-2 font-bold">
-            Toplam: ${escapeHtml((order.toplamFiyat || 0).toString())} ₺
-          </div>
-          ${order.rating ? `
-          <div class="ml-3 mt-2 flex items-center">
-            <span class="text-sm text-gray-600 mr-2">Puan:</span>
-            <div class="flex">
-              ${Array.from({length: 5}, (_, i) => 
-                `<i class="fas fa-star ${i < order.rating ? 'text-yellow-400' : 'text-gray-300'}" style="font-size: 14px;"></i>`
-              ).join('')}
-            </div>
-            <span class="ml-2 text-sm text-gray-500">(${order.rating}/5)</span>
-          </div>
-          ` : ''}
+        <div class="font-semibold text-gray-700 mt-2 mb-1">SİPARİŞ İÇERİĞİ</div>
+        <div>${itemsHtml}</div>
+        <div class="bg-gray-50 rounded-lg px-3 py-2 mt-2 mb-1 flex justify-between items-center">
+          <span class="font-medium">Toplam Tutar</span>
+          <span class="font-bold">${escapeHtml((order.toplamFiyat || 0).toString())} ₺</span>
         </div>
+        ${status === 'teslim edildi' && order.rating ? `
+        <div class="bg-white rounded-lg px-3 py-2 mt-2 mb-1 flex justify-between items-center border border-gray-100">
+          <span class="font-medium">Müşteri Puanı</span>
+          <span class="flex items-center">
+            ${Array.from({length: 5}, (_, i) =>
+              `<i class='fas fa-star ${i < order.rating ? 'text-yellow-400' : 'text-gray-300'}' style='font-size: 18px;'></i>`
+            ).join('')}
+            <span class="ml-2 font-bold text-gray-700">${order.rating}/5</span>
+          </span>
+        </div>
+        ` : ''}
         <div class="flex justify-between items-center mt-3 pt-3 border-t relative">
-          <button class="${buttonClass} px-3 py-2 text-sm" onclick="cycleStatus('${order.id}', this)" ${disabled ? 'disabled' : ''}>
+          <button class="${buttonClass} px-3 py-2 text-sm" onclick="cycleStatus('${order.id}', this)" ${disabled ? 'disabled' : ''} ${buttonExtra}>
             ${buttonIcon}${buttonText}
           </button>
-          
-          <!-- Çöp Kutusu İkonu -->
-          <button class="delete-icon-btn ${activeTab === 'preparing' ? 'delete-icon-preparing' : 'delete-icon-delivered'}" 
-                  onclick="deleteOrder('${order.id}', this)" 
+          <button class="delete-icon-btn ${activeTab === 'preparing' ? 'delete-icon-preparing' : 'delete-icon-delivered'}"
+                  onclick="deleteOrder('${order.id}', this)"
                   title="Siparişi Sil">
             <i class="fas fa-trash"></i>
           </button>
@@ -1227,25 +1329,18 @@ async function updateReport() {
       } else if (currentStatus === "hazırlandı") {
         const card = btn.closest('.order-card');
         if (card) {
-          const msg = document.createElement('div');
-          msg.className = 'center-message';
-          msg.textContent = 'Teslim Edildi.';
-          card.appendChild(msg);
-          setTimeout(() => {
-            card.classList.add('fade-out');
-            setTimeout(async () => {
-              await updateDoc(ref, { status: "teslim edildi" });
-              // --- RAPOR TOPLAMINI ARTIR ---
-              await increaseReportTotal(order);
-            }, 600);
-          }, 1000);
+          // Kartı kırmızı yap ve bounce animasyonu uygula
+          card.classList.remove('order-card-ready');
+          card.classList.add('order-card-delivering', 'fade-out');
+          setTimeout(async () => {
+            await updateDoc(ref, { status: "teslim edildi" });
+            await increaseReportTotal(order);
+          }, 600);
         } else {
           await updateDoc(ref, { status: "teslim edildi" });
-          // --- RAPOR TOPLAMINI ARTIR ---
           await increaseReportTotal(order);
         }
       }
-      // Badge sayılarını güncelle
       updateBadges();
     };
 
@@ -1297,7 +1392,10 @@ async function updateReport() {
               userDepartment: order.departman || '',
               userFloor: order.floor || 0,
               timestamp: order.tarih || new Date(),
-              preservedAt: new Date()
+              preservedAt: new Date(),
+              items: order.items || [],
+              orderItems: order.orderItems || [],
+              toplamFiyat: order.toplamFiyat || 0
             };
             
             console.log('Korunan puanlama verisi:', ratingData); // Debug için
@@ -1371,7 +1469,10 @@ async function updateReport() {
                 userDepartment: order.departman || '',
                 userFloor: order.floor || 0,
                 timestamp: order.tarih || new Date(),
-                preservedAt: new Date()
+                preservedAt: new Date(),
+                items: order.items || [],
+                orderItems: order.orderItems || [],
+                toplamFiyat: order.toplamFiyat || 0
               };
               
               // Puanlama verilerini ayrı koleksiyonda sakla
@@ -1725,6 +1826,20 @@ async function updateReport() {
       }
     }
     
+    // Sipariş içeriği toggle fonksiyonu
+    window.toggleOrderContent = function(ratingId) {
+      const contentDiv = document.getElementById(`order-content-${ratingId}`);
+      const toggleIcon = document.getElementById(`toggle-icon-${ratingId}`);
+      
+      if (contentDiv.style.display === 'none') {
+        contentDiv.style.display = 'block';
+        toggleIcon.className = 'fas fa-chevron-up';
+      } else {
+        contentDiv.style.display = 'none';
+        toggleIcon.className = 'fas fa-chevron-down';
+      }
+    };
+
     // Puanları render et
     function renderRatings() {
       // Ortalama puanı güncelle
@@ -1771,6 +1886,17 @@ async function updateReport() {
         const tarih = rating.ratingDate && rating.ratingDate.toDate ? 
           rating.ratingDate.toDate() : new Date();
         
+        // Sipariş içeriğini hazırla (her zaman preserved rating'den de bak)
+        let orderContent = '';
+        let items = rating.items && Array.isArray(rating.items) && rating.items.length > 0 ? rating.items : (rating.orderItems && Array.isArray(rating.orderItems) && rating.orderItems.length > 0 ? rating.orderItems : []);
+        if (items.length > 0) {
+          orderContent = items.map(item => 
+            `${escapeHtml(item.name)}${item.option ? ' (' + escapeHtml(item.option) + ')' : ''} - ${escapeHtml(item.adet?.toString() || '1')} adet`
+          ).join('<br>');
+        } else {
+          orderContent = '';
+        }
+        
         let starsHtml = '';
         for (let i = 0; i < 5; i++) {
           starsHtml += `<i class="fas fa-star ${i < ratingValue ? 'text-yellow-400' : 'text-gray-300'}" style="font-size: 16px;"></i>`;
@@ -1794,9 +1920,49 @@ async function updateReport() {
               </button>
             </div>
           </div>
+          
           ${comment ? `
-            <div class="bg-gray-50 rounded-lg p-4">
-              <p class="text-gray-700">${escapeHtml(comment)}</p>
+            <div class="bg-gray-50 rounded-lg p-4 mb-3">
+              <div class="flex items-center mb-2">
+                <i class="fas fa-comment text-gray-600 mr-2"></i>
+                <h4 class="font-semibold text-gray-800">Yorum:</h4>
+              </div>
+              <p class="text-gray-700 ml-6">${escapeHtml(comment)}</p>
+              ${rating.selectedPersonnel ? `
+                <div class="mt-2 pt-2 border-t border-gray-200">
+                  <div class="flex items-center">
+                    <i class="fas fa-user text-green-600 mr-2"></i>
+                    <span class="text-sm text-gray-600">Değerlendirilen Personel: <span class="font-semibold text-green-700">${escapeHtml(rating.selectedPersonnel)}</span></span>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          ` : ''}
+          
+          ${orderContent ? `
+            <div class="bg-blue-50 rounded-lg p-4">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center">
+                  <i class="fas fa-shopping-cart text-blue-600 mr-2"></i>
+                  <h4 class="font-semibold text-blue-800">Sipariş İçeriği:</h4>
+                </div>
+                <button 
+                  onclick="toggleOrderContent('${rating.id}')" 
+                  class="text-blue-600 hover:text-blue-800 p-1 rounded transition-all duration-200"
+                  title="Sipariş içeriğini göster/gizle"
+                  id="toggle-btn-${rating.id}"
+                >
+                  <i class="fas fa-chevron-down" id="toggle-icon-${rating.id}"></i>
+                </button>
+              </div>
+              <div class="text-sm text-gray-700 ml-6 order-content" id="order-content-${rating.id}" style="display: none;">
+                ${orderContent}
+                ${(typeof rating.toplamFiyat !== 'undefined' && rating.toplamFiyat !== null) ? `
+                  <div class="mt-2 font-bold text-blue-800">
+                    Toplam: ${escapeHtml((rating.toplamFiyat || 0).toString())} ₺
+                  </div>
+                ` : ''}
+              </div>
             </div>
           ` : ''}
         `;
@@ -1865,6 +2031,114 @@ async function updateReport() {
       renderFloors();
       updateBadges();
     });
+    // Personel sistemi
+    const personelCollectionName = 'personel_456'; // Kat 4-5-6 için
+    
+    // Personel listesini yükle
+    async function loadPersonelList() {
+      try {
+        const q = query(collection(db, personelCollectionName));
+        const querySnapshot = await getDocs(q);
+        const personelList = document.getElementById('personel-list');
+        
+        if (querySnapshot.empty) {
+          personelList.innerHTML = `
+            <div class="flex flex-col items-center justify-center text-gray-400 py-8">
+              <i class="fas fa-users text-4xl mb-2"></i>
+              <div>Henüz personel eklenmemiş</div>
+            </div>
+          `;
+          return;
+        }
+        
+        let personelHTML = '';
+        querySnapshot.forEach((doc) => {
+          const personel = doc.data();
+          personelHTML += `
+            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg mb-2">
+              <div>
+                <div class="font-medium">${personel.ad} ${personel.soyad}</div>
+                <div class="text-sm text-gray-500">${personel.tel || 'Telefon yok'}</div>
+              </div>
+              <button onclick="deletePersonel('${doc.id}')" class="text-red-500 hover:text-red-700 p-1">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          `;
+        });
+        
+        personelList.innerHTML = personelHTML;
+      } catch (error) {
+        console.error('Personel listesi yüklenirken hata:', error);
+      }
+    }
+    
+    // Personel ekle
+    async function addPersonel(event) {
+      event.preventDefault();
+      
+      const ad = document.getElementById('personel-ad').value.trim();
+      const soyad = document.getElementById('personel-soyad').value.trim();
+      const tel = document.getElementById('personel-tel').value.trim();
+      
+      if (!ad || !soyad) {
+        await showAlert('Ad ve soyad alanları zorunludur!', 'error');
+        return;
+      }
+      
+      try {
+        await addDoc(collection(db, personelCollectionName), {
+          ad: ad,
+          soyad: soyad,
+          tel: tel,
+          eklenmeTarihi: Timestamp.now()
+        });
+        
+        document.getElementById('add-personel-form').reset();
+        await loadPersonelList();
+        await showAlert('Personel başarıyla eklendi!', 'success');
+      } catch (error) {
+        console.error('Personel eklenirken hata:', error);
+        await showAlert('Personel eklenirken bir hata oluştu!', 'error');
+      }
+    }
+    
+    // Personel sil
+    async function deletePersonel(personelId) {
+      const confirmed = await showConfirm('Personel Silme', 'Bu personeli silmek istediğinizden emin misiniz?', 'warning');
+      if (confirmed) {
+        try {
+          await deleteDoc(doc(db, personelCollectionName, personelId));
+          await loadPersonelList();
+          await showAlert('Personel başarıyla silindi!', 'success');
+        } catch (error) {
+          console.error('Personel silinirken hata:', error);
+          await showAlert('Personel silinirken bir hata oluştu!', 'error');
+        }
+      }
+    }
+    
+    // Personel modal olay dinleyicileri
+    document.getElementById('open-personel-btn').addEventListener('click', () => {
+      document.getElementById('personel-modal').classList.remove('hidden');
+      loadPersonelList();
+    });
+    
+    document.getElementById('close-personel-btn').addEventListener('click', () => {
+      document.getElementById('personel-modal').classList.add('hidden');
+    });
+    
+    document.getElementById('add-personel-form').addEventListener('submit', addPersonel);
+    
+    // Menü modal olay dinleyicileri
+    document.getElementById('open-menu-btn').addEventListener('click', () => {
+      document.getElementById('menu-modal').classList.remove('hidden');
+    });
+    
+    document.getElementById('close-menu-btn').addEventListener('click', () => {
+      document.getElementById('menu-modal').classList.add('hidden');
+    });
+    
     // Sayfa yüklendiğinde
     window.addEventListener('DOMContentLoaded', () => {
       listenMenuRealtime();

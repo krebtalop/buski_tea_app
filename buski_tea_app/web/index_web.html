@@ -261,8 +261,8 @@
       transform: translateX(-50%);
       background: #10b981;
       color: white;
-      padding: 16px 24px;
-      border-radius: 12px;
+      padding: 12px 20px;
+      border-radius: 5px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.15);
       transition: top 0.5s ease;
       z-index: 1000;
@@ -272,7 +272,7 @@
     }
     
     .notification.show {
-      top: 20px;
+      top: 10px;
     }
 
     /* Buski Logo Loading Animation */
@@ -1877,6 +1877,30 @@
       font-size: 18px;
       color: #fbbf24;
     }
+    
+    .order-status {
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .status-preparing {
+      background-color: #fef3c7;
+      color: #d97706;
+    }
+    
+    .status-ready {
+      background-color: #d1fae5;
+      color: #059669;
+    }
+    
+    .status-delivered {
+      background-color: #fee2e2;
+      color: #dc2626;
+    }
 
     .order-details {
       padding: 16px;
@@ -2297,6 +2321,17 @@
     .btn-danger:hover {
       background: #b91c1c;
       transform: translateY(-1px);
+    }
+
+    .btn-danger:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-danger:disabled:hover {
+      transform: none;
+      background: #dc2626;
     }
 
     .btn-secondary {
@@ -2885,6 +2920,10 @@
                 <input type="text" id="editName" required>
               </div>
               <div class="form-group">
+                <label for="editSurname">Soyad</label>
+                <input type="text" id="editSurname" required>
+              </div>
+              <div class="form-group">
                 <label for="editDepartment">Departman</label>
                 <input type="text" id="editDepartment" required>
               </div>
@@ -3008,7 +3047,10 @@
       </div>
       <div class="modal-footer">
         <button class="btn-secondary" onclick="closeDeleteAccountModal()">İptal</button>
-        <button class="btn-danger" onclick="confirmDeleteAccount()">Hesabı Sil</button>
+        <button class="btn-danger" id="deleteAccountBtn" onclick="confirmDeleteAccount()">
+          <span id="deleteAccountText">Hesabı Sil</span>
+          <div id="deleteAccountSpinner" class="spinner" style="display: none;"></div>
+        </button>
       </div>
     </div>
   </div>
@@ -3126,6 +3168,7 @@
           // Eğer kayıt işlemi sırasındaysa menü sayfasına yönlendirme
           if (isRegistering) {
             console.log("Kayıt işlemi sırasında, menü sayfasına yönlendirme atlanıyor");
+            isRegistering = false; // Flag'i sıfırla
             return;
           }
           
@@ -3151,6 +3194,9 @@
           
           // Önce kullanıcı verisini yükle, sonra menüyü yükle
           loadUserData();
+          
+          // Personel listesini yükle
+          loadPersonnelOptions();
         } else {
           console.log("Kullanıcı giriş yapmamış, giriş sayfasında kalıyor");
           currentUser = null;
@@ -3244,6 +3290,27 @@
       if (profileDeptElement) {
         profileDeptElement.textContent = userData.department || '-';
         console.log("Profile department güncellendi:", userData.department || '-');
+      }
+      
+      // Update edit form fields
+      const editNameField = document.getElementById('editName');
+      if (editNameField) {
+        editNameField.value = userData.name || '';
+      }
+      
+      const editSurnameField = document.getElementById('editSurname');
+      if (editSurnameField) {
+        editSurnameField.value = userData.surname || '';
+      }
+      
+      const editDepartmentField = document.getElementById('editDepartment');
+      if (editDepartmentField) {
+        editDepartmentField.value = userData.department || '';
+      }
+      
+      const editFloorField = document.getElementById('editFloor');
+      if (editFloorField) {
+        editFloorField.value = userData.floor || 0;
       }
       
       // Update profile image if exists
@@ -3652,6 +3719,9 @@
       firebase.auth().signInWithEmailAndPassword(email, password)
         .then(() => {
           console.log("Giriş başarılı, sipariş sayfasına yönlendiriliyor");
+          
+          // isRegistering flag'ini sıfırla
+          isRegistering = false;
           
           // Login form alanlarını temizle
           document.getElementById('loginEmail').value = '';
@@ -4315,42 +4385,74 @@
       
       console.log("Firebase'den kullanıcı siparişleri çekiliyor, UID:", currentUser.uid);
       
-      firebase.firestore().collection('user_orders').doc(currentUser.uid).collection('orders')
-        .orderBy('tarih', 'desc')
-        .get()
-        .then((querySnapshot) => {
-          console.log("Firebase'den gelen sipariş sayısı:", querySnapshot.size);
-          orderHistoryData = [];
+      // Hem user_orders hem de siparisler koleksiyonlarını dinle
+      const userOrdersQuery = firebase.firestore().collection('user_orders').doc(currentUser.uid).collection('orders').orderBy('tarih', 'desc');
+      const allOrdersQuery = firebase.firestore().collection('siparisler').where('userId', '==', currentUser.uid).orderBy('tarih', 'desc');
+      
+      // Her iki koleksiyonu da dinle ve birleştir
+      const unsubscribeUserOrders = userOrdersQuery.onSnapshot((userOrdersSnapshot) => {
+                 const unsubscribeAllOrders = allOrdersQuery.onSnapshot((allOrdersSnapshot) => {
+           console.log("User orders:", userOrdersSnapshot.size, "All orders:", allOrdersSnapshot.size);
+           
+           // Siparişleri birleştir ve güncelle
+           const ordersMap = new Map();
+           
+           // Boş sipariş kontrolü
+           if (userOrdersSnapshot.empty && allOrdersSnapshot.empty) {
+             console.log("Kullanıcının sipariş geçmişi boş");
+             orderHistoryDiv.innerHTML = '<p style="text-align: center; color: #64748b;">Henüz sipariş geçmişiniz bulunmuyor</p>';
+             displayOrderHistory([]);
+             createOrderChart([]);
+             updateOrderStats([]);
+             return;
+           }
           
-          if (querySnapshot.empty) {
-            console.log("Kullanıcının sipariş geçmişi boş");
-            orderHistoryDiv.innerHTML = '<p style="text-align: center; color: #64748b;">Henüz sipariş geçmişiniz bulunmuyor</p>';
-            displayOrderHistory([]);
-            createOrderChart([]);
-            updateOrderStats([]);
-            return;
-          }
-          
-          querySnapshot.forEach((doc) => {
+          // Önce user_orders'dan yükle
+          userOrdersSnapshot.forEach((doc) => {
             const order = doc.data();
-            orderHistoryData.push(order);
-            console.log("Sipariş yüklendi:", {
-              id: doc.id,
-              tarih: order.tarih,
-              toplamFiyat: order.toplamFiyat,
-              itemCount: order.items ? order.items.length : 0
-            });
+            order.id = doc.id;
+            ordersMap.set(doc.id, order);
+          });
+          
+          // Sonra siparisler'den güncelle (durum bilgisi için)
+          allOrdersSnapshot.forEach((doc) => {
+            const order = doc.data();
+            if (ordersMap.has(doc.id)) {
+              // Mevcut siparişi güncelle
+              const existingOrder = ordersMap.get(doc.id);
+              existingOrder.status = order.status; // Durumu güncelle
+              existingOrder.rating = order.rating; // Puanlamayı güncelle
+              existingOrder.comment = order.comment; // Yorumu güncelle
+            } else {
+              // Yeni sipariş ekle
+              order.id = doc.id;
+              ordersMap.set(doc.id, order);
+            }
+          });
+          
+          // Map'i array'e çevir ve tarihe göre sırala
+          orderHistoryData = Array.from(ordersMap.values()).sort((a, b) => {
+            const dateA = a.tarih.toDate ? a.tarih.toDate() : new Date(a.tarih);
+            const dateB = b.tarih.toDate ? b.tarih.toDate() : new Date(b.tarih);
+            return dateB - dateA;
           });
           
           console.log("Toplam yüklenen sipariş sayısı:", orderHistoryData.length);
           displayOrderHistory(orderHistoryData);
           createOrderChart(orderHistoryData);
           updateOrderStats(orderHistoryData);
-        })
-        .catch((error) => {
-          console.error('Firebase\'den sipariş geçmişi çekilirken hata:', error);
-          orderHistoryDiv.innerHTML = '<p style="text-align: center; color: #ef4444;">Sipariş geçmişi yüklenirken hata oluştu</p>';
+        }, (error) => {
+          console.error('Siparisler koleksiyonu dinlenirken hata:', error);
         });
+        
+        // Cleanup function
+        return () => {
+          unsubscribeAllOrders();
+        };
+      }, (error) => {
+        console.error('User orders dinlenirken hata:', error);
+        orderHistoryDiv.innerHTML = '<p style="text-align: center; color: #ef4444;">Sipariş geçmişi yüklenirken hata oluştu</p>';
+      });
     }
 
     function clearAllHistory() {
@@ -4489,11 +4591,24 @@
         
         const orderElement = document.createElement('div');
         orderElement.className = 'order-item';
+        
+        // Sipariş durumunu belirle
+        let statusText = 'Hazırlanıyor';
+        let statusClass = 'status-preparing';
+        if (order.status === 'hazırlandı') {
+          statusText = 'Hazırlandı';
+          statusClass = 'status-ready';
+        } else if (order.status === 'teslim edildi') {
+          statusText = 'Teslim Edildi';
+          statusClass = 'status-delivered';
+        }
+        
         orderElement.innerHTML = `
           <div class="order-header" onclick="toggleOrderDetails('${orderId}')">
             <div class="order-info">
               <span class="order-date">${orderDate}</span>
               <span class="order-total">${formatPrice(order.toplamFiyat)} ₺</span>
+              <span class="order-status ${statusClass}">${statusText}</span>
             </div>
             <div class="order-header-rating" id="header-rating-${orderId}"></div>
             <div class="order-toggle">
@@ -4527,12 +4642,10 @@
                     <label for="personnel-${orderId}">Siparişi Getiren Personel:</label>
                     <select id="personnel-${orderId}" class="personnel-select" onchange="updatePersonnel('${orderId}', this.value)">
                       <option value="">Seçiniz...</option>
-                      <option value="Ayşe">Ayşe</option>
-                      <option value="Fatma">Fatma</option>
-                      <option value="Hayriye">Hayriye</option>
                     </select>
                   </div>
                   
+                  ${order.status === 'teslim edildi' ? `
                   <div class="rating-section" id="rating-section-${orderId}">
                     <div class="rating-label">Puanınız:</div>
                     <div class="rating-stars" data-order-id="${orderId}">
@@ -4551,6 +4664,13 @@
                       <div class="comment"></div>
                     </div>
                   </div>
+                  ` : `
+                  <div class="rating-disabled">
+                    <p style="color: #6b7280; font-size: 14px; text-align: center; padding: 16px;">
+                      Sipariş teslim edildikten sonra puanlama yapabilirsiniz.
+                    </p>
+                  </div>
+                  `}
                 </div>
               </div>
             </div>
@@ -4900,54 +5020,77 @@
       const rating = ratings[orderId];
       const commentInput = document.querySelector(`textarea[data-order-id="${orderId}"]`);
       const comment = commentInput.value.trim();
+      const personnelSelect = document.getElementById(`personnel-${orderId}`);
+      const selectedPersonnel = personnelSelect ? personnelSelect.value : '';
       
       if (!rating) {
         showNotification('Lütfen bir puan seçin', 'error');
         return;
       }
       
-      const submitBtn = document.querySelector(`button[onclick="submitRating('${orderId}')"]`);
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Gönderiliyor...';
-      
-      // Save rating to Firebase
-      const ratingData = {
-        orderId: orderId,
-        userId: currentUser.uid,
-        userEmail: currentUser.email,
-        userName: userData.name,
-        userFloor: userData.floor,
-        userDepartment: userData.department,
-        rating: rating,
-        comment: comment,
-        timestamp: firebase.firestore.Timestamp.now()
-      };
-      
-      // Save rating to both ratings collection and the order itself
-      Promise.all([
-        firebase.firestore().collection('ratings').doc(orderId).set(ratingData),
-        firebase.firestore().collection('siparisler').doc(orderId).update({
-          rating: rating,
-          comment: comment,
-          ratingDate: firebase.firestore.Timestamp.now(),
-          userName: userData.name,
-          userFloor: userData.floor,
-          userDepartment: userData.department
-        })
-      ])
-        .then(() => {
-          showNotification('Değerlendirmeniz başarıyla gönderildi!', 'success');
-          console.log('Rating saved, calling displayRating with:', orderId, rating, comment);
-          displayRating(orderId, rating, comment);
-          commentInput.value = '';
-          submitBtn.disabled = false;
-          submitBtn.textContent = 'Değerlendirme Gönder';
+      // Sipariş durumunu kontrol et
+      firebase.firestore().collection('siparisler').doc(orderId).get()
+        .then((orderDoc) => {
+          if (!orderDoc.exists) {
+            showNotification('Sipariş bulunamadı!', 'error');
+            return;
+          }
+          
+          const orderData = orderDoc.data();
+          if (orderData.status !== 'teslim edildi') {
+            showNotification('Sadece teslim edilen siparişlere puan verebilirsiniz!', 'error');
+            return;
+          }
+          
+          const submitBtn = document.querySelector(`button[onclick="submitRating('${orderId}')"]`);
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Gönderiliyor...';
+          
+          // Save rating to Firebase
+          const ratingData = {
+            orderId: orderId,
+            userId: currentUser.uid,
+            userEmail: currentUser.email,
+            userName: userData.name,
+            userFloor: userData.floor,
+            userDepartment: userData.department,
+            rating: rating,
+            comment: comment,
+            selectedPersonnel: selectedPersonnel, // Seçilen personel bilgisi
+            timestamp: firebase.firestore.Timestamp.now()
+          };
+          
+          // Save rating to both ratings collection and the order itself
+          Promise.all([
+            firebase.firestore().collection('ratings').doc(orderId).set(ratingData),
+            firebase.firestore().collection('siparisler').doc(orderId).update({
+              rating: rating,
+              comment: comment,
+              selectedPersonnel: selectedPersonnel, // Seçilen personel bilgisi
+              ratingDate: firebase.firestore.Timestamp.now(),
+              userName: userData.name,
+              userFloor: userData.floor,
+              userDepartment: userData.department
+            })
+          ])
+            .then(() => {
+              showNotification('Değerlendirmeniz başarıyla gönderildi!', 'success');
+              console.log('Rating saved, calling displayRating with:', orderId, rating, comment);
+              displayRating(orderId, rating, comment);
+              commentInput.value = '';
+              submitBtn.disabled = false;
+              submitBtn.textContent = 'Değerlendirme Gönder';
+            })
+            .catch((error) => {
+              console.error('Error submitting rating:', error);
+              showNotification('Değerlendirme gönderilirken hata oluştu', 'error');
+              submitBtn.disabled = false;
+              submitBtn.textContent = 'Değerlendirme Gönder';
+            });
         })
         .catch((error) => {
-          console.error('Error submitting rating:', error);
-          showNotification('Değerlendirme gönderilirken hata oluştu', 'error');
-          submitBtn.disabled = false;
-          submitBtn.textContent = 'Değerlendirme Gönder';
+          console.error('Error checking order status:', error);
+          showNotification('Sipariş durumu kontrol edilirken hata oluştu', 'error');
         });
     }
 
@@ -4961,6 +5104,9 @@
         // Load existing rating and personnel when order details are opened
         loadExistingRating(orderId);
         loadExistingPersonnel(orderId);
+        
+        // Personel listesini yükle
+        loadPersonnelOptions();
       } else {
         orderDetails.style.display = 'none';
         toggleIcon.textContent = '▼';
@@ -4970,20 +5116,9 @@
 
 
     function updatePersonnel(orderId, personnelName) {
-      if (!personnelName) return;
-      
-      // Update the order in Firestore with personnel information
-      firebase.firestore().collection('siparisler').doc(orderId).update({
-        deliveryPersonnel: personnelName,
-        personnelUpdatedAt: firebase.firestore.Timestamp.now()
-      })
-      .then(() => {
-        showNotification(`${personnelName} personel olarak atandı`, 'success');
-      })
-      .catch((error) => {
-        console.error('Error updating personnel:', error);
-        showNotification('Personel güncellenirken hata oluştu', 'error');
-      });
+      // Personel seçimi sadece yorum ve puanlama için, otomatik atama yok
+      // Seçilen personel bilgisi sadece yorum gönderilirken kullanılacak
+      console.log(`Personel seçildi: ${personnelName} (Sipariş: ${orderId})`);
     }
 
     function loadExistingPersonnel(orderId) {
@@ -4996,12 +5131,74 @@
               if (personnelSelect) {
                 personnelSelect.value = orderData.deliveryPersonnel;
               }
+            } else {
+              // Eğer personel atanmamışsa varsayılan olarak "Seçiniz..." seçili olsun
+              const personnelSelect = document.getElementById(`personnel-${orderId}`);
+              if (personnelSelect) {
+                personnelSelect.value = '';
+              }
             }
           }
         })
         .catch((error) => {
           console.error('Error loading personnel:', error);
         });
+    }
+    
+    // Personel listesini yükle (kat bazlı)
+    async function loadPersonnelOptions() {
+      try {
+        // Kullanıcı katına göre personel koleksiyonu belirle
+        let personnelCollection = 'personel_z123'; // Varsayılan (Kat 1-2-3)
+        
+        if (userData && userData.floor) {
+          if (userData.floor >= 4 && userData.floor <= 6) {
+            personnelCollection = 'personel_456'; // Kat 4-5-6
+          } else if (userData.floor >= 7 && userData.floor <= 10) {
+            personnelCollection = 'personel_78910'; // Kat 7-8-9-10
+          }
+        }
+        
+        console.log('Kullanıcı katı:', userData?.floor, 'Personel koleksiyonu:', personnelCollection);
+        
+        const personnelSnapshot = await firebase.firestore().collection(personnelCollection).get();
+        const personnelOptions = personnelSnapshot.docs.map(doc => {
+          const data = doc.data();
+          return `${data.ad} ${data.soyad}`;
+        });
+        
+        console.log('Yüklenen personel:', personnelOptions);
+        
+        // Tüm personel select elementlerini güncelle
+        const personnelSelects = document.querySelectorAll('.personnel-select');
+        personnelSelects.forEach(select => {
+          // Mevcut seçili değeri koru
+          const currentValue = select.value;
+          
+          // Seçenekleri temizle (ilk "Seçiniz..." hariç)
+          while (select.children.length > 1) {
+            select.removeChild(select.lastChild);
+          }
+          
+          // Yeni personel seçeneklerini ekle
+          personnelOptions.forEach(personnelName => {
+            const option = document.createElement('option');
+            option.value = personnelName;
+            option.textContent = personnelName;
+            select.appendChild(option);
+          });
+          
+          // Önceki seçili değeri geri yükle (sadece boş değilse)
+          if (currentValue && currentValue !== '') {
+            select.value = currentValue;
+          } else {
+            // Varsayılan olarak "Seçiniz..." seçili olsun
+            select.value = '';
+          }
+        });
+      } catch (error) {
+        console.error('Personel listesi yüklenirken hata:', error);
+      }
     }
 
     function loadExistingRating(orderId) {
@@ -5241,21 +5438,23 @@
 
     function editProfile() {
       const name = document.getElementById('editName').value;
+      const surname = document.getElementById('editSurname').value;
       const department = document.getElementById('editDepartment').value;
       const floor = parseInt(document.getElementById('editFloor').value);
       
-      if (!name || !department) {
+      if (!name || !surname || !department) {
         showNotification('Tüm alanları doldurun', 'error');
         return;
       }
       
       firebase.firestore().collection('users').doc(currentUser.uid).update({
         name: name,
+        surname: surname,
         department: department,
         floor: floor
       })
       .then(() => {
-        userData = { ...userData, name, department, floor };
+        userData = { ...userData, name, surname, department, floor };
         showNotification('Profil bilgileri güncellendi!', 'success');
         loadUserData(); // Refresh user data display
       })
@@ -5291,6 +5490,15 @@
     }
 
     async function confirmDeleteAccount() {
+      // Show loading state
+      const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+      const deleteAccountText = document.getElementById('deleteAccountText');
+      const deleteAccountSpinner = document.getElementById('deleteAccountSpinner');
+      
+      deleteAccountBtn.disabled = true;
+      deleteAccountText.textContent = 'Hesap Siliniyor...';
+      deleteAccountSpinner.style.display = 'inline-block';
+
       try {
         // Base64 resimler için Firebase Storage silme işlemi gerekmez
         // Profil resmi Firestore'da saklandığı için otomatik olarak silinecek
@@ -5327,10 +5535,25 @@
         await currentUser.delete();
         
         closeDeleteAccountModal();
-        logout();
+        
+        // Direkt çıkış yap ve giriş sayfasına yönlendir
+        currentUser = null;
+        cartItems = [];
+        userData = {};
+        
+        // Tüm form alanlarını temizle
+        clearAllForms();
+        
+        showNotification('Hesabınız başarıyla silindi', 'success');
+        showScreen('loginScreen');
       } catch (error) {
         console.error('Error deleting account:', error);
         showNotification('Hesap silinirken hata oluştu', 'error');
+      } finally {
+        // Reset button state
+        deleteAccountBtn.disabled = false;
+        deleteAccountText.textContent = 'Hesabı Sil';
+        deleteAccountSpinner.style.display = 'none';
       }
     }
 
@@ -5359,6 +5582,7 @@
           clearAllForms();
           
           closeLogoutModal();
+          showNotification('Başarıyla çıkış yapıldı', 'success');
           showScreen('loginScreen');
         })
         .catch((error) => {

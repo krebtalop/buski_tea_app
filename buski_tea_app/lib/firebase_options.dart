@@ -7,13 +7,13 @@ import 'package:flutter/foundation.dart'
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
 /// Example:
-/// ```dart
+/// dart
 /// import 'firebase_options.dart';
 /// // ...
 /// await Firebase.initializeApp(
 ///   options: DefaultFirebaseOptions.currentPlatform,
 /// );
-/// ```
+/// 
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
@@ -23,20 +23,11 @@ class DefaultFirebaseOptions {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -49,20 +40,49 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCfEf6nTfh70tldBoMAvZOoTMzTaVry28A',
-    appId: '1:463802150330:android:211ca8c61576d4b6658183',
-    messagingSenderId: '463802150330',
-    projectId: 'buski-1b341',
-    storageBucket: 'buski-1b341.firebasestorage.app',
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyCVdVGdVmeP5mlikvbQF3AkdQ3JNOg_uco',
+    appId: '1:674085318891:web:00dfb59d7e720c1ca24eae',
+    messagingSenderId: '674085318891',
+    projectId: 'buski-74e3a',
+    authDomain: 'buski-74e3a.firebaseapp.com',
+    storageBucket: 'buski-74e3a.firebasestorage.app',
+    measurementId: 'G-DFB2M6XMT3',
   );
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCfEf6nTfh70tldBoMAvZOoTMzTaVry28A',
-    appId: '1:463802150330:web:211ca8c61576d4b6658183',
-    messagingSenderId: '463802150330',
-    projectId: 'buski-1b341',
-    storageBucket: 'buski-1b341.firebasestorage.app',
-    authDomain: 'buski-1b341.firebaseapp.com',
+  static const FirebaseOptions android = FirebaseOptions(
+    apiKey: 'AIzaSyBZl1sVfBhwniVA5xIt05PGeApvYrjnc0Q',
+    appId: '1:674085318891:android:645d1772fac9325ea24eae',
+    messagingSenderId: '674085318891',
+    projectId: 'buski-74e3a',
+    storageBucket: 'buski-74e3a.firebasestorage.app',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyCyA--64cda1bcju76YwCHnwdahG5Wsip4',
+    appId: '1:674085318891:ios:4f994ac359dc4476a24eae',
+    messagingSenderId: '674085318891',
+    projectId: 'buski-74e3a',
+    storageBucket: 'buski-74e3a.firebasestorage.app',
+    iosBundleId: 'com.berk.buskiTeaApp',
+  );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyCyA--64cda1bcju76YwCHnwdahG5Wsip4',
+    appId: '1:674085318891:ios:4f994ac359dc4476a24eae',
+    messagingSenderId: '674085318891',
+    projectId: 'buski-74e3a',
+    storageBucket: 'buski-74e3a.firebasestorage.app',
+    iosBundleId: 'com.berk.buskiTeaApp',
+  );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyCVdVGdVmeP5mlikvbQF3AkdQ3JNOg_uco',
+    appId: '1:674085318891:web:c38f6747767bef50a24eae',
+    messagingSenderId: '674085318891',
+    projectId: 'buski-74e3a',
+    authDomain: 'buski-74e3a.firebaseapp.com',
+    storageBucket: 'buski-74e3a.firebasestorage.app',
+    measurementId: 'G-4BBRT698GY',
   );
 }

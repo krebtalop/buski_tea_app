@@ -12,7 +12,8 @@ class GecmisSiparislerScreen extends StatefulWidget {
 }
 
 class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
-  final List<String> _garsonlar = ['Ahmet', 'Mehmet', 'Ayşe', 'Fatma'];
+  // Kat bazlı personel sistemi
+  List<String> _garsonlar = [];
   // Her sipariş için seçilen garsonu tutacak map
   final Map<String, String?> _secilenGarsonlar = {};
 
@@ -45,7 +46,59 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
   @override
   void initState() {
     super.initState();
+    _loadPersonnel();
     _fetchOrders();
+  }
+
+  Future<void> _loadPersonnel() async {
+    try {
+      // Kullanıcı verilerini al
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      if (!userDoc.exists) return;
+
+      final userData = userDoc.data();
+      final floor = userData?['floor'] as int? ?? 1;
+
+      // Kat bazlı personel koleksiyonu belirle
+      String personnelCollection = 'personel_z123'; // Varsayılan (Kat 1-2-3)
+      if (floor >= 4 && floor <= 6) {
+        personnelCollection = 'personel_456'; // Kat 4-5-6
+      } else if (floor >= 7 && floor <= 10) {
+        personnelCollection = 'personel_78910'; // Kat 7-8-9-10
+      }
+
+      print('Kullanıcı katı: $floor, Personel koleksiyonu: $personnelCollection');
+
+      // Personeli Firebase'den yükle
+      final personnelSnapshot = await FirebaseFirestore.instance
+          .collection(personnelCollection)
+          .get();
+
+      final personnel = <String>[];
+      for (var doc in personnelSnapshot.docs) {
+        final data = doc.data();
+        final name = '${data['ad']} ${data['soyad']}';
+        personnel.add(name);
+      }
+
+      setState(() {
+        _garsonlar = personnel;
+      });
+
+      print('Yüklenen personel: $_garsonlar');
+    } catch (error) {
+      print('Personel yüklenirken hata: $error');
+      setState(() {
+        _garsonlar = [];
+      });
+    }
   }
 
   Future<void> _fetchOrders() async {

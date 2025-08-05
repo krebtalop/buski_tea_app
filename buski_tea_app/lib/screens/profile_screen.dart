@@ -23,6 +23,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final ImagePicker _picker = ImagePicker();
 
   final _nameController = TextEditingController();
+  final _surnameController = TextEditingController();
   final _departmentController = TextEditingController();
   final _floorController = TextEditingController();
   final _emailController = TextEditingController();
@@ -206,9 +207,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _openEditDialog(Map<String, dynamic> userData) {
     _emailController.text = _auth.currentUser?.email ?? '';
     _nameController.text = userData['name'] ?? '';
+    _surnameController.text = userData['surname'] ?? '';
     _departmentController.text = userData['department'] ?? '';
     _floorController.text = userData['floor']?.toString() ?? '';
-
     _hasChanges = false;
 
     showDialog(
@@ -242,6 +243,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     setModalState,
                   ),
                   _buildTextField(
+                    'Soyadı',
+                    _surnameController,
+                    true,
+                    setModalState,
+                  ),
+                  _buildTextField(
                     'Departman',
                     _departmentController,
                     true,
@@ -265,8 +272,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   .doc(uid)
                                   .update({
                                     'name': _nameController.text.trim(),
-                                    'department': _departmentController.text
-                                        .trim(),
+                                    'surname': _surnameController.text.trim(),
+                                    'department': _departmentController.text.trim(),
                                     'floor': _floorController.text.trim(),
                                   });
                               Navigator.of(context).pop();
@@ -445,7 +452,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       bottom: 8,
                                     ),
                                     child: Text(
-                                      '${data['name']}',
+                                      data['surname'] != null && data['surname'].toString().isNotEmpty
+                                        ? '${data['name']} ${data['surname']}'
+                                        : '${data['name']}',
                                       style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w500,
