@@ -1316,8 +1316,7 @@ async function updateReport() {
 
     // Puanlama silme fonksiyonu
     window.deleteRating = async function(ratingId) {
-      const confirmed = await showConfirm('Puanlama Silme', 'Bu puanlamayı silmek istediğinizden emin misiniz?', 'warning');
-      if (confirmed) {
+      if (confirm('Bu puanlamayı silmek istediğinizden emin misiniz?')) {
         try {
           // Önce korunan puanlamalarda ara
           const preservedRef = doc(db, "preserved_ratings", ratingId);
@@ -1347,8 +1346,7 @@ async function updateReport() {
 
     // Tüm puanları sil
     window.deleteAllRatings = async function() {
-      const confirmed = await showConfirm('Tüm Puanları Sil', 'Bu işlem tüm puanları ve yorumları kalıcı olarak silecektir. Devam etmek istediğinizden emin misiniz?', 'warning');
-      if (confirmed) {
+      if (confirm('Bu işlem tüm puanları ve yorumları kalıcı olarak silecektir. Devam etmek istediğinizden emin misiniz?')) {
         try {
           // Kat grubuna göre siparişleri filtrele
           const filteredOrders = filterOrdersByPanel(allOrders);
@@ -1406,8 +1404,7 @@ async function updateReport() {
 
     // Hata butonu işlevi: Siparişi hazırlananlar sekmesine geri döndürür
     window.revertToPreparing = async function(id, btn) {
-        const confirmed = await showConfirm('Sipariş Geri Alma', 'Bu siparişi hazırlananlar sekmesine geri almak istediğinizden emin misiniz?', 'warning');
-        if (confirmed) {
+        if (confirm('Bu siparişi hazırlananlar sekmesine geri almak istediğinizden emin misiniz?')) {
             const ref = doc(db, "siparisler", id);
             try {
                 await updateDoc(ref, { status: "hazırlanıyor" });
@@ -1633,8 +1630,7 @@ async function updateReport() {
     }
     // Siparişi sil
     window.deleteOrder = async function(id, btn) {
-      const confirmed = await showConfirm('Sipariş Silme', 'Bu siparişi silmek istediğinizden emin misiniz?', 'warning');
-      if (confirmed) {
+      if (confirm('Bu siparişi silmek istediğinizden emin misiniz?')) {
         try {
           const order = allOrders.find(o => o.id === id);
           const ref = doc(db, "siparisler", id);
@@ -1685,8 +1681,7 @@ async function updateReport() {
     
     // Tüm teslim edilmiş siparişleri sil fonksiyonu
     async function deleteAllOrders() {
-      const confirmed = await showConfirm('Toplu Silme', 'Tüm teslim edilmiş siparişleri silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.', 'danger');
-      if (confirmed) {
+      if (confirm('Tüm teslim edilmiş siparişleri silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
         try {
           // Panele göre siparişleri filtrele ve sadece teslim edilmiş olanları al
           const filteredOrders = filterOrdersByPanel(allOrders);

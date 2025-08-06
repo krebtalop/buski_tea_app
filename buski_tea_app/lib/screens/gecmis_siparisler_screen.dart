@@ -732,6 +732,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
     if (!_showRatingDialog || _selectedOrderId == null) {
       return const SizedBox.shrink();
     }
+
     final orderData = _orders
         .firstWhere((doc) => doc.id == _selectedOrderId)
         .data();

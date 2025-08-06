@@ -597,7 +597,7 @@
 </div>
 </div>
   <!-- Custom Alert Modal -->
-  <div id="alert-modal" class="fixed inset-0 z-[999999] flex items-center justify-center modal-backdrop-light hidden">
+  <div id="alert-modal" class="fixed inset-0 z-[9999999] flex items-center justify-center modal-backdrop-light hidden">
     <div class="bg-white rounded-lg shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-95 opacity-0" id="alert-content">
       <div class="p-6">
         <div class="flex items-center mb-4">
@@ -623,57 +623,6 @@
   <!-- Custom Confirm Modal -->
   
 
-      <div class="p-6">
-        <div class="flex items-center mb-4">
-          <div class="flex-shrink-0">
-            <i id="confirm-icon" class="fas fa-exclamation-triangle text-yellow-500 text-2xl"></i>
-          </div>
-          <div class="ml-3">
-            <h3 id="confirm-title" class="text-lg font-medium text-gray-900">Onay Gerekli</h3>
-          </div>
-        </div>
-        <div class="mb-6">
-          <p id="confirm-message" class="text-sm text-gray-600"></p>
-        </div>
-        <div class="flex justify-end space-x-3">
-          <button id="confirm-cancel" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200">
-            İptal
-          </button>
-          <button id="confirm-ok" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors duration-200">
-            Onayla
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Custom Confirm Modal - En üstte görünmesi için body'nin başına eklendi -->
-  <div id="confirm-modal" class="fixed inset-0 z-[999999] flex items-center justify-center bg-black bg-opacity-50 hidden" style="display: none;">
-    <div class="bg-white rounded-lg shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-95 opacity-0" id="confirm-content">
-      <div class="p-6">
-        <div class="flex items-center mb-4">
-          <div class="flex-shrink-0">
-            <i id="confirm-icon" class="fas fa-exclamation-triangle text-yellow-500 text-2xl"></i>
-          </div>
-          <div class="ml-3">
-            <h3 id="confirm-title" class="text-lg font-medium text-gray-900">Onay Gerekli</h3>
-          </div>
-        </div>
-        <div class="mb-6">
-          <p id="confirm-message" class="text-sm text-gray-600"></p>
-        </div>
-        <div class="flex justify-end space-x-3">
-          <button id="confirm-cancel" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200">
-            İptal
-          </button>
-          <button id="confirm-ok" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors duration-200">
-            Onayla
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-  
   <!-- Bildirim Sesi -->
       <audio id="order-notification-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3" preload="auto"></audio>
     <audio id="bell-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-bell-notification-933.mp3" preload="auto"></audio>
@@ -1171,8 +1120,7 @@ async function updateReport() {
 
     // Puanlama silme fonksiyonu
     window.deleteRating = async function(ratingId) {
-      const confirmed = await showConfirm('Puanlama Silme', 'Bu puanlamayı silmek istediğinizden emin misiniz?', 'warning');
-      if (confirmed) {
+      if (confirm('Bu puanlamayı silmek istediğinizden emin misiniz?')) {
         try {
           const ref = doc(db, "siparisler", ratingId);
           await updateDoc(ref, { 
@@ -1192,8 +1140,7 @@ async function updateReport() {
 
     // Tüm puanları sil
     window.deleteAllRatings = async function() {
-      const confirmed = await showConfirm('Tüm Puanları Sil', 'Bu işlem tüm puanları ve yorumları kalıcı olarak silecektir. Devam etmek istediğinizden emin misiniz?', 'warning');
-      if (confirmed) {
+      if (confirm('Bu işlem tüm puanları ve yorumları kalıcı olarak silecektir. Devam etmek istediğinizden emin misiniz?')) {
         try {
           // Kat grubuna göre siparişleri filtrele
           const filteredOrders = filterOrdersByPanel(allOrders);
@@ -1239,8 +1186,7 @@ async function updateReport() {
 
     // Hata butonu işlevi: Siparişi hazırlananlar sekmesine geri döndürür
     window.revertToPreparing = async function(id, btn) {
-        const confirmed = await showConfirm('Sipariş Geri Alma', 'Bu siparişi hazırlananlar sekmesine geri almak istediğinizden emin misiniz?', 'warning');
-        if (confirmed) {
+        if (confirm('Bu siparişi hazırlananlar sekmesine geri almak istediğinizden emin misiniz?')) {
             const ref = doc(db, "siparisler", id);
             try {
                 await updateDoc(ref, { status: "hazırlanıyor" });
@@ -1465,8 +1411,7 @@ async function updateReport() {
     }
     // Siparişi sil
     window.deleteOrder = async function(id, btn) {
-      const confirmed = await showConfirm('Sipariş Silme', 'Bu siparişi silmek istediğinizden emin misiniz?', 'warning');
-      if (confirmed) {
+      if (confirm('Bu siparişi silmek istediğinizden emin misiniz?')) {
         try {
           const order = allOrders.find(o => o.id === id);
           const ref = doc(db, "siparisler", id);
@@ -1516,8 +1461,7 @@ async function updateReport() {
     
     // Tüm teslim edilmiş siparişleri sil fonksiyonu
     async function deleteAllOrders() {
-      const confirmed = await showConfirm('Toplu Silme', 'TÜM TESLİM EDİLMİŞ SİPARİŞLERİ SİLMEK İSTEDİĞİNİZDEN EMİN MİSİNİZ? Bu işlem geri alınamaz!', 'danger');
-      if (confirmed) {
+      if (confirm('TÜM TESLİM EDİLMİŞ SİPARİŞLERİ SİLMEK İSTEDİĞİNİZDEN EMİN MİSİNİZ? Bu işlem geri alınamaz!')) {
         try {
           // Panele göre siparişleri filtrele ve sadece teslim edilmiş olanları al
           const filteredOrders = filterOrdersByPanel(allOrders);
