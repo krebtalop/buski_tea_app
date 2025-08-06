@@ -192,7 +192,7 @@
       position: absolute;
       top: -2px;
       right: -8px;
-      background-color: var(--danger-color);
+      background-color: #ef4444;
       color: white;
       border-radius: 50%;
       width: 20px;
@@ -379,28 +379,8 @@
     }
     .order-list {
       flex-grow: 1;
-      overflow-y: auto;
-      max-height: 350px;
+      overflow-y: visible;
       padding: 0.5rem;
-    }
-    
-    /* Sipariş listesi scrollbar'larını gizle */
-    .order-list::-webkit-scrollbar {
-      width: 0px;
-      display: none;
-    }
-    .order-list::-webkit-scrollbar-track {
-      display: none;
-    }
-    .order-list::-webkit-scrollbar-thumb {
-      display: none;
-    }
-    .order-list::-webkit-scrollbar-thumb:hover {
-      display: none;
-    }
-    .order-list {
-      scrollbar-width: none;
-      -ms-overflow-style: none;
     }
     @media (max-width: 768px) {
       .floor-grid {
@@ -463,10 +443,6 @@
   </style>
 </head>
 <body class="bg-gray-50">
-  <!-- Menü Açma Butonu -->
-  <button id="open-menu-btn" class="fixed top-4 right-4 z-50 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium">
-    Menü
-  </button>
   <!-- Menü Modal -->
   <div id="menu-modal" class="modal-overlay">
     <div class="modal-content">
@@ -542,23 +518,8 @@
       </form>
     </div>
   </div>
-  <!-- Rapor Butonu (sol üst) -->
-  <button id="open-report-btn" class="fixed top-4 left-4 z-50 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium">
-    Rapor
-  </button>
-  <!-- Menü ve Personel Butonları (sağ üst) -->
-  <div class="fixed top-4 right-4 z-50 flex flex-col items-end gap-2">
-    <button id="open-menu-btn-secondary" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium">
-      Menü
-    </button>
-    <button id="open-personel-btn" class="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium">
-      Personel
-    </button>
-  </div>
-<!-- Tüm Teslim Edilenleri Sil Butonu -->
-<button id="delete-all-orders-btn" class="fixed top-36 right-4 z-50 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium hidden">
-  <i class="fas fa-trash-alt mr-1"></i>Tüm Teslim Edilenleri Sil
-</button>
+
+
   <!-- Personel Modal -->
   <div id="personel-modal" class="modal-overlay">
     <div class="modal-content" style="max-width:600px;">
@@ -566,10 +527,9 @@
         <h2 class="text-xl font-bold text-gray-800">Personel Yönetimi</h2>
         <button id="close-personel-btn" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>
       </div>
-      <div class="p-4">
-        <div class="mb-6">
-          <div class="font-semibold text-lg mb-2">Bursa Çay Ocağı Personeli</div>
-          <div id="personel-list" class="flex flex-col items-center justify-center text-gray-400 py-8">
+      <div class="p-4 pt-0">
+        <div class="mb-0">
+          <div id="personel-list" class="flex flex-col items-center justify-center text-gray-400 py-0">
             <i class="fas fa-users text-4xl mb-2"></i>
             <div>Henüz personel eklenmemiş</div>
           </div>
@@ -592,7 +552,7 @@
         <h2 class="text-xl font-bold text-gray-800">Menü</h2>
         <button id="close-menu-btn" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>
       </div>
-      <div id="menu-list" class="p-4 scroll-container"></div>
+      <div id="menu-list" class="p-4 pt-0 scroll-container"></div>
     </div>
   </div>
   <!-- Rapor Modal -->
@@ -637,7 +597,7 @@
 </div>
 </div>
   <!-- Custom Alert Modal -->
-  <div id="alert-modal" class="fixed inset-0 z-90 flex items-center justify-center modal-backdrop-light hidden">
+  <div id="alert-modal" class="fixed inset-0 z-[999999] flex items-center justify-center modal-backdrop-light hidden">
     <div class="bg-white rounded-lg shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-95 opacity-0" id="alert-content">
       <div class="p-6">
         <div class="flex items-center mb-4">
@@ -661,8 +621,8 @@
   </div>
 
   <!-- Custom Confirm Modal -->
-  <div id="confirm-modal" class="fixed inset-0 z-70 flex items-center justify-center modal-backdrop hidden">
-    <div class="bg-white rounded-lg shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-95 opacity-0" id="confirm-content">
+  
+
       <div class="p-6">
         <div class="flex items-center mb-4">
           <div class="flex-shrink-0">
@@ -687,16 +647,64 @@
     </div>
   </div>
 
+  <!-- Custom Confirm Modal - En üstte görünmesi için body'nin başına eklendi -->
+  <div id="confirm-modal" class="fixed inset-0 z-[999999] flex items-center justify-center bg-black bg-opacity-50 hidden" style="display: none;">
+    <div class="bg-white rounded-lg shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-95 opacity-0" id="confirm-content">
+      <div class="p-6">
+        <div class="flex items-center mb-4">
+          <div class="flex-shrink-0">
+            <i id="confirm-icon" class="fas fa-exclamation-triangle text-yellow-500 text-2xl"></i>
+          </div>
+          <div class="ml-3">
+            <h3 id="confirm-title" class="text-lg font-medium text-gray-900">Onay Gerekli</h3>
+          </div>
+        </div>
+        <div class="mb-6">
+          <p id="confirm-message" class="text-sm text-gray-600"></p>
+        </div>
+        <div class="flex justify-end space-x-3">
+          <button id="confirm-cancel" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200">
+            İptal
+          </button>
+          <button id="confirm-ok" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors duration-200">
+            Onayla
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
   <!-- Bildirim Sesi -->
-  <audio id="order-notification-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3" preload="auto"></audio>
+      <audio id="order-notification-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3" preload="auto"></audio>
+    <audio id="bell-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-bell-notification-933.mp3" preload="auto"></audio>
   <!-- Ana İçerik -->
-  <header class="header-gradient text-white py-6 px-4 shadow-lg">
+  <header class="header-gradient text-white py-6 px-4 shadow-lg relative">
     <div class="container mx-auto">
       <h1 class="text-3xl font-bold flex items-center justify-center">
         <i class="fas fa-mug-hot mr-3"></i>
         Çay Ocağı Sipariş Paneli
       </h1>
       <p class="mt-2 opacity-90 text-center">Siparişleri takip edin ve durumlarını güncelleyin</p>
+    </div>
+    
+    <!-- Rapor Butonu (sol üst) -->
+    <button id="open-report-btn" class="absolute top-4 left-4 z-50 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium">
+      Rapor
+    </button>
+    <!-- Menü ve Personel Butonları (sağ üst) -->
+    <div class="absolute top-4 right-4 z-50 flex flex-col items-end gap-2">
+      <button id="open-menu-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium">
+        Menü
+      </button>
+      <button id="open-personel-btn" class="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium">
+        Personel
+      </button>
+      <button id="delete-all-orders-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium hidden" style="margin-top: 30px;">
+        <i class="fas fa-trash-alt mr-1"></i>Tüm Teslim Edilenleri Sil
+      </button>
+      <button id="delete-all-ratings-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium hidden" style="margin-top: 30px;">
+        <i class="fas fa-trash-alt mr-1"></i>Tüm Puanları Sil
+      </button>
     </div>
   </header>
   <main class="container mx-auto px-4 py-6">
@@ -714,14 +722,12 @@
         Puanlama
         <span id="ratings-badge" class="notification-badge hidden">0</span>
       </button>
+
     </div>
     
 
     
-    <!-- Kat Grubu Seçimi Butonları -->
-    <div class="flex flex-wrap justify-center mb-6">
-      <button class="floor-group-btn active" data-group="456">Kat 4-5-6</button>
-    </div>
+
     
     <!-- Katlar -->
     <div id="floors-container"></div>
@@ -743,15 +749,7 @@
           </div>
         </div>
         
-        <!-- Butonlar -->
-        <div class="text-center mb-6 space-x-4">
-          <button id="refresh-ratings-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-lg transition-all duration-300 font-medium">
-            <i class="fas fa-refresh mr-2"></i>Puanları Yenile
-          </button>
-          <button id="delete-all-ratings-btn" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg shadow-lg transition-all duration-300 font-medium">
-            <i class="fas fa-trash-alt mr-2"></i>Tüm Puanları Sil
-          </button>
-        </div>
+
         
         <!-- Puan Listesi -->
         <div id="ratings-list" class="space-y-4">
@@ -863,7 +861,7 @@ async function updateReport() {
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
     import {
       getFirestore, collection, query, orderBy,
-      onSnapshot, updateDoc, doc, deleteDoc, setDoc, getDoc, getDocs, where, writeBatch, addDoc
+      onSnapshot, updateDoc, doc, deleteDoc, setDoc, getDoc, getDocs, where, writeBatch, addDoc, Timestamp
     } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
     // Firebase config
     const firebaseConfig = {
@@ -963,21 +961,39 @@ async function updateReport() {
       setActiveTab('ratings');
     });
     
-    // Puanları yenile butonu
-    refreshRatingsBtn.addEventListener('click', () => {
-      loadRatings();
-    });
-    
     // Tüm puanları sil butonu
     const deleteAllRatingsBtn = document.getElementById('delete-all-ratings-btn');
     deleteAllRatingsBtn.addEventListener('click', () => {
       window.deleteAllRatings();
     });
     
-    // Tüm siparişleri sil butonu olay dinleyicisi
-    deleteAllOrdersBtn.addEventListener('click', () => {
-      deleteAllOrders();
+    // Real-time puanlama listener'ı
+    const ratingsQuery = query(
+      collection(db, "siparisler"),
+      where("rating", ">", 0)
+    );
+    
+    onSnapshot(ratingsQuery, (snapshot) => {
+      if (activeTab === 'ratings') {
+        loadRatings();
+      }
     });
+    
+    // Korunan puanlamalar için de listener
+    const preservedRatingsQuery = query(collection(db, "preserved_ratings"));
+    
+    onSnapshot(preservedRatingsQuery, (snapshot) => {
+      if (activeTab === 'ratings') {
+        loadRatings();
+      }
+    });
+    
+    // Tüm siparişleri sil butonu olay dinleyicisi
+    if (deleteAllOrdersBtn) {
+      deleteAllOrdersBtn.addEventListener('click', () => {
+        deleteAllOrders();
+      });
+    }
     // Kat grubu değişiklikleri - Sadece kat 4-5-6
     // Bu panel sadece kat 4-5-6 için olduğundan değişiklik yok
     // Menü listesini render et
@@ -1113,11 +1129,15 @@ async function updateReport() {
     // Ürün silme
     document.getElementById('delete-product-btn').addEventListener('click', async () => {
       if (editingProductIndex !== -1) {
-        if (confirm('Bu ürünü silmek istediğinizden emin misiniz?')) {
+        if (!confirm('Bu ürünü silmek istediğinizden emin misiniz?')) return;
+        try {
           menuData.splice(editingProductIndex, 1);
           await saveMenuToFirestore();
           editProductModal.style.display = 'none';
           renderMenuList();
+        } catch (error) {
+          console.error('Ürün silinirken hata:', error);
+          alert('Ürün silinirken bir hata oluştu!');
         }
       }
     });
@@ -1247,11 +1267,11 @@ async function updateReport() {
         { floor: 5, name: 'Kat 5' },
         { floor: 6, name: 'Kat 6' }
       ];
-      const groupName = "Katlar 4 - 5 - 6";
+      const groupName = "Kat 4 - 5 - 6";
       
       const groupRow = document.createElement('div');
       groupRow.className = 'mb-8';
-      groupRow.innerHTML = `<h2 class="text-xl font-bold text-center mb-4 text-gray-700">${groupName}</h2>`;
+      groupRow.innerHTML = `<h2 class="text-2xl font-bold text-center mb-6 text-gray-800">${groupName}</h2>`;
       const groupGrid = document.createElement('div');
       groupGrid.className = 'floor-grid';
       
@@ -1324,9 +1344,11 @@ async function updateReport() {
       if (Array.isArray(order.items) && order.items.length > 0) {
         itemsHtml = order.items.map(item =>
           `<div class='flex justify-between items-center bg-white rounded-lg px-3 py-2 mb-2 border border-gray-100'>
-            <span class='font-medium'>${escapeHtml(item.name)}</span>
-            <span class='bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded ml-2'>${item.adet} adet</span>
-            <span class='font-bold ml-2'>${escapeHtml((item.fiyat || order.toplamFiyat || 0).toString())} ₺</span>
+            <span class='font-medium text-green-700'>${escapeHtml(item.name)}</span>
+            <div class='flex items-center space-x-3'>
+              <span class='bg-green-100 text-green-700 text-sm font-bold px-3 py-1 rounded'>${item.adet} adet</span>
+              <span class='font-bold text-black'>${escapeHtml(((item.price || item.fiyat || 0) * item.adet).toString())} ₺</span>
+            </div>
           </div>`
         ).join('');
       }
@@ -1352,10 +1374,10 @@ async function updateReport() {
           <i class="fas fa-user-circle text-2xl text-blue-400 mr-2"></i>
           <div>
             <div class="font-bold text-base">${escapeHtml(fullName)}</div>
-            <div class="text-xs text-gray-500"><i class='fas fa-building mr-1'></i>${escapeHtml(order.departman || '')}${order.floor ? ' - ' + order.floor + '. Kat' : ''}</div>
+                        <div class="text-xs text-gray-500"><i class='fas fa-building mr-1'></i>${escapeHtml(order.departman || '')}${order.floor ? ' - ' + order.floor + '. Kat' : ''}</div>
           </div>
           <div class="ml-auto text-right">
-            <div class="text-xs text-gray-400">${order.tarih?.toDate ? order.tarih.toDate().toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' }) : ''}</div>
+            <div class="text-xs text-gray-400">${order.tarih?.toDate ? order.tarih.toDate().toLocaleDateString('tr-TR', { day: '2-digit', month: 'long' }) : ''}</div>
             <div class="text-lg font-bold text-gray-700">${order.tarih?.toDate ? order.tarih.toDate().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : ''}</div>
           </div>
         </div>
@@ -1363,7 +1385,7 @@ async function updateReport() {
         <div>${itemsHtml}</div>
         <div class="bg-gray-50 rounded-lg px-3 py-2 mt-2 mb-1 flex justify-between items-center">
           <span class="font-medium">Toplam Tutar</span>
-          <span class="font-bold">${escapeHtml((order.toplamFiyat || 0).toString())} ₺</span>
+          <span class="font-bold text-xl text-black">${escapeHtml((order.toplamFiyat || 0).toString())} ₺</span>
         </div>
         ${status === 'teslim edildi' && order.rating ? `
         <div class="bg-white rounded-lg px-3 py-2 mt-2 mb-1 flex justify-between items-center border border-gray-100">
@@ -1627,6 +1649,19 @@ async function updateReport() {
     // Custom Alert fonksiyonu
     function showAlert(message, type = 'info') {
       return new Promise((resolve) => {
+        const alertModal = document.getElementById('alert-modal');
+        const alertContent = document.getElementById('alert-content');
+        const alertIcon = document.getElementById('alert-icon');
+        const alertTitle = document.getElementById('alert-title');
+        const alertMessage = document.getElementById('alert-message');
+        const alertOk = document.getElementById('alert-ok');
+        
+        if (!alertModal || !alertContent || !alertIcon || !alertTitle || !alertMessage || !alertOk) {
+          console.error('Alert modal elementleri bulunamadı');
+          resolve();
+          return;
+        }
+        
         let iconClass = '';
         let title = '';
         switch(type) {
@@ -1669,6 +1704,14 @@ async function updateReport() {
     }
 
     function hideAlert() {
+      const alertModal = document.getElementById('alert-modal');
+      const alertContent = document.getElementById('alert-content');
+      
+      if (!alertModal || !alertContent) {
+        console.error('Alert modal elementleri bulunamadı');
+        return;
+      }
+      
       alertContent.classList.remove('scale-100', 'opacity-100');
       alertContent.classList.add('scale-95', 'opacity-0');
       setTimeout(() => {
@@ -1681,6 +1724,20 @@ async function updateReport() {
     // Custom Confirm fonksiyonu
     function showConfirm(title, message, type = 'warning') {
       return new Promise((resolve) => {
+        const confirmModal = document.getElementById('confirm-modal');
+        const confirmContent = document.getElementById('confirm-content');
+        const confirmIcon = document.getElementById('confirm-icon');
+        const confirmTitle = document.getElementById('confirm-title');
+        const confirmMessage = document.getElementById('confirm-message');
+        const confirmOk = document.getElementById('confirm-ok');
+        const confirmCancel = document.getElementById('confirm-cancel');
+        
+        if (!confirmModal || !confirmContent || !confirmIcon || !confirmTitle || !confirmMessage || !confirmOk || !confirmCancel) {
+          console.error('Confirm modal elementleri bulunamadı');
+          resolve(false);
+          return;
+        }
+        
         let iconClass = '';
         let buttonColor = '';
         switch(type) {
@@ -1699,6 +1756,7 @@ async function updateReport() {
         document.body.classList.add('modal-open');
         
         confirmModal.classList.remove('hidden');
+        confirmModal.style.display = 'flex';
         setTimeout(() => {
           confirmContent.classList.remove('scale-95', 'opacity-0');
           confirmContent.classList.add('scale-100', 'opacity-100');
@@ -1729,10 +1787,19 @@ async function updateReport() {
     }
 
     function hideConfirm() {
+      const confirmModal = document.getElementById('confirm-modal');
+      const confirmContent = document.getElementById('confirm-content');
+      
+      if (!confirmModal || !confirmContent) {
+        console.error('Confirm modal elementleri bulunamadı');
+        return;
+      }
+      
       confirmContent.classList.remove('scale-100', 'opacity-100');
       confirmContent.classList.add('scale-95', 'opacity-0');
       setTimeout(() => {
         confirmModal.classList.add('hidden');
+        confirmModal.style.display = 'none';
         // Body'den modal-open sınıfını kaldır
         document.body.classList.remove('modal-open');
       }, 300);
@@ -1746,6 +1813,15 @@ async function updateReport() {
       if (audio) {
         audio.currentTime = 0;
         audio.play().catch(e => console.log("Ses çalınamadı:", e));
+      }
+    }
+    
+    // Çan sesi çal (sadece yeni sipariş için)
+    function playBellSound() {
+      const bellAudio = document.getElementById('bell-sound');
+      if (bellAudio) {
+        bellAudio.currentTime = 0;
+        bellAudio.play().catch(e => console.log("Çan sesi çalınamadı:", e));
       }
     }
     // Panele göre siparişleri filtrele
@@ -1795,20 +1871,27 @@ async function updateReport() {
         preparingTab.classList.remove('tab-inactive');
         floorsContainer.classList.remove('hidden');
         deleteAllOrdersBtn.classList.add('hidden');
+        deleteAllRatingsBtn.classList.add('hidden');
         renderFloors();
       } else if (tab === 'delivered') {
         console.log('Delivered sekmesi aktif ediliyor');
         deliveredTab.classList.add('tab-active');
         deliveredTab.classList.remove('tab-inactive');
         floorsContainer.classList.remove('hidden');
-        deleteAllOrdersBtn.classList.remove('hidden');
+        deleteAllRatingsBtn.classList.add('hidden');
         renderFloors();
+        // Butonu tekrar bul ve hidden class'ını kaldır
+        const newDeleteAllOrdersBtn = document.getElementById('delete-all-orders-btn');
+        if (newDeleteAllOrdersBtn) {
+          newDeleteAllOrdersBtn.classList.remove('hidden');
+        }
       } else if (tab === 'ratings') {
         console.log('Ratings sekmesi aktif ediliyor');
         ratingsTab.classList.add('tab-active');
         ratingsTab.classList.remove('tab-inactive');
         ratingsContainer.classList.remove('hidden');
         deleteAllOrdersBtn.classList.add('hidden');
+        deleteAllRatingsBtn.classList.remove('hidden');
         loadRatings();
       }
     }
@@ -2091,13 +2174,35 @@ async function updateReport() {
     // Siparişleri Firestore'dan çek
     const q = query(collection(db, "siparisler"), orderBy("tarih", "desc"));
     let lastOrderIds = [];
+    let lastOrderCount = 0;
+    
     onSnapshot(q, (snapshot) => {
       const currentOrderIds = snapshot.docs.map(docSnap => docSnap.id);
-      // Yeni sipariş geldiyse bildirim sesi çal
-      if (lastOrderIds.length > 0 && currentOrderIds.length > lastOrderIds.length) {
-        playOrderNotification();
+      const currentOrderCount = currentOrderIds.length;
+      
+      // Yeni sipariş geldiyse çan sesi çal
+      if (lastOrderIds.length > 0 && currentOrderCount > lastOrderCount) {
+        // Sadece bu panele ait yeni siparişler için çan sesi çal
+        const newOrders = snapshot.docs.filter(docSnap => {
+          const order = docSnap.data();
+          const floor = Number(order.floor);
+          if (activeFloorGroup === 'z123') {
+            return floor >= 1 && floor <= 3;
+          } else if (activeFloorGroup === '456') {
+            return floor >= 4 && floor <= 6;
+          } else if (activeFloorGroup === '78910') {
+            return floor >= 7 && floor <= 10;
+          }
+          return false;
+        });
+        
+        if (newOrders.length > 0) {
+          playBellSound();
+        }
       }
+      
       lastOrderIds = currentOrderIds;
+      lastOrderCount = currentOrderCount;
       allOrders = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
       renderFloors();
       updateBadges();
@@ -2126,9 +2231,9 @@ async function updateReport() {
         querySnapshot.forEach((doc) => {
           const personel = doc.data();
           personelHTML += `
-            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg mb-2">
-              <div>
-                <div class="font-medium">${personel.ad} ${personel.soyad}</div>
+            <div class="flex justify-between items-center py-2 border-b border-gray-200 w-full">
+              <div class="flex-1 text-left">
+                <div class="font-medium text-gray-800">${personel.ad} ${personel.soyad}</div>
                 <div class="text-sm text-gray-500">${personel.tel || 'Telefon yok'}</div>
               </div>
               <button onclick="deletePersonel('${doc.id}')" class="text-red-500 hover:text-red-700 p-1">
@@ -2153,7 +2258,7 @@ async function updateReport() {
       const tel = document.getElementById('personel-tel').value.trim();
       
       if (!ad || !soyad) {
-        await showAlert('Ad ve soyad alanları zorunludur!', 'error');
+        alert('Ad ve soyad alanları zorunludur!');
         return;
       }
       
@@ -2167,25 +2272,29 @@ async function updateReport() {
         
         document.getElementById('add-personel-form').reset();
         await loadPersonelList();
-        await showAlert('Personel başarıyla eklendi!', 'success');
+        
+        // Modal'ı kapat
+        document.getElementById('personel-modal').style.display = 'none';
+        
+        // Başarı bildirimi göster
+        await showAlert(`${ad} ${soyad} başarıyla eklendi!`, 'success');
       } catch (error) {
         console.error('Personel eklenirken hata:', error);
+        
+        // Hata bildirimi göster
         await showAlert('Personel eklenirken bir hata oluştu!', 'error');
       }
     }
     
     // Personel sil
     async function deletePersonel(personelId) {
-      const confirmed = await showConfirm('Personel Silme', 'Bu personeli silmek istediğinizden emin misiniz?', 'warning');
-      if (confirmed) {
-        try {
-          await deleteDoc(doc(db, personelCollectionName, personelId));
-          await loadPersonelList();
-          await showAlert('Personel başarıyla silindi!', 'success');
-        } catch (error) {
-          console.error('Personel silinirken hata:', error);
-          await showAlert('Personel silinirken bir hata oluştu!', 'error');
-        }
+      if (!confirm('Bu personeli silmek istediğinizden emin misiniz?')) return;
+      try {
+        await deleteDoc(doc(db, personelCollectionName, personelId));
+        await loadPersonelList();
+      } catch (error) {
+        console.error('Personel silinirken hata:', error);
+        alert('Personel silinirken bir hata oluştu!');
       }
     }
     
@@ -2218,5 +2327,6 @@ async function updateReport() {
       loadRatings(); // Puanları da yükle
     });
   </script>
+  
 </body>
 </html>

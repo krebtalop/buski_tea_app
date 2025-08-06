@@ -3958,7 +3958,7 @@
 
       firebase.auth().sendPasswordResetEmail(email)
         .then(() => {
-          showNotification('Şifre sıfırlama linki e-posta adresinize gönderildi.', 'success');
+          showNotification('Şifre sıfırlama linki mailinize gönderildi. Lütfen spam klasörünüzü kontrol ediniz.', 'success');
           showLogin();
         })
         .catch((error) => {
@@ -5252,7 +5252,6 @@
           <div class="comment">${comment}</div>
         `;
         ratingDisplay.style.display = 'block';
-        ratingDisplay.style.visibility = 'visible';
         console.log('Rating display updated');
       }
       
@@ -5264,13 +5263,6 @@
           <div class="stars">${stars}</div>
         `;
         headerRating.style.display = 'flex';
-        headerRating.style.visibility = 'visible';
-      }
-      
-      // Hide the rating input section after successful submission
-      const ratingSection = document.getElementById(`rating-section-${orderId}`);
-      if (ratingSection) {
-        ratingSection.style.display = 'none';
       }
     }
 

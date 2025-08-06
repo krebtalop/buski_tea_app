@@ -105,7 +105,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 const SizedBox(height: 16),
                 if (_showSuccess)
                   const Text(
-                    'Şifre sıfırlama linki mailinize gönderildi.',
+                    'Şifre sıfırlama linki mailinize gönderildi. Lütfen spam klasörünüzü kontrol ediniz.',
                     style: TextStyle(
                       color: Colors.green,
                       fontWeight: FontWeight.bold,

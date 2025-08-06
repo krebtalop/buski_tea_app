@@ -43,11 +43,39 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
     Colors.indigo,
   ];
 
+  // Sipariş kartlarının açık/kapalı durumunu takip etmek için
+  final Map<String, bool> _expandedOrders = {};
+
   @override
   void initState() {
     super.initState();
     _loadPersonnel();
     _fetchOrders();
+    _listenToPanelUpdates();
+  }
+
+  // Personel listesini yeniden yükle
+  Future<void> _reloadPersonnel() async {
+    print('DEBUG: Personel listesi yeniden yükleniyor...');
+    await _loadPersonnel();
+  }
+
+  // Panel güncellemelerini dinle
+  void _listenToPanelUpdates() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    // Panel siparişlerindeki değişiklikleri dinle
+    FirebaseFirestore.instance
+        .collection('siparisler')
+        .where('userId', isEqualTo: user.uid)
+        .snapshots()
+        .listen((snapshot) {
+          // Panel'de değişiklik olduğunda siparişleri yeniden yükle
+          if (mounted) {
+            _fetchOrders();
+          }
+        });
   }
 
   Future<void> _loadPersonnel() async {
@@ -64,7 +92,21 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
       if (!userDoc.exists) return;
 
       final userData = userDoc.data();
-      final floor = userData?['floor'] as int? ?? 1;
+      print('DEBUG: Kullanıcı verileri: $userData');
+
+      // Floor değerini güvenli şekilde al
+      dynamic floorValue = userData?['floor'];
+      int floor;
+
+      if (floorValue is int) {
+        floor = floorValue;
+      } else if (floorValue is String) {
+        floor = int.tryParse(floorValue) ?? 1;
+      } else {
+        floor = 1;
+      }
+
+      print('DEBUG: Floor değeri: $floor (tip: ${floorValue.runtimeType})');
 
       // Kat bazlı personel koleksiyonu belirle
       String personnelCollection = 'personel_z123'; // Varsayılan (Kat 1-2-3)
@@ -74,27 +116,44 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
         personnelCollection = 'personel_78910'; // Kat 7-8-9-10
       }
 
-      print('Kullanıcı katı: $floor, Personel koleksiyonu: $personnelCollection');
+      print(
+        'Kullanıcı katı: $floor, Personel koleksiyonu: $personnelCollection',
+      );
 
       // Personeli Firebase'den yükle
+      print('DEBUG: Firebase\'e bağlanıyor - Koleksiyon: $personnelCollection');
+
       final personnelSnapshot = await FirebaseFirestore.instance
           .collection(personnelCollection)
           .get();
 
+      print('DEBUG: Gelen doküman sayısı: ${personnelSnapshot.docs.length}');
+
       final personnel = <String>[];
       for (var doc in personnelSnapshot.docs) {
         final data = doc.data();
+        print('DEBUG: Personel verisi: $data');
         final name = '${data['ad']} ${data['soyad']}';
         personnel.add(name);
+        print('DEBUG: Eklenen personel: $name');
       }
 
       setState(() {
         _garsonlar = personnel;
       });
 
-      print('Yüklenen personel: $_garsonlar');
+      print('DEBUG: Toplam yüklenen personel: $_garsonlar');
+
+      if (personnel.isEmpty) {
+        print('DEBUG: PERSONEL LİSTESİ BOŞ!');
+        print('DEBUG: Kullanıcı katı: $floor');
+        print('DEBUG: Kullanılan koleksiyon: $personnelCollection');
+        print(
+          'DEBUG: Firebase\'den gelen doküman sayısı: ${personnelSnapshot.docs.length}',
+        );
+      }
     } catch (error) {
-      print('Personel yüklenirken hata: $error');
+      print('DEBUG: Personel yüklenirken hata: $error');
       setState(() {
         _garsonlar = [];
       });
@@ -124,15 +183,29 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
         startDate = now.subtract(const Duration(days: 30));
       }
 
-      final snapshot = await FirebaseFirestore.instance
-          .collection('user_orders')
-          .doc(user.uid)
-          .collection('orders')
+      // Panel'den güncel siparişleri al (durum bilgisi dahil)
+      final panelOrdersSnapshot = await FirebaseFirestore.instance
+          .collection('siparisler')
+          .where('userId', isEqualTo: user.uid)
           .where('tarih', isGreaterThan: Timestamp.fromDate(startDate))
           .orderBy('tarih', descending: true)
           .get();
 
-      _orders = snapshot.docs;
+      // Kullanıcının geçmiş siparişlerini de al
+      final userOrdersSnapshot = await FirebaseFirestore.instance
+          .collection('user_orders')
+          .doc(user.uid)
+          .collection('orders')
+          .get();
+
+      // Kullanıcı geçmişinde olan sipariş ID'lerini al
+      final userOrderIds = userOrdersSnapshot.docs.map((doc) => doc.id).toSet();
+
+      // Panel siparişlerini filtrele - sadece kullanıcı geçmişinde olanları göster
+      _orders = panelOrdersSnapshot.docs
+          .where((doc) => userOrderIds.contains(doc.id))
+          .toList();
+
       _totalSpent = 0;
       _categoryData.clear();
       _categoryCounts.clear();
@@ -165,6 +238,69 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
     }
   }
 
+  // Tek sipariş sil
+  Future<void> _deleteSingleOrder(String orderId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Siparişi Sil'),
+          content: const Text(
+            'Bu siparişi geçmişinizden silmek istediğinizden emin misiniz?\n\n'
+            'Bu işlem sadece uygulama ekranından siparişi kaldırır. '
+            'Panel tarafından kontrol edilen sipariş etkilenmez.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('İptal'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Sil', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      // Sadece kullanıcı geçmişinden sil
+      await FirebaseFirestore.instance
+          .collection('user_orders')
+          .doc(user.uid)
+          .collection('orders')
+          .doc(orderId)
+          .delete();
+
+      // Siparişleri yeniden yükle
+      await _fetchOrders();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sipariş geçmişinizden silindi'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Sipariş silinirken hata oluştu: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   // Tüm siparişleri sil (sadece kullanıcı geçmişinden)
   Future<void> _clearAllOrders() async {
     final confirmed = await showDialog<bool>(
@@ -173,7 +309,9 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
         return AlertDialog(
           title: const Text('Siparişleri Sil'),
           content: const Text(
-            'Tüm sipariş geçmişinizi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
+            'Tüm sipariş geçmişinizi silmek istediğinizden emin misiniz?\n\n'
+            'Bu işlem sadece uygulama ekranından siparişleri kaldırır. '
+            'Panel tarafından kontrol edilen siparişler etkilenmez.',
           ),
           actions: [
             TextButton(
@@ -202,6 +340,18 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
           .collection('orders')
           .get();
 
+      if (snapshot.docs.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Silinecek sipariş bulunamadı'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
       // Batch işlemi ile tüm siparişleri sil
       final batch = FirebaseFirestore.instance.batch();
 
@@ -216,8 +366,10 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Sipariş geçmişi başarıyla silindi'),
+          SnackBar(
+            content: Text(
+              '${snapshot.docs.length} sipariş geçmişi başarıyla silindi',
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -437,6 +589,18 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
 
   // Puanlama modalını göster
   void _showRatingModal(String orderId, Map<String, dynamic> orderData) {
+    // Sadece teslim edilmiş siparişler için puanlama yapılabilir
+    final status = orderData['status'] ?? 'hazırlanıyor';
+    if (status.toLowerCase() != 'teslim edildi') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sadece teslim edilmiş siparişler puanlanabilir!'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
     _selectedOrderId = orderId;
     _selectedRating = orderData['rating'] ?? 0;
     _commentController.text = orderData['comment'] ?? '';
@@ -498,6 +662,54 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
     }
   }
 
+  // Durum widget'ı
+  Widget _buildStatusWidget(String status) {
+    Color statusColor;
+    IconData statusIcon;
+    String statusText;
+
+    switch (status.toLowerCase()) {
+      case 'hazırlanıyor':
+        statusColor = Colors.orange;
+        statusIcon = Icons.access_time;
+        statusText = 'Hazırlanıyor';
+        break;
+      case 'teslim edildi':
+        statusColor = Colors.green;
+        statusIcon = Icons.check_circle;
+        statusText = 'Teslim Edildi';
+        break;
+      default:
+        statusColor = Colors.blue;
+        statusIcon = Icons.help_outline;
+        statusText = 'Hazırlandı';
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: statusColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: statusColor.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(statusIcon, size: 16, color: statusColor),
+          const SizedBox(width: 4),
+          Text(
+            statusText,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: statusColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // Yıldız widget'ı
   Widget _buildStarRating(int rating, Function(int) onRatingChanged) {
     return Row(
@@ -520,7 +732,6 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
     if (!_showRatingDialog || _selectedOrderId == null) {
       return const SizedBox.shrink();
     }
-
     final orderData = _orders
         .firstWhere((doc) => doc.id == _selectedOrderId)
         .data();
@@ -771,16 +982,28 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
             onSelected: (value) {
               if (value == 'clear_orders') {
                 _clearAllOrders();
+              } else if (value == 'reload_personnel') {
+                _reloadPersonnel();
               }
             },
             itemBuilder: (BuildContext context) => [
+              const PopupMenuItem<String>(
+                value: 'reload_personnel',
+                child: Row(
+                  children: [
+                    Icon(Icons.refresh, color: Colors.blue),
+                    SizedBox(width: 8),
+                    Text('Personel Listesini Yenile'),
+                  ],
+                ),
+              ),
               const PopupMenuItem<String>(
                 value: 'clear_orders',
                 child: Row(
                   children: [
                     Icon(Icons.delete_sweep, color: Colors.red),
                     SizedBox(width: 8),
-                    Text('Siparişleri Sil'),
+                    Text('Tüm Siparişleri Sil'),
                   ],
                 ),
               ),
@@ -944,6 +1167,10 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                             final rating = data['rating'] ?? 0;
                             final comment = data['comment'] ?? '';
                             final garson = data['garson'] ?? '';
+                            final status = data['status'] ?? 'hazırlanıyor';
+                            final orderId = _orders[i].id;
+                            final isExpanded =
+                                _expandedOrders[orderId] ?? false;
 
                             return Card(
                               color: Colors.white,
@@ -952,243 +1179,391 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                               ),
                               elevation: 2,
                               margin: const EdgeInsets.symmetric(vertical: 6),
-                              child: Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          '${tarih.day.toString().padLeft(2, '0')}.${tarih.month.toString().padLeft(2, '0')}.${tarih.year}',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            color: Color(0xFF1565C0),
-                                          ),
-                                        ),
-                                        Text(
-                                          '${data['toplamFiyat']} TL',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    ...items.map(
-                                      (item) => Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 2.0,
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text(
-                                              '${item['name']} ${item['option'] != null && item['option'] != '' ? '(${item['option']})' : ''}',
-                                              style: const TextStyle(
-                                                fontSize: 15,
-                                              ),
-                                            ),
-                                            Text(
-                                              'x${item['adet']}',
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Sipariş Saati: ${tarih.hour.toString().padLeft(2, '0')}:${tarih.minute.toString().padLeft(2, '0')}',
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.black54,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    // Garson bilgisi gösterimi
-                                    if (garson.isNotEmpty) ...[
-                                      const SizedBox(height: 8),
-                                      Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: Colors.green[50],
-                                          borderRadius: BorderRadius.circular(
-                                            6,
-                                          ),
-                                          border: Border.all(
-                                            color: Colors.green[200]!,
-                                          ),
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Icon(
-                                              Icons.person,
-                                              size: 16,
-                                              color: Colors.green[700],
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              'Garson: $garson',
-                                              style: TextStyle(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w500,
-                                                color: Colors.green[700],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                    // Yorum gösterimi
-                                    if (comment.isNotEmpty) ...[
-                                      const SizedBox(height: 8),
-                                      Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: Colors.blue[50],
-                                          borderRadius: BorderRadius.circular(
-                                            6,
-                                          ),
-                                          border: Border.all(
-                                            color: Colors.blue[200]!,
-                                          ),
-                                        ),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            const Text(
-                                              'Yorumunuz:',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.blue,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              comment,
-                                              style: const TextStyle(
-                                                fontSize: 13,
-                                                color: Colors.black87,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                    const SizedBox(height: 12),
-                                    // Puanlama ve tekrarlama bölümü
-                                    Column(
+                              child: Column(
+                                children: [
+                                  // Ana sipariş bilgileri (her zaman görünür)
+                                  Padding(
+                                    padding: const EdgeInsets.all(16),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
                                           children: [
-                                            if (rating > 0) ...[
-                                              Row(
-                                                children: [
-                                                  const Text(
-                                                    'Puanınız: ',
-                                                    style: TextStyle(
-                                                      fontSize: 14,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                    ),
-                                                  ),
-                                                  Row(
-                                                    children: List.generate(5, (
-                                                      index,
-                                                    ) {
-                                                      return Icon(
-                                                        index < rating
-                                                            ? Icons.star
-                                                            : Icons.star_border,
-                                                        color: index < rating
-                                                            ? Colors.amber
-                                                            : Colors.grey,
-                                                        size: 20,
-                                                      );
-                                                    }),
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
-                                            // Sadece teslim edilen siparişler için puanlama butonu göster
-                                            if (data['status'] == 'teslim edildi') ...[
-                                              ElevatedButton.icon(
-                                                onPressed: () => _showRatingModal(
-                                                  _orders[i].id,
-                                                  data,
-                                                ),
-                                                icon: const Icon(
-                                                  Icons.rate_review,
-                                                  size: 16,
-                                                ),
-                                                label: Text(
-                                                  rating > 0
-                                                      ? 'Puanı Değiştir'
-                                                      : 'Puanla',
-                                                ),
-                                                style: ElevatedButton.styleFrom(
-                                                  backgroundColor: rating > 0
-                                                      ? Colors.orange
-                                                      : Colors.blue[700],
-                                                  foregroundColor: Colors.white,
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 12,
-                                                        vertical: 6,
-                                                      ),
-                                                  shape: RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(6),
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  '${tarih.day.toString().padLeft(2, '0')}.${tarih.month.toString().padLeft(2, '0')}.${tarih.year}',
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Color(0xFF1565C0),
                                                   ),
                                                 ),
-                                              ),
-                                            ],
+                                                const SizedBox(height: 4),
+                                                _buildStatusWidget(status),
+                                              ],
+                                            ),
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.end,
+                                              children: [
+                                                Text(
+                                                  '${data['toplamFiyat']} TL',
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 16,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  'Sipariş Saati: ${tarih.hour.toString().padLeft(2, '0')}:${tarih.minute.toString().padLeft(2, '0')}',
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.black54,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
                                           ],
                                         ),
-                                        const SizedBox(height: 8),
-                                        // Tekrarlama butonu
-                                        SizedBox(
-                                          width: double.infinity,
-                                          child: ElevatedButton.icon(
-                                            onPressed: () => _repeatOrder(data),
-                                            icon: const Icon(
-                                              Icons.replay,
-                                              size: 16,
+                                        const SizedBox(height: 12),
+                                        // Dropdown butonu
+                                        InkWell(
+                                          onTap: () {
+                                            setState(() {
+                                              _expandedOrders[orderId] =
+                                                  !isExpanded;
+                                            });
+                                          },
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 8,
                                             ),
-                                            label: const Text(
-                                              'Bu Siparişi Tekrarla',
-                                            ),
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor:
-                                                  Colors.green[600],
-                                              foregroundColor: Colors.white,
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 16,
-                                                    vertical: 8,
-                                                  ),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(6),
+                                            decoration: BoxDecoration(
+                                              color: Colors.blue[50],
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              border: Border.all(
+                                                color: Colors.blue[200]!,
                                               ),
+                                            ),
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Text(
+                                                  'Sipariş İçeriği (${items.length} ürün)',
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Colors.blue[700],
+                                                  ),
+                                                ),
+                                                Icon(
+                                                  isExpanded
+                                                      ? Icons.keyboard_arrow_up
+                                                      : Icons
+                                                            .keyboard_arrow_down,
+                                                  color: Colors.blue[700],
+                                                ),
+                                              ],
                                             ),
                                           ),
                                         ),
                                       ],
                                     ),
+                                  ),
+                                  // Genişletilmiş içerik (sadece açıkken görünür)
+                                  if (isExpanded) ...[
+                                    Container(
+                                      width: double.infinity,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[50],
+                                        borderRadius: const BorderRadius.only(
+                                          bottomLeft: Radius.circular(12),
+                                          bottomRight: Radius.circular(12),
+                                        ),
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(16),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            // Sipariş ürünleri
+                                            ...items.map(
+                                              (item) => Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      vertical: 2.0,
+                                                    ),
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    Expanded(
+                                                      child: Text(
+                                                        '${item['name']} ${item['option'] != null && item['option'] != '' ? '(${item['option']})' : ''}',
+                                                        style: const TextStyle(
+                                                          fontSize: 15,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Text(
+                                                      'x${item['adet']}',
+                                                      style: const TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 12),
+                                            // Garson bilgisi gösterimi
+                                            if (garson.isNotEmpty) ...[
+                                              Container(
+                                                padding: const EdgeInsets.all(
+                                                  8,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.green[50],
+                                                  borderRadius:
+                                                      BorderRadius.circular(6),
+                                                  border: Border.all(
+                                                    color: Colors.green[200]!,
+                                                  ),
+                                                ),
+                                                child: Row(
+                                                  children: [
+                                                    Icon(
+                                                      Icons.person,
+                                                      size: 16,
+                                                      color: Colors.green[700],
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    Text(
+                                                      'Garson: $garson',
+                                                      style: TextStyle(
+                                                        fontSize: 13,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                        color:
+                                                            Colors.green[700],
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              const SizedBox(height: 8),
+                                            ],
+                                            // Yorum gösterimi
+                                            if (comment.isNotEmpty) ...[
+                                              Container(
+                                                padding: const EdgeInsets.all(
+                                                  8,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.blue[50],
+                                                  borderRadius:
+                                                      BorderRadius.circular(6),
+                                                  border: Border.all(
+                                                    color: Colors.blue[200]!,
+                                                  ),
+                                                ),
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    const Text(
+                                                      'Yorumunuz:',
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color: Colors.blue,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 4),
+                                                    Text(
+                                                      comment,
+                                                      style: const TextStyle(
+                                                        fontSize: 13,
+                                                        color: Colors.black87,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              const SizedBox(height: 8),
+                                            ],
+                                            // Puanlama ve tekrarlama bölümü
+                                            Column(
+                                              children: [
+                                                // Puanlama gösterimi (varsa)
+                                                if (rating > 0) ...[
+                                                  Row(
+                                                    children: [
+                                                      const Text(
+                                                        'Puanınız: ',
+                                                        style: TextStyle(
+                                                          fontSize: 14,
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                        ),
+                                                      ),
+                                                      Row(
+                                                        children: List.generate(
+                                                          5,
+                                                          (index) {
+                                                            return Icon(
+                                                              index < rating
+                                                                  ? Icons.star
+                                                                  : Icons
+                                                                        .star_border,
+                                                              color:
+                                                                  index < rating
+                                                                  ? Colors.amber
+                                                                  : Colors.grey,
+                                                              size: 20,
+                                                            );
+                                                          },
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 12),
+                                                ],
+                                                // Butonlar yan yana
+                                                Row(
+                                                  children: [
+                                                    // Puanla butonu (sadece teslim edilmiş siparişler için)
+                                                    if (status.toLowerCase() ==
+                                                        'teslim edildi') ...[
+                                                      Expanded(
+                                                        child: ElevatedButton.icon(
+                                                          onPressed: () =>
+                                                              _showRatingModal(
+                                                                _orders[i].id,
+                                                                data,
+                                                              ),
+                                                          icon: const Icon(
+                                                            Icons.rate_review,
+                                                            size: 16,
+                                                          ),
+                                                          label: Text(
+                                                            rating > 0
+                                                                ? 'Puanla'
+                                                                : 'Puanla',
+                                                          ),
+                                                          style: ElevatedButton.styleFrom(
+                                                            backgroundColor:
+                                                                rating > 0
+                                                                ? Colors.orange
+                                                                : Colors
+                                                                      .blue[700],
+                                                            foregroundColor:
+                                                                Colors.white,
+                                                            padding:
+                                                                const EdgeInsets.symmetric(
+                                                                  horizontal:
+                                                                      12,
+                                                                  vertical: 8,
+                                                                ),
+                                                            shape: RoundedRectangleBorder(
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    6,
+                                                                  ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 8),
+                                                    ],
+                                                    // Tekrarlama butonu
+                                                    Expanded(
+                                                      child: ElevatedButton.icon(
+                                                        onPressed: () =>
+                                                            _repeatOrder(data),
+                                                        icon: const Icon(
+                                                          Icons.replay,
+                                                          size: 16,
+                                                        ),
+                                                        label: const Text(
+                                                          'Tekrarla',
+                                                        ),
+                                                        style: ElevatedButton.styleFrom(
+                                                          backgroundColor:
+                                                              Colors.green[600],
+                                                          foregroundColor:
+                                                              Colors.white,
+                                                          padding:
+                                                              const EdgeInsets.symmetric(
+                                                                horizontal: 12,
+                                                                vertical: 8,
+                                                              ),
+                                                          shape: RoundedRectangleBorder(
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  6,
+                                                                ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    // Silme butonu
+                                                    Expanded(
+                                                      child: ElevatedButton.icon(
+                                                        onPressed: () =>
+                                                            _deleteSingleOrder(
+                                                              _orders[i].id,
+                                                            ),
+                                                        icon: const Icon(
+                                                          Icons.delete,
+                                                          size: 16,
+                                                        ),
+                                                        label: const Text(
+                                                          'Sil',
+                                                        ),
+                                                        style: ElevatedButton.styleFrom(
+                                                          backgroundColor:
+                                                              Colors.red[600],
+                                                          foregroundColor:
+                                                              Colors.white,
+                                                          padding:
+                                                              const EdgeInsets.symmetric(
+                                                                horizontal: 12,
+                                                                vertical: 8,
+                                                              ),
+                                                          shape: RoundedRectangleBorder(
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  6,
+                                                                ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
                                   ],
-                                ),
+                                ],
                               ),
                             );
                           },

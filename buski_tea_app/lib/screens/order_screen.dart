@@ -120,99 +120,12 @@ class _OrderScreenState extends State<OrderScreen>
           }
         });
       } else {
-        // Menü koleksiyonu yoksa varsayılan menüyü oluştur
-        _createDefaultMenu(menuCollection);
         setState(() {
           _menu = [];
           _isMenuLoading = false;
         });
       }
     });
-  }
-
-  // Varsayılan menü oluştur
-  void _createDefaultMenu(String menuCollection) async {
-    final defaultMenu = [
-      {
-        'name': 'Çay',
-        'price': 2,
-        'options': ['Şekersiz', 'Şekerli'],
-        'defaultOption': 'Şekersiz',
-        'inStock': true,
-      },
-      {
-        'name': 'Çay (Su Bardağı)',
-        'price': 4,
-        'options': ['Şekersiz', 'Şekerli'],
-        'defaultOption': 'Şekersiz',
-        'inStock': true,
-      },
-      {
-        'name': 'Bitki Çayı',
-        'price': 2,
-        'options': ['Çiçek', 'Adaçayı', 'Kuşburnu'],
-        'defaultOption': 'Çiçek',
-        'inStock': true,
-      },
-      {
-        'name': 'Oralet',
-        'price': 2,
-        'options': ['Şekersiz', 'Şekerli'],
-        'defaultOption': 'Şekersiz',
-        'inStock': true,
-      },
-      {
-        'name': 'Nescafe',
-        'price': 8,
-        'options': ['Sade', 'Sütlü'],
-        'defaultOption': 'Sade',
-        'inStock': true,
-      },
-      {
-        'name': 'Türk Kahvesi',
-        'price': 10,
-        'options': ['Sade', 'Orta', 'Şekerli'],
-        'defaultOption': 'Sade',
-        'inStock': true,
-      },
-      {
-        'name': 'Maden Suyu',
-        'price': 10,
-        'options': ['Sade', 'Elmalı', 'Limonlu', 'Narlı'],
-        'defaultOption': 'Sade',
-        'inStock': true,
-      },
-      {
-        'name': 'Sade Gazoz',
-        'price': 30,
-        'options': [],
-        'defaultOption': '',
-        'inStock': true,
-      },
-      {
-        'name': 'Sarı Gazoz',
-        'price': 34,
-        'options': [],
-        'defaultOption': '',
-        'inStock': true,
-      },
-      {
-        'name': "Çay Fişi 100'lü",
-        'price': 200,
-        'options': [],
-        'defaultOption': '',
-        'inStock': true,
-      },
-    ];
-
-    try {
-      await FirebaseFirestore.instance
-          .collection('menu')
-          .doc(menuCollection)
-          .set({'items': defaultMenu});
-    } catch (e) {
-      print('Varsayılan menü oluşturulamadı: $e');
-    }
   }
 
   @override
@@ -316,14 +229,18 @@ class _OrderScreenState extends State<OrderScreen>
         'items': _cartItems,
       };
       await Future.wait([orderRef.set(newOrder), userOrderRef.set(newOrder)]);
-      setState(() => _cartItems.clear());
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Tüm siparişleriniz başarıyla alındı!'),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      setState(() {
+        _cartItems.clear();
+        _notificationMessage = 'Tüm siparişleriniz başarıyla alındı!';
+        _showTopNotification = true;
+      });
+
+      // 3 saniye sonra bildirimi kapat
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) {
+          setState(() => _showTopNotification = false);
+        }
+      });
     } catch (e) {
       ScaffoldMessenger.of(
         context,
@@ -682,17 +599,42 @@ class _OrderScreenState extends State<OrderScreen>
       child: Material(
         color: Colors.transparent,
         child: Container(
-          padding: const EdgeInsets.only(
-            top: 7,
-            bottom: 0,
-            left: 24,
-            right: 24,
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+          decoration: BoxDecoration(
+            color: _notificationMessage.contains('başarıyla')
+                ? Colors.green
+                : Colors.black.withOpacity(0.8),
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(12),
+              bottomRight: Radius.circular(12),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-          color: Colors.black.withOpacity(0.1),
-          child: Text(
-            _notificationMessage,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white, fontSize: 16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (_notificationMessage.contains('başarıyla'))
+                const Icon(Icons.check_circle, color: Colors.white, size: 20),
+              if (_notificationMessage.contains('başarıyla'))
+                const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  _notificationMessage,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
