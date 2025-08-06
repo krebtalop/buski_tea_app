@@ -5252,6 +5252,7 @@
           <div class="comment">${comment}</div>
         `;
         ratingDisplay.style.display = 'block';
+        ratingDisplay.style.visibility = 'visible';
         console.log('Rating display updated');
       }
       
@@ -5263,6 +5264,13 @@
           <div class="stars">${stars}</div>
         `;
         headerRating.style.display = 'flex';
+        headerRating.style.visibility = 'visible';
+      }
+      
+      // Hide the rating input section after successful submission
+      const ratingSection = document.getElementById(`rating-section-${orderId}`);
+      if (ratingSection) {
+        ratingSection.style.display = 'none';
       }
     }
 

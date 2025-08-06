@@ -1121,36 +1121,39 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                                                 ],
                                               ),
                                             ],
-                                            ElevatedButton.icon(
-                                              onPressed: () => _showRatingModal(
-                                                _orders[i].id,
-                                                data,
-                                              ),
-                                              icon: const Icon(
-                                                Icons.rate_review,
-                                                size: 16,
-                                              ),
-                                              label: Text(
-                                                rating > 0
-                                                    ? 'Puanı Değiştir'
-                                                    : 'Puanla',
-                                              ),
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: rating > 0
-                                                    ? Colors.orange
-                                                    : Colors.blue[700],
-                                                foregroundColor: Colors.white,
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 12,
-                                                      vertical: 6,
-                                                    ),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(6),
+                                            // Sadece teslim edilen siparişler için puanlama butonu göster
+                                            if (data['status'] == 'teslim edildi') ...[
+                                              ElevatedButton.icon(
+                                                onPressed: () => _showRatingModal(
+                                                  _orders[i].id,
+                                                  data,
+                                                ),
+                                                icon: const Icon(
+                                                  Icons.rate_review,
+                                                  size: 16,
+                                                ),
+                                                label: Text(
+                                                  rating > 0
+                                                      ? 'Puanı Değiştir'
+                                                      : 'Puanla',
+                                                ),
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: rating > 0
+                                                      ? Colors.orange
+                                                      : Colors.blue[700],
+                                                  foregroundColor: Colors.white,
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 12,
+                                                        vertical: 6,
+                                                      ),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(6),
+                                                  ),
                                                 ),
                                               ),
-                                            ),
+                                            ],
                                           ],
                                         ),
                                         const SizedBox(height: 8),
