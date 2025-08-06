@@ -642,10 +642,10 @@
     </button>
     <!-- Menü ve Personel Butonları (sağ üst) -->
     <div class="absolute top-4 right-4 z-50 flex flex-col items-end gap-2">
-      <button id="open-menu-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium">
+      <button id="open-menu-btn" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium text-center w-24">
         Menü
       </button>
-      <button id="open-personel-btn" class="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium">
+      <button id="open-personel-btn" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium text-center w-24">
         Personel
       </button>
       <button id="delete-all-orders-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium hidden" style="margin-top: 30px;">
@@ -1409,19 +1409,26 @@ async function updateReport() {
         console.error('Rapor toplamı artırılırken hata:', error);
       }
     }
-    // Siparişi sil
+    // Siparişi sil (geçmiş siparişler için korunur)
     window.deleteOrder = async function(id, btn) {
-      if (confirm('Bu siparişi silmek istediğinizden emin misiniz?')) {
+      if (confirm('Bu siparişi panelden kaldırmak istediğinizden emin misiniz? Sipariş geçmiş siparişlerde korunacaktır.')) {
         try {
           const order = allOrders.find(o => o.id === id);
           const ref = doc(db, "siparisler", id);
           
-          console.log('Silinecek sipariş:', order); // Debug için
+          console.log('Panelden kaldırılacak sipariş:', order); // Debug için
+          
+          // Siparişi "silindi" durumuna çevir, tamamen silme
+          await updateDoc(ref, { 
+            status: "silindi",
+            deletedAt: new Date(),
+            deletedBy: "panel"
+          });
           
           // Eğer siparişin puanlaması varsa, puanlama verilerini koru
           if (order && (order.rating > 0 || order.comment)) {
             console.log('Puanlama bulundu, korunuyor:', order.rating, order.comment); // Debug için
-            // Siparişi sil ama puanlama verilerini ayrı bir koleksiyonda sakla
+            
             const ratingData = {
               orderId: id,
               rating: order.rating || 0,
@@ -1445,7 +1452,6 @@ async function updateReport() {
             console.log('Puanlama bulunamadı, korunmuyor'); // Debug için
           }
           
-          await deleteDoc(ref);
           const card = btn.closest('.order-card');
           if (card) {
             card.remove();
@@ -1453,8 +1459,8 @@ async function updateReport() {
           // Badge sayılarını güncelle
           updateBadges().catch(console.error);
         } catch (error) {
-          console.error('Sipariş silinirken hata oluştu:', error);
-          await showAlert('Sipariş silinirken bir hata oluştu: ' + error.message, 'error');
+          console.error('Sipariş kaldırılırken hata oluştu:', error);
+          await showAlert('Sipariş kaldırılırken bir hata oluştu: ' + error.message, 'error');
         }
       }
     };
@@ -1887,6 +1893,17 @@ async function updateReport() {
             return dateB - dateA;
           });
         
+        // Debug: Personel bilgilerini kontrol et
+        console.log('Yüklenen puanlama verileri:', ratingsData);
+        ratingsData.forEach((rating, index) => {
+          console.log(`Puanlama ${index}:`, {
+            id: rating.id,
+            selectedPersonnel: rating.selectedPersonnel,
+            deliveryPersonnel: rating.deliveryPersonnel,
+            comment: rating.comment
+          });
+        });
+        
         // Kullanıcı bilgilerini çek
         for (let rating of ratingsData) {
           if (rating.userId && !rating.isPreserved) {
@@ -2026,11 +2043,11 @@ async function updateReport() {
                 <h4 class="font-semibold text-gray-800">Yorum:</h4>
               </div>
               <p class="text-gray-700 ml-6">${escapeHtml(comment)}</p>
-              ${rating.selectedPersonnel ? `
+              ${(rating.selectedPersonnel || rating.deliveryPersonnel) ? `
                 <div class="mt-2 pt-2 border-t border-gray-200">
                   <div class="flex items-center">
                     <i class="fas fa-user text-green-600 mr-2"></i>
-                    <span class="text-sm text-gray-600">Değerlendirilen Personel: <span class="font-semibold text-green-700">${escapeHtml(rating.selectedPersonnel)}</span></span>
+                    <span class="text-sm text-gray-600">Değerlendirilen Personel: <span class="font-semibold text-green-700">${escapeHtml(rating.selectedPersonnel || rating.deliveryPersonnel)}</span></span>
                   </div>
                 </div>
               ` : ''}
@@ -2215,7 +2232,10 @@ async function updateReport() {
         });
         
         document.getElementById('add-personel-form').reset();
-        await loadPersonelList();
+        // Kısa bir gecikme ekleyerek listeyi yeniden yükle
+        setTimeout(async () => {
+          await loadPersonelList();
+        }, 100);
         
         // Modal'ı kapat
         document.getElementById('personel-modal').style.display = 'none';
@@ -2231,11 +2251,14 @@ async function updateReport() {
     }
     
     // Personel sil
-    async function deletePersonel(personelId) {
+    window.deletePersonel = async function(personelId) {
       if (!confirm('Bu personeli silmek istediğinizden emin misiniz?')) return;
       try {
         await deleteDoc(doc(db, personelCollectionName, personelId));
-        await loadPersonelList();
+        // Kısa bir gecikme ekleyerek listeyi yeniden yükle
+        setTimeout(async () => {
+          await loadPersonelList();
+        }, 100);
       } catch (error) {
         console.error('Personel silinirken hata:', error);
         alert('Personel silinirken bir hata oluştu!');
@@ -2245,7 +2268,10 @@ async function updateReport() {
     // Personel modal olay dinleyicileri
     document.getElementById('open-personel-btn').addEventListener('click', () => {
       document.getElementById('personel-modal').style.display = 'flex';
-      loadPersonelList();
+      // Modal açıldığında listeyi yeniden yükle
+      setTimeout(async () => {
+        await loadPersonelList();
+      }, 100);
     });
     
     document.getElementById('close-personel-btn').addEventListener('click', () => {

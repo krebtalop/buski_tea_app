@@ -978,37 +978,10 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
         centerTitle: true,
         elevation: 0,
         actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (value) {
-              if (value == 'clear_orders') {
-                _clearAllOrders();
-              } else if (value == 'reload_personnel') {
-                _reloadPersonnel();
-              }
-            },
-            itemBuilder: (BuildContext context) => [
-              const PopupMenuItem<String>(
-                value: 'reload_personnel',
-                child: Row(
-                  children: [
-                    Icon(Icons.refresh, color: Colors.blue),
-                    SizedBox(width: 8),
-                    Text('Personel Listesini Yenile'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem<String>(
-                value: 'clear_orders',
-                child: Row(
-                  children: [
-                    Icon(Icons.delete_sweep, color: Colors.red),
-                    SizedBox(width: 8),
-                    Text('Tüm Siparişleri Sil'),
-                  ],
-                ),
-              ),
-            ],
+          IconButton(
+            icon: const Icon(Icons.delete_sweep),
+            onPressed: () => _clearAllOrders(),
+            tooltip: 'Tüm Siparişleri Sil',
           ),
         ],
       ),

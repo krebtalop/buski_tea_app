@@ -616,11 +616,11 @@
     </button>
     <!-- Menü ve Personel Butonları (sağ üst) -->
     <div class="absolute top-4 right-4 z-50 flex flex-col items-end gap-2">
-      <button id="open-menu-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium">
+      <button id="open-menu-btn" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium text-center w-24">
         Menü
       </button>
-      <button id="open-personel-btn" class="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium">
-        Personel
+      <button id="open-personel-btn" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium text-center w-24">
+      Personel
       </button>
       <button id="delete-all-orders-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium hidden" style="margin-top: 30px;">
         <i class="fas fa-trash-alt mr-1"></i>Tüm Teslim Edilenleri Sil
@@ -1120,7 +1120,7 @@ async function updateReport() {
           }))
           .filter(rating => {
             const floor = Number(rating.floor);
-            return floor >= 1 && floor <= 3; // Kat 1-2-3 (zemin hariç)
+            return floor >= 0 && floor <= 3; // Zemin ve kat 1-2-3
           });
         
         // Korunan puanlamalardan al
@@ -1132,7 +1132,7 @@ async function updateReport() {
           }))
           .filter(rating => {
             const floor = Number(rating.userFloor);
-            return floor >= 1 && floor <= 3; // Kat 1-2-3 (zemin hariç)
+            return floor >= 0 && floor <= 3; // Zemin ve kat 1-2-3
           });
         
         // Tüm puanları birleştir ve tarihe göre sırala
@@ -1145,6 +1145,17 @@ async function updateReport() {
                          b.timestamp && b.timestamp.toDate ? b.timestamp.toDate() : new Date(0);
             return dateB - dateA;
           });
+        
+        // Debug: Personel bilgilerini kontrol et
+        console.log('Yüklenen puanlama verileri:', ratingsData);
+        ratingsData.forEach((rating, index) => {
+          console.log(`Puanlama ${index}:`, {
+            id: rating.id,
+            selectedPersonnel: rating.selectedPersonnel,
+            deliveryPersonnel: rating.deliveryPersonnel,
+            comment: rating.comment
+          });
+        });
         
         // Kullanıcı bilgilerini çek
         for (let rating of ratingsData) {
@@ -1271,11 +1282,11 @@ async function updateReport() {
                 <h4 class="font-semibold text-gray-800">Yorum:</h4>
               </div>
               <p class="text-gray-700 ml-6">${escapeHtml(comment)}</p>
-              ${rating.selectedPersonnel ? `
+              ${(rating.selectedPersonnel || rating.deliveryPersonnel) ? `
                 <div class="mt-2 pt-2 border-t border-gray-200">
                   <div class="flex items-center">
                     <i class="fas fa-user text-green-600 mr-2"></i>
-                    <span class="text-sm text-gray-600">Değerlendirilen Personel: <span class="font-semibold text-green-700">${escapeHtml(rating.selectedPersonnel)}</span></span>
+                    <span class="text-sm text-gray-600">Değerlendirilen Personel: <span class="font-semibold text-green-700">${escapeHtml(rating.selectedPersonnel || rating.deliveryPersonnel)}</span></span>
                   </div>
                 </div>
               ` : ''}
@@ -1463,12 +1474,14 @@ async function updateReport() {
       if (activeTab === 'preparing') {
         filteredOrders = allOrders.filter(order => 
           Number(order.floor) === floor && 
-          order.status !== "teslim edildi"
+          order.status !== "teslim edildi" &&
+          order.status !== "silindi"
         );
       } else {
         filteredOrders = allOrders.filter(order => 
           Number(order.floor) === floor && 
-          order.status === "teslim edildi"
+          order.status === "teslim edildi" &&
+          order.status !== "silindi"
         );
       }
       if (filteredOrders.length === 0) {
@@ -1628,20 +1641,26 @@ async function updateReport() {
         console.error('Rapor toplamı artırılırken hata:', error);
       }
     }
-    // Siparişi sil
+    // Siparişi sil (geçmiş siparişler için korunur)
     window.deleteOrder = async function(id, btn) {
-      if (confirm('Bu siparişi silmek istediğinizden emin misiniz?')) {
+      if (confirm('Bu siparişi panelden kaldırmak istediğinizden emin misiniz? Sipariş geçmiş siparişlerde korunacaktır.')) {
         try {
           const order = allOrders.find(o => o.id === id);
           const ref = doc(db, "siparisler", id);
           
-          console.log('Silinecek sipariş:', order); // Debug için
+          console.log('Panelden kaldırılacak sipariş:', order); // Debug için
+          
+          // Siparişi "silindi" durumuna çevir, tamamen silme
+          await updateDoc(ref, { 
+            status: "silindi",
+            deletedAt: new Date(),
+            deletedBy: "panel"
+          });
           
           // Eğer siparişin puanlaması varsa, puanlama verilerini koru
           if (order && (order.rating > 0 || order.comment)) {
             console.log('Puanlama bulundu, korunuyor:', order.rating, order.comment); // Debug için
             
-            // Siparişi sil ama puanlama verilerini ayrı bir koleksiyonda sakla
             const ratingData = {
               orderId: id,
               rating: order.rating || 0,
@@ -1665,7 +1684,6 @@ async function updateReport() {
             console.log('Puanlama bulunamadı, korunmuyor'); // Debug için
           }
           
-          await deleteDoc(ref);
           const card = btn.closest('.order-card');
           if (card) {
             card.remove();
@@ -1673,15 +1691,15 @@ async function updateReport() {
           // Badge sayılarını güncelle
           updateBadges().catch(console.error);
         } catch (error) {
-          console.error('Sipariş silinirken hata oluştu:', error);
-          await showAlert('Sipariş silinirken bir hata oluştu: ' + error.message, 'error');
+          console.error('Sipariş kaldırılırken hata oluştu:', error);
+          await showAlert('Sipariş kaldırılırken bir hata oluştu: ' + error.message, 'error');
         }
       }
     };
     
-    // Tüm teslim edilmiş siparişleri sil fonksiyonu
+    // Tüm teslim edilmiş siparişleri panelden kaldır fonksiyonu
     async function deleteAllOrders() {
-      if (confirm('Tüm teslim edilmiş siparişleri silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
+      if (confirm('Tüm teslim edilmiş siparişleri panelden kaldırmak istediğinizden emin misiniz? Siparişler geçmiş siparişlerde korunacaktır.')) {
         try {
           // Panele göre siparişleri filtrele ve sadece teslim edilmiş olanları al
           const filteredOrders = filterOrdersByPanel(allOrders);
@@ -1712,11 +1730,11 @@ async function updateReport() {
           }, { merge: true });
           // --- SONU ---
 
-          // Her teslim edilmiş siparişi Firebase'den sil
+          // Her teslim edilmiş siparişi "silindi" durumuna çevir
           for (const order of deliveredOrders) {
             // Eğer siparişin puanlaması varsa, puanlama verilerini koru
             if (order.rating > 0 || order.comment) {
-              console.log('Toplu silmede puanlama korunuyor:', order.id, order.rating, order.comment);
+              console.log('Toplu kaldırmada puanlama korunuyor:', order.id, order.rating, order.comment);
               
               const ratingData = {
                 orderId: order.id,
@@ -1736,7 +1754,12 @@ async function updateReport() {
               await setDoc(doc(db, "preserved_ratings", order.id), ratingData);
             }
             
-            await deleteDoc(doc(db, "siparisler", order.id));
+            // Siparişi "silindi" durumuna çevir, tamamen silme
+            await updateDoc(doc(db, "siparisler", order.id), {
+              status: "silindi",
+              deletedAt: new Date(),
+              deletedBy: "panel_bulk"
+            });
           }
           
           // Badge sayılarını güncelle
@@ -2005,10 +2028,10 @@ async function updateReport() {
     // Panele göre siparişleri filtrele
     function filterOrdersByPanel(orders) {
       if (activeFloorGroup === 'z123') {
-        // Zemin ve kat 1-2-3 (zemin hariç)
+        // Zemin ve kat 1-2-3
         return orders.filter(order => {
           const orderFloor = Number(order.floor);
-          return orderFloor >= 1 && orderFloor <= 3;
+          return orderFloor >= 0 && orderFloor <= 3;
         });
       } else if (activeFloorGroup === '456') {
         // Kat 4-5-6
@@ -2051,7 +2074,7 @@ async function updateReport() {
           .filter(rating => {
             const floor = Number(rating.userFloor);
             if (activeFloorGroup === 'z123') {
-              return floor >= 1 && floor <= 3;
+              return floor >= 0 && floor <= 3;
             } else if (activeFloorGroup === '456') {
               return floor >= 4 && floor <= 6;
             } else if (activeFloorGroup === '78910') {
@@ -2088,7 +2111,7 @@ async function updateReport() {
           const order = docSnap.data();
           const floor = Number(order.floor);
           if (activeFloorGroup === 'z123') {
-            return floor >= 1 && floor <= 3;
+            return floor >= 0 && floor <= 3;
           } else if (activeFloorGroup === '456') {
             return floor >= 4 && floor <= 6;
           } else if (activeFloorGroup === '78910') {

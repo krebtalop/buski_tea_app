@@ -1710,6 +1710,8 @@
       margin-bottom: 16px;
     }
 
+
+
     .clear-history-btn {
       background: none;
       border: none;
@@ -3282,8 +3284,15 @@
       
       const profileFloorElement = document.getElementById('profileFloor');
       if (profileFloorElement) {
-        profileFloorElement.textContent = userData.floor || '-';
-        console.log("Profile floor güncellendi:", userData.floor || '-');
+        // Zemin katı için özel gösterim
+        let floorDisplay = userData.floor || '-';
+        if (userData.floor === 0) {
+          floorDisplay = 'Zemin';
+        } else if (userData.floor) {
+          floorDisplay = `Kat ${userData.floor}`;
+        }
+        profileFloorElement.textContent = floorDisplay;
+        console.log("Profile floor güncellendi:", floorDisplay);
       }
       
       const profileDeptElement = document.getElementById('profileDept');
@@ -3310,7 +3319,9 @@
       
       const editFloorField = document.getElementById('editFloor');
       if (editFloorField) {
+        // Zemin katı için 0 değerini ayarla
         editFloorField.value = userData.floor || 0;
+        console.log("Edit floor field güncellendi:", userData.floor || 0);
       }
       
       // Update profile image if exists
@@ -3348,8 +3359,9 @@
       }
       
       if (editFloorElement) {
-        editFloorElement.value = userData.floor || '1';
-        console.log("Settings form editFloor güncellendi:", userData.floor || '1');
+        // Zemin katı için 0 değerini ayarla
+        editFloorElement.value = userData.floor || 0;
+        console.log("Settings form editFloor güncellendi:", userData.floor || 0);
       }
       
       console.log("updateUserInterface tamamlandı");
@@ -3362,7 +3374,7 @@
       console.log("loadMenu çağrıldı, userData:", userData);
       
       // Kullanıcı giriş yapmamışsa veya floor bilgisi yoksa menü yükleme
-      if (!userData || !userData.floor) {
+      if (!userData || userData.floor === undefined || userData.floor === null) {
         if (currentUser) {
           console.log("Kullanıcı giriş yapmış ama verisi henüz yüklenmemiş, loading mesajı gösteriliyor");
           menu = [];
@@ -3377,10 +3389,18 @@
 
       // Kat bazlı menü koleksiyonu belirleme
       let menuCollection = 'kat123'; // Zemin, 1, 2, 3 katları için
-      if (userData.floor >= 4 && userData.floor <= 6) {
+      if (userData.floor === 0) {
+        menuCollection = 'kat123'; // Zemin katı için
+        console.log("Zemin katı kullanıcısı tespit edildi, floor:", userData.floor);
+      } else if (userData.floor >= 1 && userData.floor <= 3) {
+        menuCollection = 'kat123'; // 1, 2, 3 katları için
+        console.log("Kat 1-3 kullanıcısı tespit edildi, floor:", userData.floor);
+      } else if (userData.floor >= 4 && userData.floor <= 6) {
         menuCollection = 'kat456'; // 4, 5, 6 katları için
+        console.log("Kat 4-6 kullanıcısı tespit edildi, floor:", userData.floor);
       } else if (userData.floor >= 7 && userData.floor <= 10) {
         menuCollection = 'kat78910'; // 7, 8, 9, 10 katları için
+        console.log("Kat 7-10 kullanıcısı tespit edildi, floor:", userData.floor);
       }
 
       console.log("Kullanıcı katı:", userData.floor, "Menü koleksiyonu:", menuCollection);
@@ -3391,13 +3411,50 @@
         menuListener = null;
       }
 
+      // Firebase'den menü dokümanını kontrol et
+      console.log("Firebase'den menü dokümanı kontrol ediliyor:", menuCollection);
+      firebase.firestore().collection('menu').doc(menuCollection).get().then((doc) => {
+        if (doc.exists) {
+          console.log("Menü dokümanı mevcut:", doc.data());
+          console.log("Menü dokümanı ID:", doc.id);
+          console.log("Menü dokümanı verisi:", doc.data());
+        } else {
+          console.log("Menü dokümanı bulunamadı:", menuCollection);
+          console.log("Firebase'de bu koleksiyon yok, varsayılan menü kullanılacak");
+        }
+      }).catch((error) => {
+        console.error("Menü dokümanı kontrol edilirken hata:", error);
+        console.log("Hata nedeniyle varsayılan menü kullanılacak");
+      });
+
       // Gerçek zamanlı dinleyici ekle
+      console.log("Firebase'den gerçek zamanlı menü dinleyicisi başlatılıyor:", menuCollection);
       menuListener = firebase.firestore().collection('menu').doc(menuCollection)
         .onSnapshot((docSnapshot) => {
-          console.log("Firebase'den gerçek zamanlı menü güncellemesi:", docSnapshot.data());
+          console.log("Firebase'den gerçek zamanlı menü güncellemesi geldi");
+          console.log("Doküman mevcut mu:", docSnapshot.exists);
+          console.log("Doküman ID:", docSnapshot.id);
+          console.log("Doküman verisi:", docSnapshot.data());
+          
           if (docSnapshot.exists) {
             const menuData = docSnapshot.data();
-            menu = menuData.items || menuData.menu || [];
+            console.log("Ham menü verisi:", menuData);
+            
+            // Menü verisi farklı formatlarda olabilir
+            if (menuData.items && Array.isArray(menuData.items)) {
+              menu = menuData.items;
+              console.log("items array'den menü yüklendi, uzunluk:", menu.length);
+            } else if (menuData.menu && Array.isArray(menuData.menu)) {
+              menu = menuData.menu;
+              console.log("menu array'den menü yüklendi, uzunluk:", menu.length);
+            } else if (Array.isArray(menuData)) {
+              menu = menuData;
+              console.log("Direkt array olarak menü yüklendi, uzunluk:", menu.length);
+            } else {
+              console.log("Menü verisi beklenen formatta değil, varsayılan menü kullanılıyor");
+              menu = getDefaultMenu();
+            }
+            
             console.log("Toplam menü öğesi:", menu.length);
             
             // Stok durumunu kontrol et ve logla
@@ -3411,15 +3468,144 @@
             
             displayMenu();
           } else {
-            console.log("Menü dokümanı bulunamadı, boş menü gösteriliyor");
-            menu = [];
+            console.log("Menü dokümanı bulunamadı, varsayılan menü kullanılıyor");
+            console.log("Aranan koleksiyon:", menuCollection);
+            menu = getDefaultMenu();
             displayMenu();
           }
         }, (error) => {
           console.error("Menü dinlenirken hata oluştu:", error);
-          menu = [];
+          console.log("Hata detayları:", error.message);
+          console.log("Hata nedeniyle varsayılan menü öğeleri kullanılıyor");
+          menu = getDefaultMenu();
           displayMenu();
         });
+    }
+
+    // Varsayılan menü öğeleri
+    function getDefaultMenu() {
+      return [
+        {
+          name: 'TÜRK Kahvesi',
+          price: 5,
+          category: 'Kahve',
+          inStock: true,
+          options: ['Sade', 'Şekerli'],
+          defaultOption: 'Sade'
+        },
+        {
+          name: 'Nescafe',
+          price: 6,
+          category: 'Kahve',
+          inStock: true,
+          options: ['Sade', 'Şekerli'],
+          defaultOption: 'Sade'
+        },
+        {
+          name: 'Çay',
+          price: 2,
+          category: 'Çay',
+          inStock: true,
+          options: ['Sade', 'Şekerli'],
+          defaultOption: 'Sade'
+        },
+        {
+          name: 'Büyük Çay',
+          price: 3,
+          category: 'Çay',
+          inStock: true,
+          options: ['Sade', 'Şekerli'],
+          defaultOption: 'Sade'
+        },
+        {
+          name: 'Ihlamur',
+          price: 3,
+          category: 'Çay',
+          inStock: true,
+          options: ['Sade', 'Şekerli'],
+          defaultOption: 'Sade'
+        },
+        {
+          name: 'Kuşburnu',
+          price: 3,
+          category: 'Çay',
+          inStock: true,
+          options: ['Sade', 'Şekerli'],
+          defaultOption: 'Sade'
+        },
+        {
+          name: 'Adaçayı',
+          price: 3,
+          category: 'Çay',
+          inStock: true,
+          options: ['Sade', 'Şekerli'],
+          defaultOption: 'Sade'
+        },
+        {
+          name: 'Oralet',
+          price: 3,
+          category: 'Çay',
+          inStock: true,
+          options: ['Sade', 'Şekerli'],
+          defaultOption: 'Sade'
+        },
+        {
+          name: 'Maden Suyu',
+          price: 4,
+          category: 'İçecek',
+          inStock: true,
+          options: ['Sade'],
+          defaultOption: 'Sade'
+        },
+        {
+          name: 'Sade Gazoz',
+          price: 4,
+          category: 'İçecek',
+          inStock: true,
+          options: ['Sade'],
+          defaultOption: 'Sade'
+        },
+        {
+          name: 'Sarı Gazoz',
+          price: 4,
+          category: 'İçecek',
+          inStock: true,
+          options: ['Sade'],
+          defaultOption: 'Sade'
+        },
+        {
+          name: 'Limonlu Soda',
+          price: 4,
+          category: 'İçecek',
+          inStock: true,
+          options: ['Sade'],
+          defaultOption: 'Sade'
+        },
+        {
+          name: 'Narlı Soda',
+          price: 4,
+          category: 'İçecek',
+          inStock: true,
+          options: ['Sade'],
+          defaultOption: 'Sade'
+        },
+        {
+          name: 'Elmalı Soda',
+          price: 4,
+          category: 'İçecek',
+          inStock: true,
+          options: ['Sade'],
+          defaultOption: 'Sade'
+        },
+        {
+          name: 'Çay Fişi',
+          price: 15,
+          category: 'Çay Fişi',
+          inStock: true,
+          options: ['100\'lü'],
+          defaultOption: '100\'lü'
+        }
+      ];
     }
 
     // Global ürün mapping'leri - displayMenu dışında tanımlanmalı
@@ -3852,7 +4038,7 @@
               
               if (editNameElement) editNameElement.value = userData.name || '';
               if (editDepartmentElement) editDepartmentElement.value = userData.department || '';
-              if (editFloorElement) editFloorElement.value = userData.floor || '1';
+              if (editFloorElement) editFloorElement.value = userData.floor || 0;
             }
           } else {
             console.log("userData yok, yeniden yükleniyor");
@@ -4356,8 +4542,8 @@
         }
         
         if (editFloorElement) {
-          editFloorElement.value = userData.floor || '1';
-          console.log("Settings form editFloor güncellendi:", userData.floor || '1');
+          editFloorElement.value = userData.floor || 0;
+                      console.log("Settings form editFloor güncellendi:", userData.floor || 0);
         }
       }
     }
@@ -4385,13 +4571,15 @@
       
       console.log("Firebase'den kullanıcı siparişleri çekiliyor, UID:", currentUser.uid);
       
-      // Hem user_orders hem de siparisler koleksiyonlarını dinle
+      // Hem user_orders hem de siparisler koleksiyonlarını bir kez yükle
       const userOrdersQuery = firebase.firestore().collection('user_orders').doc(currentUser.uid).collection('orders').orderBy('tarih', 'desc');
       const allOrdersQuery = firebase.firestore().collection('siparisler').where('userId', '==', currentUser.uid).orderBy('tarih', 'desc');
       
-      // Her iki koleksiyonu da dinle ve birleştir
-      const unsubscribeUserOrders = userOrdersQuery.onSnapshot((userOrdersSnapshot) => {
-                 const unsubscribeAllOrders = allOrdersQuery.onSnapshot((allOrdersSnapshot) => {
+      // Her iki koleksiyonu da bir kez yükle ve birleştir
+      Promise.all([
+        userOrdersQuery.get(),
+        allOrdersQuery.get()
+      ]).then(([userOrdersSnapshot, allOrdersSnapshot]) => {
            console.log("User orders:", userOrdersSnapshot.size, "All orders:", allOrdersSnapshot.size);
            
            // Siparişleri birleştir ve güncelle
@@ -4420,9 +4608,16 @@
             if (ordersMap.has(doc.id)) {
               // Mevcut siparişi güncelle
               const existingOrder = ordersMap.get(doc.id);
+              const oldStatus = existingOrder.status;
               existingOrder.status = order.status; // Durumu güncelle
               existingOrder.rating = order.rating; // Puanlamayı güncelle
               existingOrder.comment = order.comment; // Yorumu güncelle
+              
+              // Eğer durum değiştiyse dinamik olarak güncelle
+              if (oldStatus !== order.status) {
+                console.log(`Sipariş ${doc.id} durumu değişti: ${oldStatus} -> ${order.status}`);
+                updateOrderStatus(doc.id, order.status);
+              }
             } else {
               // Yeni sipariş ekle
               order.id = doc.id;
@@ -4441,18 +4636,78 @@
           displayOrderHistory(orderHistoryData);
           createOrderChart(orderHistoryData);
           updateOrderStats(orderHistoryData);
-        }, (error) => {
-          console.error('Siparisler koleksiyonu dinlenirken hata:', error);
+        }).catch((error) => {
+          console.error('Sipariş geçmişi yüklenirken hata:', error);
+          orderHistoryDiv.innerHTML = '<p style="text-align: center; color: #ef4444;">Sipariş geçmişi yüklenirken hata oluştu</p>';
         });
-        
-        // Cleanup function
-        return () => {
-          unsubscribeAllOrders();
-        };
-      }, (error) => {
-        console.error('User orders dinlenirken hata:', error);
-        orderHistoryDiv.innerHTML = '<p style="text-align: center; color: #ef4444;">Sipariş geçmişi yüklenirken hata oluştu</p>';
-      });
+    }
+
+    // Sipariş durumunu dinamik olarak güncelle
+    function updateOrderStatus(orderId, newStatus) {
+      const orderElement = document.querySelector(`[data-order-id="${orderId}"]`);
+      if (!orderElement) return;
+      
+      const statusElement = orderElement.querySelector('.order-status');
+      if (!statusElement) return;
+      
+      let statusText = 'Hazırlanıyor';
+      let statusClass = 'status-preparing';
+      
+      if (newStatus === 'hazırlandı') {
+        statusText = 'Hazırlandı';
+        statusClass = 'status-ready';
+      } else if (newStatus === 'teslim edildi') {
+        statusText = 'Teslim Edildi';
+        statusClass = 'status-delivered';
+      }
+      
+      // Durumu güncelle
+      statusElement.textContent = statusText;
+      statusElement.className = `order-status ${statusClass}`;
+      
+      // Personel seçimi ve puanlama bölümlerini güncelle
+      const feedbackContent = orderElement.querySelector('.feedback-content');
+      if (feedbackContent) {
+        if (newStatus === 'teslim edildi') {
+          // Personel seçimi ve puanlama bölümlerini göster
+          const personnelSection = feedbackContent.querySelector('.delivery-personnel');
+          const personnelDisabledSection = feedbackContent.querySelector('.delivery-personnel-disabled');
+          const ratingSection = feedbackContent.querySelector('.rating-section');
+          const ratingDisabledSection = feedbackContent.querySelector('.rating-disabled');
+          
+          if (personnelDisabledSection) personnelDisabledSection.style.display = 'none';
+          if (personnelSection) personnelSection.style.display = 'block';
+          if (ratingDisabledSection) ratingDisabledSection.style.display = 'none';
+          if (ratingSection) ratingSection.style.display = 'block';
+        } else {
+          // Personel seçimi ve puanlama bölümlerini gizle
+          const personnelSection = feedbackContent.querySelector('.delivery-personnel');
+          const personnelDisabledSection = feedbackContent.querySelector('.delivery-personnel-disabled');
+          const ratingSection = feedbackContent.querySelector('.rating-section');
+          const ratingDisabledSection = feedbackContent.querySelector('.rating-disabled');
+          
+          if (personnelSection) personnelSection.style.display = 'none';
+          if (personnelDisabledSection) personnelDisabledSection.style.display = 'block';
+          if (ratingSection) ratingSection.style.display = 'none';
+          if (ratingDisabledSection) ratingDisabledSection.style.display = 'block';
+        }
+      }
+    }
+
+    // Belirli siparişin durumunu dinle
+    function listenToOrderStatus(orderId) {
+      firebase.firestore().collection('siparisler').doc(orderId)
+        .onSnapshot((doc) => {
+          if (doc.exists) {
+            const orderData = doc.data();
+            if (orderData.status) {
+              console.log(`Sipariş ${orderId} durumu değişti: ${orderData.status}`);
+              updateOrderStatus(orderId, orderData.status);
+            }
+          }
+        }, (error) => {
+          console.error(`Sipariş ${orderId} dinlenirken hata:`, error);
+        });
     }
 
     function clearAllHistory() {
@@ -4603,6 +4858,7 @@
           statusClass = 'status-delivered';
         }
         
+        orderElement.setAttribute('data-order-id', orderId);
         orderElement.innerHTML = `
           <div class="order-header" onclick="toggleOrderDetails('${orderId}')">
             <div class="order-info">
@@ -4638,12 +4894,21 @@
                 </div>
                 
                 <div class="feedback-content">
+                  ${order.status === 'teslim edildi' ? `
                   <div class="delivery-personnel">
                     <label for="personnel-${orderId}">Siparişi Getiren Personel:</label>
                     <select id="personnel-${orderId}" class="personnel-select" onchange="updatePersonnel('${orderId}', this.value)">
                       <option value="">Seçiniz...</option>
                     </select>
                   </div>
+                  
+                  ` : `
+                  <div class="delivery-personnel-disabled">
+                    <p style="color: #6b7280; font-size: 14px; text-align: center; padding: 16px;">
+                      Sipariş teslim edildikten sonra personel seçebilirsiniz.
+                    </p>
+                  </div>
+                  `}
                   
                   ${order.status === 'teslim edildi' ? `
                   <div class="rating-section" id="rating-section-${orderId}">
@@ -4681,6 +4946,9 @@
         
         // Load existing rating if any (this will also display in header)
         loadExistingRating(orderId);
+        
+        // Siparişin durumunu dinle
+        listenToOrderStatus(orderId);
       });
       
       // Add event listeners for stars
@@ -5119,6 +5387,15 @@
       // Personel seçimi sadece yorum ve puanlama için, otomatik atama yok
       // Seçilen personel bilgisi sadece yorum gönderilirken kullanılacak
       console.log(`Personel seçildi: ${personnelName} (Sipariş: ${orderId})`);
+      
+      // Personel bilgisini siparişe kaydet
+      firebase.firestore().collection('siparisler').doc(orderId).update({
+        deliveryPersonnel: personnelName
+      }).then(() => {
+        console.log('Personel bilgisi kaydedildi:', personnelName);
+      }).catch((error) => {
+        console.error('Personel bilgisi kaydedilirken hata:', error);
+      });
     }
 
     function loadExistingPersonnel(orderId) {
