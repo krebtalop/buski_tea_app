@@ -4574,10 +4574,10 @@
       }
       
       const item = cartItems[index];
-      const newQuantity = Math.max(1, item.quantity + change);
+      const newQuantity = item.quantity + change;
       
-      if (newQuantity === 1 && change === -1) {
-        // Remove item if quantity becomes 0
+      if (newQuantity <= 0) {
+        // Remove item if quantity becomes 0 or less
         cartItems.splice(index, 1);
       } else {
         item.quantity = newQuantity;
@@ -4611,7 +4611,7 @@
           cartItem.className = 'cart-item';
           
           // Türk kahvesi için şeker bilgisini göster
-          const sugarInfo = item.sugar ? ` (${item.sugar})` : '';
+          const sugarInfo = item.option ? ` (${item.option})` : '';
           
           cartItem.innerHTML = `
             <div class="cart-item-info">
@@ -5963,6 +5963,12 @@
             if (personnelSelect && selectedPersonnel) {
               personnelSelect.value = selectedPersonnel;
             }
+            
+            // Mevcut değerlendirme varsa butonu aktif tut
+            const submitBtn = document.querySelector(`button[onclick="submitRating('${orderId}')"]`);
+            if (submitBtn) {
+              submitBtn.disabled = false;
+            }
           }
         })
         .catch((error) => {
@@ -6559,7 +6565,14 @@
       personnelSelect.addEventListener('change', function() {
         const submitBtn = document.querySelector(`button[onclick="submitRating('${orderId}')"]`);
         if (submitBtn) {
-          submitBtn.disabled = !this.value;
+          // Eğer puanlama zaten yapılmışsa butonu aktif tut
+          const ratingDisplay = document.getElementById(`rating-display-${orderId}`);
+          if (ratingDisplay && ratingDisplay.style.display !== 'none' && ratingDisplay.innerHTML.trim() !== '') {
+            submitBtn.disabled = false;
+          } else {
+            // Puanlama yapılmamışsa personel seçimine göre aktif et
+            submitBtn.disabled = !this.value;
+          }
         }
       });
       
