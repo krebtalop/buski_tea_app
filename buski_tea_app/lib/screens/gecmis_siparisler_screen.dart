@@ -55,10 +55,6 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
   }
 
   // Personel listesini yeniden yükle
-  Future<void> _reloadPersonnel() async {
-    print('DEBUG: Personel listesi yeniden yükleniyor...');
-    await _loadPersonnel();
-  }
 
   // Panel güncellemelerini dinle
   void _listenToPanelUpdates() {
@@ -214,14 +210,14 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
         final data = doc.data();
         _totalSpent += (data['toplamFiyat'] ?? 0).toDouble();
 
-        // Kategori verilerini hesapla
+        // Kategori verilerini hesapla - adet sayısına göre
         final items = List<Map<String, dynamic>>.from(data['items'] ?? []);
         for (var item in items) {
           final category = item['name'] ?? 'Diğer';
-          final price = (item['price'] ?? 0).toDouble() * (item['adet'] ?? 1);
           final int adet = (item['adet'] ?? 1).toInt();
 
-          _categoryData[category] = (_categoryData[category] ?? 0) + price;
+          // Adet sayısını _categoryData'ya ekle (fiyat yerine)
+          _categoryData[category] = (_categoryData[category] ?? 0) + adet;
           final currentCount = _categoryCounts[category] ?? 0;
           _categoryCounts[category] = currentCount + adet;
         }
@@ -443,8 +439,43 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
       );
     }
 
+    // Pasta grafiğinin boyutuna göre dinamik kart boyutu hesapla
+    final int categoryCount = categories.length;
+    final double totalValue = _categoryData.values.fold(
+      0.0,
+      (sum, value) => sum + value,
+    );
+
+    // Grafiğin büyüklüğüne göre boyut hesapla
+    double chartSize;
+    double cardWidth;
+    double cardHeight;
+
+    if (categoryCount <= 3) {
+      // Az kategori: Küçük grafik
+      chartSize = 120.0;
+      cardWidth = 280.0;
+      cardHeight = 200.0;
+    } else if (categoryCount <= 6) {
+      // Orta kategori: Orta grafik
+      chartSize = 140.0;
+      cardWidth = 320.0;
+      cardHeight = 240.0;
+    } else {
+      // Çok kategori: Büyük grafik
+      chartSize = 160.0;
+      cardWidth = 360.0;
+      cardHeight = 280.0;
+    }
+
+    // Seçili kategori varsa ek yükseklik ekle
+    if (_selectedCategory != null) {
+      cardHeight += 30.0;
+    }
+
     return Container(
-      height: 220,
+      width: cardWidth,
+      height: cardHeight,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -460,7 +491,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
       child: Column(
         children: [
           const Text(
-            'Kategori Dağılımı',
+            'Ürün Adet Dağılımı',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -468,9 +499,10 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          // Pasta grafiği
+          // Pasta grafiği - dinamik boyut
           SizedBox(
-            height: 140,
+            height: chartSize,
+            width: chartSize,
             child: GestureDetector(
               onTap: () {
                 setState(() {
@@ -480,7 +512,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
               child: PieChart(
                 PieChartData(
                   sections: pieChartSections,
-                  centerSpaceRadius: 25,
+                  centerSpaceRadius: chartSize * 0.12, // Dinamik merkez boşluğu
                   sectionsSpace: 1,
                   pieTouchData: PieTouchData(
                     touchCallback: (FlTouchEvent event, pieTouchResponse) {
@@ -548,6 +580,9 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
       final newOrder = {
         'userId': user.uid,
         'userName': user.displayName ?? userData['name'] ?? 'Kullanıcı',
+        'ad': userData['name'] ?? '',
+        'soyad': userData['surname'] ?? '',
+        'departman': userData['department'] ?? '',
         'floor': orderData['floor'],
         'items': items,
         'toplamFiyat': orderData['toplamFiyat'],
@@ -684,7 +719,6 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
         statusIcon = Icons.help_outline;
         statusText = 'Hazırlandı';
     }
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -744,224 +778,234 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
       child: Center(
         child: Container(
           margin: const EdgeInsets.all(20),
-          padding: const EdgeInsets.all(20),
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.8,
+          ),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Sipariş Değerlendirmesi',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Sipariş Değerlendirme',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _showRatingDialog = false;
+                          _selectedOrderId = null;
+                          _selectedRating = 0;
+                          _commentController.clear();
+                        });
+                      },
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  IconButton(
-                    onPressed: () {
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Tarih: ${tarih.day.toString().padLeft(2, '0')}.${tarih.month.toString().padLeft(2, '0')}.${tarih.year}',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      Text('Toplam: ${orderData['toplamFiyat']} TL'),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Sipariş İçeriği:',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      ...items.map(
+                        (item) => Text(
+                          '• ${item['name']} ${item['option'] != null && item['option'] != '' ? '(${item['option']})' : ''} x${item['adet']}',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Bu siparişi nasıl değerlendirirsiniz?',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 16),
+                _buildStarRating(_selectedRating, (rating) {
+                  setState(() {
+                    _selectedRating = rating;
+                  });
+                }),
+                const SizedBox(height: 8),
+                Text(
+                  _selectedRating == 0
+                      ? 'Puanlama yapın'
+                      : _selectedRating == 1
+                      ? 'Çok Kötü'
+                      : _selectedRating == 2
+                      ? 'Kötü'
+                      : _selectedRating == 3
+                      ? 'Orta'
+                      : _selectedRating == 4
+                      ? 'İyi'
+                      : 'Mükemmel',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: _selectedRating == 0
+                        ? Colors.grey
+                        : Colors.blue[700],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Garson seçimi dropdown'u
+                Container(
+                  width: double.infinity,
+                  child: DropdownButtonFormField<String>(
+                    value: _secilenGarsonlar[_selectedOrderId],
+                    decoration: const InputDecoration(
+                      labelText: 'Siparişi getiren garson',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(8)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(8)),
+                        borderSide: BorderSide(color: Colors.blue),
+                      ),
+                    ),
+                    items: _garsonlar.map((String garson) {
+                      return DropdownMenuItem<String>(
+                        value: garson,
+                        child: Text(garson),
+                      );
+                    }).toList(),
+                    onChanged: (String? yeniGarson) {
                       setState(() {
-                        _showRatingDialog = false;
-                        _selectedOrderId = null;
-                        _selectedRating = 0;
-                        _commentController.clear();
+                        _secilenGarsonlar[_selectedOrderId!] = yeniGarson;
                       });
                     },
-                    icon: const Icon(Icons.close),
                   ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                const SizedBox(height: 20),
+                // Yorum alanı
+                Container(
+                  width: double.infinity,
+                  child: TextField(
+                    controller: _commentController,
+                    maxLines: 3,
+                    maxLength: 200,
+                    decoration: const InputDecoration(
+                      hintText:
+                          'Siparişiniz hakkında yorum yazın (isteğe bağlı)...',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(8)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(8)),
+                        borderSide: BorderSide(color: Colors.blue),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
                   children: [
-                    Text(
-                      'Tarih: ${tarih.day.toString().padLeft(2, '0')}.${tarih.month.toString().padLeft(2, '0')}.${tarih.year}',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _selectedRating > 0 ? _saveRating : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue[700],
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text('Puanı Kaydet'),
+                      ),
                     ),
-                    const SizedBox(height: 4),
-                    Text('Toplam: ${orderData['toplamFiyat']} TL'),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Sipariş İçeriği:',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    ...items.map(
-                      (item) => Text(
-                        '• ${item['name']} ${item['option'] != null && item['option'] != '' ? '(${item['option']})' : ''} x${item['adet']}',
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          if (_selectedOrderId == null) return;
+                          try {
+                            final user = FirebaseAuth.instance.currentUser;
+                            if (user == null) return;
+                            final updateData = {
+                              'rating': 0,
+                              'comment': '',
+                              'ratingDate': null,
+                              'garson': null,
+                            };
+                            await Future.wait([
+                              FirebaseFirestore.instance
+                                  .collection('siparisler')
+                                  .doc(_selectedOrderId)
+                                  .update(updateData),
+                              FirebaseFirestore.instance
+                                  .collection('user_orders')
+                                  .doc(user.uid)
+                                  .collection('orders')
+                                  .doc(_selectedOrderId)
+                                  .update(updateData),
+                            ]);
+                            await _fetchOrders();
+                            setState(() {
+                              _showRatingDialog = false;
+                              _selectedOrderId = null;
+                              _selectedRating = 0;
+                              _commentController.clear();
+                            });
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Puanınız kaldırıldı.'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Puan kaldırılırken hata oluştu: $e',
+                                ),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text('Temizle'),
                       ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'Bu siparişi nasıl değerlendirirsiniz?',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 16),
-              _buildStarRating(_selectedRating, (rating) {
-                setState(() {
-                  _selectedRating = rating;
-                });
-              }),
-              const SizedBox(height: 8),
-              Text(
-                _selectedRating == 0
-                    ? 'Puanlama yapın'
-                    : _selectedRating == 1
-                    ? 'Çok Kötü'
-                    : _selectedRating == 2
-                    ? 'Kötü'
-                    : _selectedRating == 3
-                    ? 'Orta'
-                    : _selectedRating == 4
-                    ? 'İyi'
-                    : 'Mükemmel',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: _selectedRating == 0 ? Colors.grey : Colors.blue[700],
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 20),
-              // Garson seçimi dropdown'u
-              Container(
-                width: double.infinity,
-                child: DropdownButtonFormField<String>(
-                  value: _secilenGarsonlar[_selectedOrderId],
-                  decoration: const InputDecoration(
-                    labelText: 'Siparişi getiren garson',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(8)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(8)),
-                      borderSide: BorderSide(color: Colors.blue),
-                    ),
-                  ),
-                  items: _garsonlar.map((String garson) {
-                    return DropdownMenuItem<String>(
-                      value: garson,
-                      child: Text(garson),
-                    );
-                  }).toList(),
-                  onChanged: (String? yeniGarson) {
-                    setState(() {
-                      _secilenGarsonlar[_selectedOrderId!] = yeniGarson;
-                    });
-                  },
-                ),
-              ),
-              const SizedBox(height: 20),
-              // Yorum alanı
-              Container(
-                width: double.infinity,
-                child: TextField(
-                  controller: _commentController,
-                  maxLines: 3,
-                  maxLength: 200,
-                  decoration: const InputDecoration(
-                    hintText:
-                        'Siparişiniz hakkında yorum yazın (isteğe bağlı)...',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(8)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(8)),
-                      borderSide: BorderSide(color: Colors.blue),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _selectedRating > 0 ? _saveRating : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue[700],
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const Text('Puanı Kaydet'),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        if (_selectedOrderId == null) return;
-                        try {
-                          final user = FirebaseAuth.instance.currentUser;
-                          if (user == null) return;
-                          final updateData = {
-                            'rating': 0,
-                            'comment': '',
-                            'ratingDate': null,
-                            'garson': null,
-                          };
-                          await Future.wait([
-                            FirebaseFirestore.instance
-                                .collection('siparisler')
-                                .doc(_selectedOrderId)
-                                .update(updateData),
-                            FirebaseFirestore.instance
-                                .collection('user_orders')
-                                .doc(user.uid)
-                                .collection('orders')
-                                .doc(_selectedOrderId)
-                                .update(updateData),
-                          ]);
-                          await _fetchOrders();
-                          setState(() {
-                            _showRatingDialog = false;
-                            _selectedOrderId = null;
-                            _selectedRating = 0;
-                            _commentController.clear();
-                          });
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Puanınız kaldırıldı.'),
-                              backgroundColor: Colors.green,
-                            ),
-                          );
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Puan kaldırılırken hata oluştu: $e',
-                              ),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const Text('Temizle'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
