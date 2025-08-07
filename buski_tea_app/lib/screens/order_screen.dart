@@ -178,6 +178,21 @@ class _OrderScreenState extends State<OrderScreen>
 
   void _removeFromCart(int index) => setState(() => _cartItems.removeAt(index));
 
+  void _updateCartItemQuantity(int index, int change) {
+    setState(() {
+      final item = _cartItems[index];
+      final newQuantity = item['adet'] + change;
+
+      if (newQuantity <= 0) {
+        // Eğer adet 0 veya daha az olursa ürünü sepetten kaldır
+        _cartItems.removeAt(index);
+      } else {
+        // Adeti güncelle
+        item['adet'] = newQuantity;
+      }
+    });
+  }
+
   Future<void> _submitAllOrders() async {
     if (_cartItems.isEmpty) return;
     setState(() => _isLoading = true);
@@ -568,21 +583,118 @@ class _OrderScreenState extends State<OrderScreen>
             .asMap()
             .entries
             .map(
-              (entry) => Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      '${entry.value['name']} x${entry.value['adet']} ${entry.value['option'] != '' ? '(${entry.value['option']})' : ''}',
+              (entry) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            entry.value['name'],
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                          ),
+                          if (entry.value['option'] != null &&
+                              entry.value['option'].toString().isNotEmpty)
+                            Text(
+                              '(${entry.value['option']})',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 12,
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
-                  Text(
-                    '${(entry.value['price'] * entry.value['adet']).toStringAsFixed(2)} TL',
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.redAccent),
-                    onPressed: () => _removeFromCart(entry.key),
-                  ),
-                ],
+                    // Adet kontrol butonları
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.remove, size: 16),
+                            onPressed: () =>
+                                _updateCartItemQuantity(entry.key, -1),
+                            padding: const EdgeInsets.all(4),
+                            constraints: const BoxConstraints(
+                              minWidth: 32,
+                              minHeight: 32,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.blue[50],
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(color: Colors.blue[200]!),
+                          ),
+                          child: Text(
+                            '${entry.value['adet']}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.add, size: 16),
+                            onPressed: () =>
+                                _updateCartItemQuantity(entry.key, 1),
+                            padding: const EdgeInsets.all(4),
+                            constraints: const BoxConstraints(
+                              minWidth: 32,
+                              minHeight: 32,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 12),
+                    // Fiyat
+                    Text(
+                      '${(entry.value['price'] * entry.value['adet']).toStringAsFixed(2)} TL',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: Colors.green,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Silme butonu
+                    IconButton(
+                      icon: const Icon(
+                        Icons.delete,
+                        color: Colors.redAccent,
+                        size: 20,
+                      ),
+                      onPressed: () => _removeFromCart(entry.key),
+                      padding: const EdgeInsets.all(4),
+                      constraints: const BoxConstraints(
+                        minWidth: 32,
+                        minHeight: 32,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             )
             .toList(),

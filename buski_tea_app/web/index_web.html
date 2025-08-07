@@ -7,7 +7,8 @@
       <link rel="icon" type="image/png" href="favicon.png?v=6">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
@@ -1559,6 +1560,25 @@
       background: #f1f5f9;
       color: #1e293b;
     }
+    
+    .remove-item-btn {
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: transparent;
+      color: #6b7280;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    
+    .remove-item-btn:hover {
+      color: #374151;
+      transform: scale(1.05);
+    }
 
     .cart-footer {
       padding: 16px 20px 20px 20px;
@@ -1839,10 +1859,64 @@
     }
 
     .order-items {
-      font-size: 13px;
+      font-size: 14px;
+      color: #374151;
+      line-height: 1.6;
+      margin-bottom: 12px;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    .order-item-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .order-item-entry {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      background: #f8fafc;
+      border-radius: 8px;
+      border-left: 3px solid #3b82f6;
+      transition: all 0.2s ease;
+    }
+
+    .order-item-entry:hover {
+      background: #f1f5f9;
+      transform: translateX(2px);
+    }
+
+    .order-item-name {
+      font-weight: 500;
+      color: #1e293b;
+      font-size: 14px;
+    }
+
+    .order-item-details {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
       color: #64748b;
-      line-height: 1.4;
-      margin-bottom: 8px;
+    }
+
+    .order-item-quantity {
+      background: #3b82f6;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .order-item-option {
+      background: #f3f4f6;
+      color: #6b7280;
+      padding: 2px 6px;
+      border-radius: 12px;
+      font-size: 11px;
     }
 
     /* Pasta Grafiği ve Yorum Sistemi Stilleri */
@@ -1940,16 +2014,19 @@
     .status-preparing {
       background-color: #fef3c7;
       color: #d97706;
+      text-align: center;
     }
     
     .status-ready {
       background-color: #d1fae5;
       color: #059669;
+      text-align: center;
     }
     
     .status-delivered {
       background-color: #fee2e2;
       color: #dc2626;
+      text-align: center;
     }
 
     .order-details {
@@ -2313,10 +2390,7 @@
       transition: all 0.3s ease;
     }
 
-    .rating-display:not(:empty) {
-      display: block !important;
-    }
-
+   
     .rating-display .stars {
       color: #fbbf24;
       font-size: 18px;
@@ -4395,6 +4469,12 @@
         
         updateCartCount();
         
+        // Eğer sepet açıksa sepet görünümünü güncelle
+        const cartDropdown = document.getElementById('cartDropdown');
+        if (cartDropdown && cartDropdown.classList.contains('show')) {
+          updateCartDisplay();
+        }
+        
         // Buton animasyonu - tik işareti
         const addButton = document.querySelector(`button[onclick="addToCart('${itemName}')"]`);
         if (addButton) {
@@ -4452,10 +4532,67 @@
       console.log('cartItems:', cartItems);
       
       const cartDropdown = document.getElementById('cartDropdown');
+      
+      if (!cartDropdown) {
+        console.error('Cart dropdown bulunamadı');
+        return;
+      }
+      
+      // Sepet içeriğini güncelle
+      updateCartDisplay();
+      
+      cartDropdown.classList.add('show');
+    }
+
+    function hideCart() {
+      const cartDropdown = document.getElementById('cartDropdown');
+      cartDropdown.classList.remove('show');
+    }
+
+    // Close cart dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+      const cartDropdown = document.getElementById('cartDropdown');
+      const cartFab = document.querySelector('.cart-fab');
+      
+      // Eğer tıklanan element bir buton ise sepeti kapatma
+      if (event.target.tagName === 'BUTTON' || event.target.closest('button')) {
+        return;
+      }
+      
+      if (cartDropdown.classList.contains('show') && 
+          !cartDropdown.contains(event.target) && 
+          !cartFab.contains(event.target)) {
+        hideCart();
+      }
+    });
+
+    function updateCartItemQuantity(index, change, event) {
+      // Event propagation'ı durdur
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      
+      const item = cartItems[index];
+      const newQuantity = Math.max(1, item.quantity + change);
+      
+      if (newQuantity === 1 && change === -1) {
+        // Remove item if quantity becomes 0
+        cartItems.splice(index, 1);
+      } else {
+        item.quantity = newQuantity;
+      }
+      
+      // Sepet modalını kapatmadan güncelle
+      updateCartDisplay();
+      updateCartCount();
+    }
+    
+    function updateCartDisplay() {
       const cartItemsDiv = document.getElementById('cartItemsDiv');
       
-      if (!cartDropdown || !cartItemsDiv) {
-        console.error('Cart dropdown veya cart items div bulunamadı');
+      if (!cartItemsDiv) {
+        console.error('Cart items div bulunamadı');
         return;
       }
       
@@ -4479,12 +4616,15 @@
           cartItem.innerHTML = `
             <div class="cart-item-info">
               <div class="cart-item-name">${item.name}${sugarInfo}</div>
-              <div class="cart-item-price">${item.price} ₺ x ${item.quantity}</div>
+              <div class="cart-item-price">${formatPrice(itemTotal)} ₺</div>
             </div>
             <div class="cart-item-quantity">
-              <button onclick="updateCartItemQuantity(${index}, -1)">-</button>
+              <button onclick="updateCartItemQuantity(${index}, -1, event)">-</button>
               <span>${item.quantity}</span>
-              <button onclick="updateCartItemQuantity(${index}, 1)">+</button>
+              <button onclick="updateCartItemQuantity(${index}, 1, event)">+</button>
+              <button onclick="removeCartItem(${index}, event)" class="remove-item-btn" title="Ürünü Sil">
+                <i class="fas fa-trash"></i>
+              </button>
             </div>
           `;
           cartItemsDiv.appendChild(cartItem);
@@ -4492,39 +4632,17 @@
         
         document.getElementById('cartTotal').textContent = `${formatPrice(total)} ₺`;
       }
-      
-      cartDropdown.classList.add('show');
     }
-
-    function hideCart() {
-      const cartDropdown = document.getElementById('cartDropdown');
-      cartDropdown.classList.remove('show');
-    }
-
-    // Close cart dropdown when clicking outside
-    document.addEventListener('click', function(event) {
-      const cartDropdown = document.getElementById('cartDropdown');
-      const cartFab = document.querySelector('.cart-fab');
-      
-      if (cartDropdown.classList.contains('show') && 
-          !cartDropdown.contains(event.target) && 
-          !cartFab.contains(event.target)) {
-        hideCart();
-      }
-    });
-
-    function updateCartItemQuantity(index, change) {
-      const item = cartItems[index];
-      const newQuantity = Math.max(1, item.quantity + change);
-      
-      if (newQuantity === 1 && change === -1) {
-        // Remove item if quantity becomes 0
-        cartItems.splice(index, 1);
-      } else {
-        item.quantity = newQuantity;
+    
+    function removeCartItem(index, event) {
+      // Event propagation'ı durdur
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
       }
       
-      showCart(); // Refresh cart display
+      cartItems.splice(index, 1);
+      updateCartDisplay();
       updateCartCount();
     }
 
@@ -4788,9 +4906,16 @@
         const order = orderHistoryData[orderIndex];
         const orderDate = order.tarih.toDate ? order.tarih.toDate().toLocaleString('tr-TR') : new Date(order.tarih).toLocaleString('tr-TR');
         const orderItems = order.items.map(item => {
-          const sugarInfo = item.option ? ` (${item.option})` : '';
-          return `${item.name}${sugarInfo} (${item.adet} adet)`;
-        }).join(', ');
+          return `
+            <div class="order-item-entry">
+              <div class="order-item-name">${item.name}</div>
+              <div class="order-item-details">
+                ${item.option ? `<span class="order-item-option">${item.option}</span>` : ''}
+                <span class="order-item-quantity">${item.adet} adet</span>
+              </div>
+            </div>
+          `;
+        }).join('');
         
         // Sipariş durumunu belirle
         let statusText = 'Hazırlanıyor';
@@ -4818,7 +4943,9 @@
           </div>
           
           <div class="order-details" id="order-details-${orderId}" style="display: none;">
-            <div class="order-items">${orderItems}</div>
+            <div class="order-items">
+              <div class="order-item-list">${orderItems}</div>
+            </div>
             
             <div class="order-actions">
               <button class="reorder-btn" onclick="reorderItems('${orderId}')">
@@ -5074,9 +5201,16 @@
       orders.forEach((order) => {
         const orderDate = order.tarih.toDate ? order.tarih.toDate().toLocaleString('tr-TR') : new Date(order.tarih).toLocaleString('tr-TR');
         const orderItems = order.items.map(item => {
-          const sugarInfo = item.option ? ` (${item.option})` : '';
-          return `${item.name}${sugarInfo} (${item.adet} adet)`;
-        }).join(', ');
+          return `
+            <div class="order-item-entry">
+              <div class="order-item-name">${item.name}</div>
+              <div class="order-item-details">
+                ${item.option ? `<span class="order-item-option">${item.option}</span>` : ''}
+                <span class="order-item-quantity">${item.adet} adet</span>
+              </div>
+            </div>
+          `;
+        }).join('');
         const orderId = order.id || order.id;
         
         const orderElement = document.createElement('div');
@@ -5108,7 +5242,9 @@
           </div>
           
           <div class="order-details" id="order-details-${orderId}" style="display: none;">
-            <div class="order-items">${orderItems}</div>
+            <div class="order-items">
+              <div class="order-item-list">${orderItems}</div>
+            </div>
             
             <div class="order-actions">
               <button class="reorder-btn" onclick="reorderItems('${orderId}')">
@@ -5673,7 +5809,7 @@
               // Yorum alanını temizle
               commentInput.value = '';
               
-              // Butonu eski haline getir
+              // Butonu aktif tut - kullanıcı tekrar değerlendirme yapabilir
               submitBtn.disabled = false;
               submitBtn.textContent = 'Değerlendirme Gönder';
             })
@@ -5717,6 +5853,13 @@
       // Boş değer kontrolü - "Seçiniz..." seçeneği için
       if (!personnelName || personnelName.trim() === '') {
         console.log('Boş personel seçimi, işlem yapılmıyor');
+        return;
+      }
+      
+      // Puanlama zaten yapılmış mı kontrol et
+      const ratingDisplay = document.getElementById(`rating-display-${orderId}`);
+      if (ratingDisplay && ratingDisplay.style.display !== 'none' && ratingDisplay.innerHTML.trim() !== '') {
+        console.log('Puanlama zaten yapılmış, personel bilgisi güncellenmiyor');
         return;
       }
       

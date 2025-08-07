@@ -258,15 +258,41 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           );
                           Navigator.of(context).pop();
                         } catch (e) {
-                          String errorMessage = 'Bir hata oluştu: $e';
-                          final msg = e.toString();
-                          if (msg.contains('email-already-in-use')) {
-                            errorMessage =
-                                'Bu e-posta ile kayıtlı kullanıcı var.';
+                          String errorMessage = 'Kayıt işlemi başarısız oldu';
+
+                          if (e is FirebaseAuthException) {
+                            switch (e.code) {
+                              case 'email-already-in-use':
+                                errorMessage =
+                                    'Bu e-posta ile kayıtlı kullanıcı var';
+                                break;
+                              case 'invalid-email':
+                                errorMessage =
+                                    'Lütfen geçerli bir e-posta adresi girin';
+                                break;
+                              case 'weak-password':
+                                errorMessage =
+                                    'Şifre en az 6 karakter olmalıdır';
+                                break;
+                              case 'network-request-failed':
+                                errorMessage =
+                                    'İnternet bağlantınızı kontrol edin';
+                                break;
+                              default:
+                                errorMessage = 'Kayıt işlemi başarısız oldu';
+                            }
                           }
-                          ScaffoldMessenger.of(
-                            context,
-                          ).showSnackBar(SnackBar(content: Text(errorMessage)));
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(errorMessage),
+                              backgroundColor: Colors.red[600],
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          );
                         } finally {
                           setState(() => _isLoading = false);
                         }

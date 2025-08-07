@@ -36,12 +36,41 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       });
       // Otomatik yönlendirme kaldırıldı
     } on FirebaseAuthException catch (e) {
+      String errorMessage = '';
+
+      switch (e.code) {
+        case 'invalid-email':
+          errorMessage = 'Lütfen geçerli bir e-posta adresi girin';
+          break;
+        case 'user-not-found':
+          errorMessage = 'Bu e-posta ile kayıtlı kullanıcı bulunamadı';
+          break;
+        default:
+          errorMessage = 'Şifre sıfırlama işlemi başarısız oldu';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: Colors.red[600],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      );
+
       setState(() {
-        if (e.code == 'invalid-email' || e.code == 'user-not-found') {
-        } else {}
         _emailVerifiedAndSent = false;
       });
     } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Bir hata oluştu'),
+          backgroundColor: Colors.red[600],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      );
+
       setState(() {
         _emailVerifiedAndSent = false;
       });

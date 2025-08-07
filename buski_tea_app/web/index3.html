@@ -162,8 +162,6 @@
     
     .modal-backdrop-light {
       background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(2px);
-      -webkit-backdrop-filter: blur(2px);
     }
     
     /* Modal açıkken header ve navigation'ı arkaya at */
@@ -440,6 +438,22 @@
     .bounce-out {
       animation: bounceOut 1s forwards;
     }
+    
+    /* confirm-modal'ün tamamını en üstte tutacak z-index */
+    #confirm-modal {
+      z-index: 10000 !important;
+    }
+
+    /* confirm-content'in de kendi konteynerinin üzerinde olmasını sağla */
+    #confirm-content {
+      position: relative;
+      z-index: 10001 !important;
+    }
+    
+    /* Modal backdrop stilleri */
+    .modal-backdrop-light {
+      background-color: rgba(0, 0, 0, 0.5);
+    }
   </style>
 </head>
 <body class="bg-gray-50">
@@ -622,6 +636,31 @@
   </div>
 
   <!-- Custom Confirm Modal -->
+  <div id="confirm-modal" class="fixed inset-0 z-[999999] flex items-center justify-center modal-backdrop-light hidden">
+    <div class="bg-white rounded-lg shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-95 opacity-0" id="confirm-content">
+      <div class="p-6">
+        <div class="flex items-center mb-4">
+          <div class="flex-shrink-0">
+            <i id="confirm-icon" class="fas fa-exclamation-triangle text-yellow-500 text-2xl"></i>
+          </div>
+          <div class="ml-3">
+            <h3 id="confirm-title" class="text-lg font-medium text-gray-900">Onay</h3>
+          </div>
+        </div>
+        <div class="mb-6">
+          <p id="confirm-message" class="text-sm text-gray-600"></p>
+        </div>
+        <div class="flex justify-end space-x-3">
+          <button id="confirm-cancel" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors duration-200">
+            İptal
+          </button>
+          <button id="confirm-ok" class="px-4 py-2 text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700 rounded-md transition-colors duration-200">
+            Onayla
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Bildirim Sesi -->
       <audio id="order-notification-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3" preload="auto"></audio>
@@ -1107,7 +1146,8 @@ async function updateReport() {
     }
     // Puanlama silme fonksiyonu
     window.deleteRating = async function(ratingId) {
-      if (confirm('Bu puanlamayı silmek istediğinizden emin misiniz?')) {
+      const confirmed = await showConfirm('Puanlamayı Sil', 'Bu puanlamayı silmek istediğinizden emin misiniz?', 'danger');
+      if (confirmed) {
         try {
           const ref = doc(db, "siparisler", ratingId);
           await updateDoc(ref, { 
@@ -1127,7 +1167,8 @@ async function updateReport() {
 
     // Tüm puanları sil
     window.deleteAllRatings = async function() {
-      if (confirm('Bu işlem tüm puanları ve yorumları kalıcı olarak silecektir. Devam etmek istediğinizden emin misiniz?')) {
+      const confirmed = await showConfirm('Tüm Puanları Sil', 'Bu işlem tüm puanları ve yorumları kalıcı olarak silecektir. Devam etmek istediğinizden emin misiniz?', 'danger');
+      if (confirmed) {
         try {
           // Kat grubuna göre siparişleri filtrele
           const filteredOrders = filterOrdersByPanel(allOrders);
@@ -1217,7 +1258,8 @@ async function updateReport() {
 
     // Hata butonu işlevi: Siparişi hazırlananlar sekmesine geri döndürür
     window.revertToPreparing = async function(id, btn) {
-        if (confirm('Bu siparişi hazırlananlar sekmesine geri almak istediğinizden emin misiniz?')) {
+        const confirmed = await showConfirm('Siparişi Geri Al', 'Bu siparişi hazırlananlar sekmesine geri almak istediğinizden emin misiniz?', 'warning');
+        if (confirmed) {
             const ref = doc(db, "siparisler", id);
             try {
                 await updateDoc(ref, { status: "hazırlanıyor" });
@@ -1322,7 +1364,7 @@ async function updateReport() {
       if (Array.isArray(order.items) && order.items.length > 0) {
         itemsHtml = order.items.map(item =>
           `<div class='flex justify-between items-center bg-white rounded-lg px-3 py-2 mb-2 border border-gray-100'>
-            <span class='font-medium text-green-700'>${escapeHtml(item.name)}</span>
+            <span class='font-medium text-gray-900'>${escapeHtml(item.name)}</span>
             <div class='flex items-center space-x-3'>
               <span class='bg-green-100 text-green-700 text-sm font-bold px-3 py-1 rounded'>${item.adet} adet</span>
               <span class='font-bold text-black'>${escapeHtml(((item.price || item.fiyat || 0) * item.adet).toString())} ₺</span>
@@ -1443,19 +1485,16 @@ async function updateReport() {
     }
     // Siparişi sil (geçmiş siparişler için korunur)
     window.deleteOrder = async function(id, btn) {
-      if (confirm('Bu siparişi panelden kaldırmak istediğinizden emin misiniz? Sipariş geçmiş siparişlerde korunacaktır.')) {
+      const confirmed = await showConfirm('Siparişi Sil', 'Bu siparişi panelden kaldırmak istediğinizden emin misiniz? Sipariş geçmiş siparişlerde korunacaktır.', 'danger');
+      if (confirmed) {
         try {
           const order = allOrders.find(o => o.id === id);
           const ref = doc(db, "siparisler", id);
           
           console.log('Panelden kaldırılacak sipariş:', order); // Debug için
           
-          // Siparişi "silindi" durumuna çevir, tamamen silme
-          await updateDoc(ref, { 
-            status: "silindi",
-            deletedAt: new Date(),
-            deletedBy: "panel"
-          });
+          // Siparişi tamamen sil
+          await deleteDoc(ref);
           
           // Eğer siparişin puanlaması varsa, puanlama verilerini koru
           if (order && (order.rating > 0 || order.comment)) {
@@ -1499,7 +1538,8 @@ async function updateReport() {
     
     // Tüm teslim edilmiş siparişleri sil fonksiyonu
     async function deleteAllOrders() {
-      if (confirm('Tüm teslim edilmiş siparişleri silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
+      const confirmed = await showConfirm('Tüm Siparişleri Sil', 'Tüm teslim edilmiş siparişleri silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.', 'danger');
+      if (confirmed) {
         try {
           // Panele göre siparişleri filtrele ve sadece teslim edilmiş olanları al
           const filteredOrders = filterOrdersByPanel(allOrders);
@@ -1606,12 +1646,9 @@ async function updateReport() {
     
     // Rapor sıfırlama fonksiyonu
     async function resetReportData() {
-      // Önce rapor modal'ını kapat
-      reportModal.style.display = 'none';
-      
-      const confirmed = await showConfirm('Rapor Sıfırlama', 'RAPOR VERİLERİNİ SIFIRLAMAK İSTEDİĞİNİZDEN EMİN MİSİNİZ? Bu işlem geri alınamaz!', 'danger');
-      if (confirmed) {
-        try {
+      try {
+        const confirmed = await showConfirm('Rapor Sıfırlama', 'Rapor verilerini sıfırlamak istediğinizden emin misiniz?', 'danger');
+        if (confirmed) {
           const raporRef = doc(db, "raporlar", activeFloorGroup);
           await setDoc(raporRef, {
             kaliciToplam: 0,
@@ -1620,11 +1657,10 @@ async function updateReport() {
             floorGroup: activeFloorGroup
           });
           updateReport();
-          // Başarı alert'ini kaldırdık
-        } catch (error) {
-          console.error('Rapor verileri sıfırlanırken hata oluştu:', error);
-          await showAlert('Rapor verileri sıfırlanırken bir hata oluştu: ' + error.message, 'error');
         }
+      } catch (error) {
+        console.error('Rapor verileri sıfırlanırken hata oluştu:', error);
+        await showAlert('Rapor verileri sıfırlanırken bir hata oluştu: ' + error.message, 'error');
       }
     }
     
@@ -1781,6 +1817,7 @@ async function updateReport() {
       confirmContent.classList.add('scale-95', 'opacity-0');
       setTimeout(() => {
         confirmModal.classList.add('hidden');
+        confirmModal.style.display = 'none';
         // Body'den modal-open sınıfını kaldır
         document.body.classList.remove('modal-open');
       }, 300);
@@ -2296,6 +2333,7 @@ async function updateReport() {
       listenMenuRealtime();
       setActiveTab('preparing'); // Varsayılan olarak preparing sekmesini aktif et
     });
+
   </script>
   
 </body>
