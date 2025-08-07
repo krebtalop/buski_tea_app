@@ -43,6 +43,28 @@
       100% { transform: rotate(360deg); }
     }
 
+    @keyframes slideInRight {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideOutRight {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+    }
+
    
 
     /* Menü ve sipariş sayfaları için gökyüzü temalı arka plan */
@@ -442,21 +464,44 @@
     .reorder-total {
       background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
       color: white;
-      padding: 20px;
+      padding: 16px 20px;
       border-radius: 12px;
       text-align: center;
-      margin-bottom: 25px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    }
+
+    .reorder-total::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { left: -100%; }
+      100% { left: 100%; }
     }
 
     .reorder-total-label {
-      font-size: 14px;
-      opacity: 0.9;
-      margin-bottom: 5px;
+      font-size: 11px;
+      opacity: 0.8;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 500;
     }
 
     .reorder-total-amount {
-      font-size: 28px;
+      font-size: 20px;
       font-weight: 700;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     .reorder-modal-actions {
@@ -1784,17 +1829,20 @@
     .order-date {
       font-weight: 600;
       color: #1e293b;
+      font-size: 14px;
     }
 
     .order-total {
       font-weight: 600;
       color: #059669;
+      font-size: 13px;
     }
 
     .order-items {
-      font-size: 14px;
+      font-size: 13px;
       color: #64748b;
-      line-height: 1.5;
+      line-height: 1.4;
+      margin-bottom: 8px;
     }
 
     /* Pasta Grafiği ve Yorum Sistemi Stilleri */
@@ -1824,9 +1872,9 @@
 
     .order-item-compact {
       background: white;
-      border-radius: 12px;
-      margin-bottom: 16px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
       border: 1px solid #e2e8f0;
       overflow: hidden;
       width: 100%;
@@ -1836,7 +1884,7 @@
     }
 
     .order-header {
-      padding: 16px;
+      padding: 12px 16px;
       cursor: pointer;
       display: flex;
       justify-content: space-between;
@@ -1852,22 +1900,22 @@
     .order-info {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 2px;
     }
 
     .order-toggle {
       color: #64748b;
-      font-size: 12px;
+      font-size: 10px;
     }
 
     .order-header-rating {
       display: flex;
       align-items: center;
       gap: 4px;
-      font-size: 18px;
+      font-size: 16px;
       color: #fbbf24;
       margin-left: auto;
-      margin-right: 20px;
+      margin-right: 16px;
     }
 
     .order-header-rating .stars {
@@ -1881,12 +1929,12 @@
     }
     
     .order-status {
-      padding: 4px 8px;
-      border-radius: 12px;
-      font-size: 12px;
+      padding: 3px 6px;
+      border-radius: 8px;
+      font-size: 10px;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.3px;
     }
     
     .status-preparing {
@@ -1905,17 +1953,28 @@
     }
 
     .order-details {
-      padding: 16px;
+      padding: 12px 16px;
       border-top: 1px solid #e2e8f0;
     }
 
     .order-feedback-container {
-      margin-top: 12px;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
+      margin-top: 16px;
+      border: none;
+      border-radius: 16px;
       overflow: hidden;
-      background: #fafafa;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      box-shadow: 0 8px 32px rgba(59, 130, 246, 0.1);
+      position: relative;
+    }
+
+    .order-feedback-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #3b82f6, #1d4ed8, #6366f1);
     }
 
     .feedback-section {
@@ -1923,59 +1982,36 @@
     }
 
     .feedback-header {
-      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
       color: white;
-      padding: 8px 12px;
-      border-bottom: 1px solid #e5e7eb;
+      padding: 12px 16px;
+      border-bottom: none;
+      position: relative;
+    }
+
+    .feedback-header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
     }
 
     .feedback-header h4 {
       margin: 0;
       font-size: 14px;
       font-weight: 600;
+      letter-spacing: 0.5px;
     }
 
     .feedback-content {
-      padding: 12px;
-    }
-
-    .delivery-personnel {
-      margin-bottom: 12px;
-      padding: 8px;
+      padding: 16px;
       background: white;
-      border-radius: 6px;
-      border: 1px solid #e5e7eb;
     }
 
-    .delivery-personnel label {
-      display: block;
-      font-size: 12px;
-      font-weight: 500;
-      color: #6b7280;
-      margin-bottom: 6px;
-    }
 
-    .personnel-select {
-      width: 100%;
-      padding: 6px 10px;
-      border: 1px solid #d1d5db;
-      border-radius: 4px;
-      background: white;
-      font-size: 13px;
-      color: #374151;
-      cursor: pointer;
-      transition: border-color 0.2s ease;
-    }
-
-    .personnel-select:focus {
-      outline: none;
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-
-    .personnel-select:hover {
-      border-color: #9ca3af;
-    }
 
 
 
@@ -1985,28 +2021,76 @@
     }
 
     .rating-label {
-      font-size: 12px;
-      font-weight: 500;
-      color: #6b7280;
-      margin-bottom: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 10px;
     }
 
     .rating-stars {
       display: flex;
-      gap: 3px;
-      margin-bottom: 6px;
+      gap: 6px;
+      margin-bottom: 12px;
+      padding: 8px;
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
     }
 
     .star {
-      font-size: 18px;
+      font-size: 22px;
       cursor: pointer;
       color: #d1d5db;
-      transition: color 0.2s ease;
+      transition: all 0.3s ease;
       position: relative;
+      padding: 4px;
+      border-radius: 6px;
+    }
+
+    .star:hover {
+      color: #fbbf24;
+      transform: scale(1.1);
     }
 
     .star.active {
       color: #fbbf24;
+    }
+
+    .personnel-section {
+      margin-top: 12px;
+    }
+
+    .personnel-select {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 14px;
+      background: white;
+      margin-bottom: 12px;
+      transition: all 0.3s ease;
+    }
+
+    .personnel-select:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .personnel-select:disabled {
+      background: #f1f5f9;
+      color: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .personnel-info {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #64748b;
+      padding: 8px 12px;
+      background: #f8fafc;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
     }
 
     .order-actions {
@@ -2137,46 +2221,74 @@
     }
 
     .comment-section {
-      margin-top: 8px;
+      margin-top: 12px;
     }
 
     .comment-input {
       width: 100%;
-      padding: 6px 10px;
-      border: 1px solid #e5e7eb;
-      border-radius: 4px;
-      font-size: 13px;
+      padding: 12px 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 14px;
       resize: vertical;
-      min-height: 50px;
+      min-height: 80px;
       font-family: inherit;
       -webkit-user-select: text;
       -moz-user-select: text;
       -ms-user-select: text;
       user-select: text;
+      background: white;
+      transition: all 0.3s ease;
+      font-weight: 500;
     }
 
     .comment-input:focus {
       outline: none;
-      border-color: #6366f1;
-      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+      background: #f8fafc;
+    }
+
+    .comment-input:hover {
+      border-color: #3b82f6;
+      background: #f8fafc;
     }
 
     .submit-rating-btn {
-      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
       color: white;
       border: none;
-      padding: 6px 12px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: 500;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s ease;
-      margin-top: 6px;
+      transition: all 0.3s ease;
+      margin-top: 12px;
+      width: 100%;
+      letter-spacing: 0.5px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .submit-rating-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .submit-rating-btn:hover::before {
+      left: 100%;
     }
 
     .submit-rating-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
     }
 
     .submit-rating-btn:disabled {
@@ -2186,30 +2298,40 @@
       box-shadow: none;
     }
 
-    .rating-display {
-      margin-top: 8px;
-      padding: 8px 12px;
-      background: #f0f9ff;
-      border-radius: 8px;
-      border-left: 4px solid #3b82f6;
-      display: block !important;
-      min-height: 20px;
+    .submit-rating-btn:disabled::before {
+      display: none;
     }
 
-    .rating-display:empty {
-      display: none !important;
+    .rating-display {
+      margin-top: 12px;
+      padding: 12px 16px;
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      display: none;
+      min-height: 20px;
+      transition: all 0.3s ease;
+    }
+
+    .rating-display:not(:empty) {
+      display: block !important;
     }
 
     .rating-display .stars {
       color: #fbbf24;
-      font-size: 16px;
-      margin-bottom: 4px;
+      font-size: 18px;
+      margin-bottom: 8px;
     }
 
     .rating-display .comment {
       font-size: 14px;
       color: #374151;
-      font-style: italic;
+      font-style: normal;
+      line-height: 1.5;
+      background: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
     }
 
     .no-orders-message {
@@ -3121,8 +3243,12 @@
 
     // Fiyat formatını düzenleyen yardımcı fonksiyon
     function formatPrice(price) {
-      // JavaScript'te tam sayı kontrolü
-      return price.toFixed(Math.floor(price) === price ? 0 : 2);
+      // Tam sayı ise ondalık kısım gösterme
+      if (Math.floor(price) === price) {
+        return price.toString();
+      }
+      // Ondalık sayı ise 2 basamak göster
+      return price.toFixed(2);
     }
 
     // Initialize Firebase
@@ -4644,52 +4770,139 @@
 
     // Sipariş durumunu dinamik olarak güncelle
     function updateOrderStatus(orderId, newStatus) {
-      const orderElement = document.querySelector(`[data-order-id="${orderId}"]`);
-      if (!orderElement) return;
+      console.log(`updateOrderStatus çağrıldı: ${orderId}, yeni durum: ${newStatus}`);
       
-      const statusElement = orderElement.querySelector('.order-status');
-      if (!statusElement) return;
-      
-      let statusText = 'Hazırlanıyor';
-      let statusClass = 'status-preparing';
-      
-      if (newStatus === 'hazırlandı') {
-        statusText = 'Hazırlandı';
-        statusClass = 'status-ready';
-      } else if (newStatus === 'teslim edildi') {
-        statusText = 'Teslim Edildi';
-        statusClass = 'status-delivered';
+      // Siparişi orderHistoryData'dan bul
+      const orderIndex = orderHistoryData.findIndex(order => order.id === orderId);
+      if (orderIndex === -1) {
+        console.log(`Sipariş ${orderId} orderHistoryData'da bulunamadı`);
+        return;
       }
       
-      // Durumu güncelle
-      statusElement.textContent = statusText;
-      statusElement.className = `order-status ${statusClass}`;
+      // Sipariş durumunu güncelle
+      orderHistoryData[orderIndex].status = newStatus;
       
-      // Personel seçimi ve puanlama bölümlerini güncelle
-      const feedbackContent = orderElement.querySelector('.feedback-content');
-      if (feedbackContent) {
+      // Sipariş elementini yeniden oluştur
+      const orderElement = document.querySelector(`[data-order-id="${orderId}"]`);
+      if (orderElement) {
+        const order = orderHistoryData[orderIndex];
+        const orderDate = order.tarih.toDate ? order.tarih.toDate().toLocaleString('tr-TR') : new Date(order.tarih).toLocaleString('tr-TR');
+        const orderItems = order.items.map(item => {
+          const sugarInfo = item.option ? ` (${item.option})` : '';
+          return `${item.name}${sugarInfo} (${item.adet} adet)`;
+        }).join(', ');
+        
+        // Sipariş durumunu belirle
+        let statusText = 'Hazırlanıyor';
+        let statusClass = 'status-preparing';
+        if (newStatus === 'hazırlandı') {
+          statusText = 'Hazırlandı';
+          statusClass = 'status-ready';
+        } else if (newStatus === 'teslim edildi') {
+          statusText = 'Teslim Edildi';
+          statusClass = 'status-delivered';
+        }
+        
+        // Yeni HTML oluştur
+        const newOrderHTML = `
+          <div class="order-header" onclick="toggleOrderDetails('${orderId}')">
+            <div class="order-info">
+              <span class="order-date">${orderDate}</span>
+              <span class="order-total">${formatPrice(order.toplamFiyat)} ₺</span>
+              <span class="order-status ${statusClass}">${statusText}</span>
+            </div>
+            <div class="order-header-rating" id="header-rating-${orderId}"></div>
+            <div class="order-toggle">
+              <span class="toggle-icon">▼</span>
+            </div>
+          </div>
+          
+          <div class="order-details" id="order-details-${orderId}" style="display: none;">
+            <div class="order-items">${orderItems}</div>
+            
+            <div class="order-actions">
+              <button class="reorder-btn" onclick="reorderItems('${orderId}')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+                  <path d="M21 3v5h-5"></path>
+                  <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+                  <path d="M3 21v-5h5"></path>
+                </svg>
+                Siparişi Tekrarla
+              </button>
+            </div>
+            
+            ${newStatus === 'teslim edildi' ? `
+            <div class="order-feedback-container">
+              <div class="feedback-section">
+                <div class="feedback-header">
+                  <h4>Sipariş Değerlendirmesi</h4>
+                </div>
+                
+                <div class="feedback-content" onclick="event.stopPropagation();">
+
+                  
+                  <div class="rating-section" id="rating-section-${orderId}" onclick="event.stopPropagation();">
+                    <div class="rating-label">Puanınız:</div>
+                    <div class="rating-stars" data-order-id="${orderId}">
+                      <span class="star" data-rating="1">☆</span>
+                      <span class="star" data-rating="2">☆</span>
+                      <span class="star" data-rating="3">☆</span>
+                      <span class="star" data-rating="4">☆</span>
+                      <span class="star" data-rating="5">☆</span>
+                    </div>
+                    
+                    <!-- Personel Seçimi -->
+                    <div class="personnel-section">
+                      <div class="rating-label">Personel Seçimi:</div>
+                      <select class="personnel-select" data-order-id="${orderId}">
+                        <option value="">Personel seçin</option>
+                      </select>
+                    </div>
+                    
+                    <div class="comment-section">
+                      <textarea class="comment-input" placeholder="Yorumunuzu yazın (opsiyonel)..." data-order-id="${orderId}"></textarea>
+                      <button class="submit-rating-btn" onclick="submitRating('${orderId}')" disabled>Değerlendirme Gönder</button>
+                    </div>
+                    <div id="rating-display-${orderId}" class="rating-display">
+                      <div class="stars"></div>
+                      <div class="comment"></div>
+                    </div>
+                  </div>
+                  ` : `
+                  <div class="evaluation-disabled">
+                    <p style="color: #6b7280; font-size: 14px; text-align: center; padding: 16px;">
+                      Sipariş teslim edildikten sonra değerlendirme yapabilirsiniz.
+                    </p>
+                  </div>
+                  `}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        // Elementi güncelle
+        orderElement.innerHTML = newOrderHTML;
+        
+        // Eğer teslim edildiyse, gerekli fonksiyonları çağır
         if (newStatus === 'teslim edildi') {
-          // Personel seçimi ve puanlama bölümlerini göster
-          const personnelSection = feedbackContent.querySelector('.delivery-personnel');
-          const personnelDisabledSection = feedbackContent.querySelector('.delivery-personnel-disabled');
-          const ratingSection = feedbackContent.querySelector('.rating-section');
-          const ratingDisabledSection = feedbackContent.querySelector('.rating-disabled');
+          // Personel listesini yükle
+          loadPersonnelList(orderId);
           
-          if (personnelDisabledSection) personnelDisabledSection.style.display = 'none';
-          if (personnelSection) personnelSection.style.display = 'block';
-          if (ratingDisabledSection) ratingDisabledSection.style.display = 'none';
-          if (ratingSection) ratingSection.style.display = 'block';
+          // Mevcut değerlendirmeyi kontrol et
+          loadExistingRating(orderId);
+          
+          // Yıldız event listener'larını ekle
+          addStarEventListeners();
+          
+          console.log(`Sipariş ${orderId} teslim edildi, değerlendirme bölümleri aktif edildi`);
         } else {
-          // Personel seçimi ve puanlama bölümlerini gizle
-          const personnelSection = feedbackContent.querySelector('.delivery-personnel');
-          const personnelDisabledSection = feedbackContent.querySelector('.delivery-personnel-disabled');
-          const ratingSection = feedbackContent.querySelector('.rating-section');
-          const ratingDisabledSection = feedbackContent.querySelector('.rating-disabled');
-          
-          if (personnelSection) personnelSection.style.display = 'none';
-          if (personnelDisabledSection) personnelDisabledSection.style.display = 'block';
-          if (ratingSection) ratingSection.style.display = 'none';
-          if (ratingDisabledSection) ratingDisabledSection.style.display = 'block';
+          // Eğer teslim edilmediyse, personel seçimini devre dışı bırak
+          const personnelSelect = document.querySelector(`select[data-order-id="${orderId}"]`);
+          if (personnelSelect) {
+            personnelSelect.disabled = true;
+          }
         }
       }
     }
@@ -4726,28 +4939,50 @@
       // Close modal
       closeClearHistoryModal();
       
-      firebase.firestore().collection('user_orders').doc(currentUser.uid).collection('orders')
-        .get()
-        .then((querySnapshot) => {
-          const deletePromises = [];
-          querySnapshot.forEach((doc) => {
-            deletePromises.push(doc.ref.delete());
-          });
-          
-          return Promise.all(deletePromises);
-        })
-        .then(() => {
-          orderHistoryData = [];
-          displayOrderHistory([]);
-          createOrderChart([]);
-          updateOrderStats([]);
-          showNotification('Sipariş geçmişi başarıyla temizlendi!', 'success');
-        })
-        .catch((error) => {
-          console.error('Error clearing order history:', error);
-          showNotification('Sipariş geçmişi temizlenirken hata oluştu!', 'error');
-          loadOrderHistory(); // Reload the history
-        });
+      // Tüm koleksiyonları temizle
+      Promise.all([
+        // user_orders koleksiyonunu temizle
+        firebase.firestore().collection('user_orders').doc(currentUser.uid).collection('orders').get()
+          .then((querySnapshot) => {
+            const deletePromises = [];
+            querySnapshot.forEach((doc) => {
+              deletePromises.push(doc.ref.delete());
+            });
+            return Promise.all(deletePromises);
+          }),
+        
+        // siparisler koleksiyonundan kullanıcının siparişlerini temizle
+        firebase.firestore().collection('siparisler').where('userId', '==', currentUser.uid).get()
+          .then((querySnapshot) => {
+            const deletePromises = [];
+            querySnapshot.forEach((doc) => {
+              deletePromises.push(doc.ref.delete());
+            });
+            return Promise.all(deletePromises);
+          }),
+        
+        // ratings koleksiyonundan kullanıcının değerlendirmelerini temizle
+        firebase.firestore().collection('ratings').where('userId', '==', currentUser.uid).get()
+          .then((querySnapshot) => {
+            const deletePromises = [];
+            querySnapshot.forEach((doc) => {
+              deletePromises.push(doc.ref.delete());
+            });
+            return Promise.all(deletePromises);
+          })
+      ])
+      .then(() => {
+        orderHistoryData = [];
+        displayOrderHistory([]);
+        createOrderChart([]);
+        updateOrderStats([]);
+        showNotification('Sipariş geçmişi ve değerlendirmeler başarıyla temizlendi!', 'success');
+      })
+      .catch((error) => {
+        console.error('Error clearing order history:', error);
+        showNotification('Sipariş geçmişi temizlenirken hata oluştu!', 'error');
+        loadOrderHistory(); // Reload the history
+      });
     }
 
     function updateOrderStats(orders) {
@@ -4897,20 +5132,11 @@
                   ${order.status === 'teslim edildi' ? `
                   <div class="delivery-personnel">
                     <label for="personnel-${orderId}">Siparişi Getiren Personel:</label>
-                    <select id="personnel-${orderId}" class="personnel-select" onchange="updatePersonnel('${orderId}', this.value)">
+                    <select id="personnel-${orderId}" class="personnel-select">
                       <option value="">Seçiniz...</option>
                     </select>
                   </div>
                   
-                  ` : `
-                  <div class="delivery-personnel-disabled">
-                    <p style="color: #6b7280; font-size: 14px; text-align: center; padding: 16px;">
-                      Sipariş teslim edildikten sonra personel seçebilirsiniz.
-                    </p>
-                  </div>
-                  `}
-                  
-                  ${order.status === 'teslim edildi' ? `
                   <div class="rating-section" id="rating-section-${orderId}">
                     <div class="rating-label">Puanınız:</div>
                     <div class="rating-stars" data-order-id="${orderId}">
@@ -4930,9 +5156,9 @@
                     </div>
                   </div>
                   ` : `
-                  <div class="rating-disabled">
+                  <div class="evaluation-disabled">
                     <p style="color: #6b7280; font-size: 14px; text-align: center; padding: 16px;">
-                      Sipariş teslim edildikten sonra puanlama yapabilirsiniz.
+                      Sipariş teslim edildikten sonra değerlendirme yapabilirsiniz.
                     </p>
                   </div>
                   `}
@@ -4949,6 +5175,11 @@
         
         // Siparişin durumunu dinle
         listenToOrderStatus(orderId);
+        
+        // Eğer yeni bir siparişse (reorder ise), sipariş durumunu dinle
+        if (order.isReordered) {
+          console.log(`Yeni tekrarlanan sipariş ${orderId} dinleniyor`);
+        }
       });
       
       // Add event listeners for stars
@@ -5146,6 +5377,74 @@
           highlightStars(starContainer, currentRating);
         });
       });
+      
+      // Personel seçimi dropdown'ları için event listener ekle
+      document.querySelectorAll('.personnel-select').forEach(select => {
+        select.addEventListener('change', (e) => {
+          e.stopPropagation(); // Event propagation'ı durdur
+          e.stopImmediatePropagation(); // Diğer event listener'ları da durdur
+          const orderId = select.id.replace('personnel-', '');
+          const personnelName = select.value;
+          updatePersonnel(orderId, personnelName);
+        });
+        
+        // Click event'ini sadece propagation'ı durdur
+        select.addEventListener('click', (e) => {
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+        });
+        
+        // Mousedown event'ini sadece propagation'ı durdur
+        select.addEventListener('mousedown', (e) => {
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+        });
+        
+        // Focus event'ini de engelle
+        select.addEventListener('focus', (e) => {
+          e.stopPropagation();
+        });
+        
+        // Blur event'ini de engelle
+        select.addEventListener('blur', (e) => {
+          e.stopPropagation();
+        });
+        
+        // Keydown event'ini de engelle
+        select.addEventListener('keydown', (e) => {
+          e.stopPropagation();
+        });
+        
+        // Keyup event'ini de engelle
+        select.addEventListener('keyup', (e) => {
+          e.stopPropagation();
+        });
+      });
+      
+      // Personel seçimi bölümlerini de koru
+      document.querySelectorAll('.delivery-personnel').forEach(personnelDiv => {
+        personnelDiv.addEventListener('click', (e) => {
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+        });
+        
+        personnelDiv.addEventListener('mousedown', (e) => {
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+        });
+        
+        personnelDiv.addEventListener('mouseup', (e) => {
+          e.stopPropagation();
+        });
+        
+        personnelDiv.addEventListener('touchstart', (e) => {
+          e.stopPropagation();
+        });
+        
+        personnelDiv.addEventListener('touchend', (e) => {
+          e.stopPropagation();
+        });
+      });
     }
 
     function setRating(orderId, rating) {
@@ -5203,7 +5502,7 @@
             <div class="reorder-item-name">${index + 1}. ${item.name}</div>
             <div class="reorder-item-details">
               <div class="reorder-item-info">
-                Adet: ${item.adet} | Fiyat: ${item.price} ₺ | Toplam: ${item.adet * item.price} ₺
+                Adet: ${item.adet} - Fiyat: ${item.price} ₺
               </div>
               ${option ? `<div class="reorder-item-option">${option}</div>` : ''}
             </div>
@@ -5276,6 +5575,24 @@
       .then(() => {
         console.log('Tekrarlanan sipariş başarıyla kaydedildi');
         console.log('Sipariş ID:', orderRef.id);
+        
+        // Yeni siparişi orderHistoryData'ya ekle
+        orderHistoryData.unshift(newOrder);
+        
+        // Geçmiş siparişler listesini güncelle
+        displayOrderHistory(orderHistoryData);
+        
+        // İstatistikleri güncelle
+        updateOrderStats(orderHistoryData);
+        
+        // Grafiği güncelle
+        createOrderChart(orderHistoryData);
+        
+        // Yeni siparişin durumunu dinlemeye başla
+        listenToOrderStatus(orderRef.id);
+        
+        console.log(`Yeni tekrarlanan sipariş ${orderRef.id} geçmiş siparişlere eklendi`);
+        
         showNotification('Siparişiniz başarıyla tekrarlandı!', 'success');
       })
       .catch((error) => {
@@ -5288,11 +5605,16 @@
       const rating = ratings[orderId];
       const commentInput = document.querySelector(`textarea[data-order-id="${orderId}"]`);
       const comment = commentInput.value.trim();
-      const personnelSelect = document.getElementById(`personnel-${orderId}`);
+      const personnelSelect = document.querySelector(`select[data-order-id="${orderId}"]`);
       const selectedPersonnel = personnelSelect ? personnelSelect.value : '';
       
       if (!rating) {
         showNotification('Lütfen bir puan seçin', 'error');
+        return;
+      }
+      
+      if (!selectedPersonnel) {
+        showNotification('Lütfen bir personel seçin', 'error');
         return;
       }
       
@@ -5324,7 +5646,7 @@
             userDepartment: userData.department,
             rating: rating,
             comment: comment,
-            selectedPersonnel: selectedPersonnel, // Seçilen personel bilgisi
+            selectedPersonnel: selectedPersonnel,
             timestamp: firebase.firestore.Timestamp.now()
           };
           
@@ -5334,7 +5656,7 @@
             firebase.firestore().collection('siparisler').doc(orderId).update({
               rating: rating,
               comment: comment,
-              selectedPersonnel: selectedPersonnel, // Seçilen personel bilgisi
+              selectedPersonnel: selectedPersonnel,
               ratingDate: firebase.firestore.Timestamp.now(),
               userName: userData.name,
               userFloor: userData.floor,
@@ -5344,8 +5666,14 @@
             .then(() => {
               showNotification('Değerlendirmeniz başarıyla gönderildi!', 'success');
               console.log('Rating saved, calling displayRating with:', orderId, rating, comment);
-              displayRating(orderId, rating, comment);
+              
+              // Değerlendirmeyi dinamik olarak göster
+              displayRating(orderId, rating, comment, selectedPersonnel);
+              
+              // Yorum alanını temizle
               commentInput.value = '';
+              
+              // Butonu eski haline getir
               submitBtn.disabled = false;
               submitBtn.textContent = 'Değerlendirme Gönder';
             })
@@ -5369,12 +5697,8 @@
       if (orderDetails.style.display === 'none') {
         orderDetails.style.display = 'block';
         toggleIcon.textContent = '▲';
-        // Load existing rating and personnel when order details are opened
+        // Load existing rating when order details are opened
         loadExistingRating(orderId);
-        loadExistingPersonnel(orderId);
-        
-        // Personel listesini yükle
-        loadPersonnelOptions();
       } else {
         orderDetails.style.display = 'none';
         toggleIcon.textContent = '▼';
@@ -5383,100 +5707,80 @@
 
 
 
+
+
+
+
+    
+
     function updatePersonnel(orderId, personnelName) {
+      // Boş değer kontrolü - "Seçiniz..." seçeneği için
+      if (!personnelName || personnelName.trim() === '') {
+        console.log('Boş personel seçimi, işlem yapılmıyor');
+        return;
+      }
+      
       // Personel seçimi sadece yorum ve puanlama için, otomatik atama yok
       // Seçilen personel bilgisi sadece yorum gönderilirken kullanılacak
       console.log(`Personel seçildi: ${personnelName} (Sipariş: ${orderId})`);
+      
+      // Global flag'leri set et
+      personnelSelectionActive = true;
+      activeOrderId = orderId;
+      personnelSelectionCount++;
+      
+      // Sipariş header'ının click event'ini geçici olarak devre dışı bırak
+      const orderHeader = document.querySelector(`[data-order-id="${orderId}"] .order-header`);
+      if (orderHeader) {
+        orderHeader.style.pointerEvents = 'none';
+        
+        // 2 saniye sonra tekrar aktif et
+        setTimeout(() => {
+          orderHeader.style.pointerEvents = 'auto';
+          personnelSelectionActive = false;
+          activeOrderId = null;
+        }, 2000);
+      }
+      
+      // Sipariş detaylarının açık kalmasını sağla
+      const orderDetails = document.getElementById(`order-details-${orderId}`);
+      if (orderDetails) {
+        orderDetails.style.display = 'block';
+      }
+      
+      // Toggle ikonunu açık halde tut
+      const toggleIcon = document.querySelector(`#order-details-${orderId}`).previousElementSibling.querySelector('.toggle-icon');
+      if (toggleIcon) {
+        toggleIcon.textContent = '▲';
+      }
       
       // Personel bilgisini siparişe kaydet
       firebase.firestore().collection('siparisler').doc(orderId).update({
         deliveryPersonnel: personnelName
       }).then(() => {
         console.log('Personel bilgisi kaydedildi:', personnelName);
+        
+        // Personel seçimi sonrası sipariş detaylarının açık kalmasını garanti et
+        setTimeout(() => {
+          const orderDetails = document.getElementById(`order-details-${orderId}`);
+          if (orderDetails) {
+            orderDetails.style.display = 'block';
+          }
+          const toggleIcon = document.querySelector(`#order-details-${orderId}`).previousElementSibling.querySelector('.toggle-icon');
+          if (toggleIcon) {
+            toggleIcon.textContent = '▲';
+          }
+        }, 300);
       }).catch((error) => {
         console.error('Personel bilgisi kaydedilirken hata:', error);
       });
     }
 
-    function loadExistingPersonnel(orderId) {
-      firebase.firestore().collection('siparisler').doc(orderId).get()
-        .then((doc) => {
-          if (doc.exists) {
-            const orderData = doc.data();
-            if (orderData.deliveryPersonnel) {
-              const personnelSelect = document.getElementById(`personnel-${orderId}`);
-              if (personnelSelect) {
-                personnelSelect.value = orderData.deliveryPersonnel;
-              }
-            } else {
-              // Eğer personel atanmamışsa varsayılan olarak "Seçiniz..." seçili olsun
-              const personnelSelect = document.getElementById(`personnel-${orderId}`);
-              if (personnelSelect) {
-                personnelSelect.value = '';
-              }
-            }
-          }
-        })
-        .catch((error) => {
-          console.error('Error loading personnel:', error);
-        });
-    }
+
     
-    // Personel listesini yükle (kat bazlı)
-    async function loadPersonnelOptions() {
-      try {
-        // Kullanıcı katına göre personel koleksiyonu belirle
-        let personnelCollection = 'personel_z123'; // Varsayılan (Kat 1-2-3)
-        
-        if (userData && userData.floor) {
-          if (userData.floor >= 4 && userData.floor <= 6) {
-            personnelCollection = 'personel_456'; // Kat 4-5-6
-          } else if (userData.floor >= 7 && userData.floor <= 10) {
-            personnelCollection = 'personel_78910'; // Kat 7-8-9-10
-          }
-        }
-        
-        console.log('Kullanıcı katı:', userData?.floor, 'Personel koleksiyonu:', personnelCollection);
-        
-        const personnelSnapshot = await firebase.firestore().collection(personnelCollection).get();
-        const personnelOptions = personnelSnapshot.docs.map(doc => {
-          const data = doc.data();
-          return `${data.ad} ${data.soyad}`;
-        });
-        
-        console.log('Yüklenen personel:', personnelOptions);
-        
-        // Tüm personel select elementlerini güncelle
-        const personnelSelects = document.querySelectorAll('.personnel-select');
-        personnelSelects.forEach(select => {
-          // Mevcut seçili değeri koru
-          const currentValue = select.value;
-          
-          // Seçenekleri temizle (ilk "Seçiniz..." hariç)
-          while (select.children.length > 1) {
-            select.removeChild(select.lastChild);
-          }
-          
-          // Yeni personel seçeneklerini ekle
-          personnelOptions.forEach(personnelName => {
-            const option = document.createElement('option');
-            option.value = personnelName;
-            option.textContent = personnelName;
-            select.appendChild(option);
-          });
-          
-          // Önceki seçili değeri geri yükle (sadece boş değilse)
-          if (currentValue && currentValue !== '') {
-            select.value = currentValue;
-          } else {
-            // Varsayılan olarak "Seçiniz..." seçili olsun
-            select.value = '';
-          }
-        });
-      } catch (error) {
-        console.error('Personel listesi yüklenirken hata:', error);
-      }
-    }
+
+
+
 
     function loadExistingRating(orderId) {
       // Try to load from ratings collection first, then from siparisler
@@ -5503,11 +5807,18 @@
           }
           
           if (ratingData) {
-            displayRating(orderId, ratingData.rating, ratingData.comment);
+            const selectedPersonnel = ratingData.selectedPersonnel || '';
+            displayRating(orderId, ratingData.rating, ratingData.comment, selectedPersonnel);
             ratings[orderId] = ratingData.rating;
             const starContainer = document.querySelector(`[data-order-id="${orderId}"]`);
             if (starContainer) {
               highlightStars(starContainer, ratingData.rating);
+            }
+            
+            // Personel seçimini de yükle
+            const personnelSelect = document.querySelector(`select[data-order-id="${orderId}"]`);
+            if (personnelSelect && selectedPersonnel) {
+              personnelSelect.value = selectedPersonnel;
             }
           }
         })
@@ -5516,17 +5827,25 @@
         });
     }
 
-    function displayRating(orderId, rating, comment) {
-      console.log('displayRating called with:', orderId, rating, comment);
+    function displayRating(orderId, rating, comment, selectedPersonnel) {
+      console.log('displayRating called with:', orderId, rating, comment, selectedPersonnel);
       
       // Display rating in details section
       const ratingDisplay = document.getElementById(`rating-display-${orderId}`);
       console.log('ratingDisplay element:', ratingDisplay);
       if (ratingDisplay) {
         const stars = '★'.repeat(rating) + '☆'.repeat(5 - rating);
+        
+        // Yorum varsa göster, yoksa sadece yıldızları göster
+        const commentHtml = comment && comment.trim() ? `<div class="comment">${comment}</div>` : '';
+        
+        // Personel bilgisi varsa göster
+        const personnelHtml = selectedPersonnel && selectedPersonnel.trim() ? `<div class="personnel-info">Değerlendirilen Personel: <strong>${selectedPersonnel}</strong></div>` : '';
+        
         ratingDisplay.innerHTML = `
           <div class="stars">${stars}</div>
-          <div class="comment">${comment}</div>
+          ${commentHtml}
+          ${personnelHtml}
         `;
         ratingDisplay.style.display = 'block';
         console.log('Rating display updated');
@@ -6013,6 +6332,96 @@
       setRandomBackground('register');
       setRandomBackground('forgotPassword');
     });
+
+    // Personel yükleme fonksiyonları
+    function loadPersonnelOptions() {
+      console.log("loadPersonnelOptions çağrıldı, userData:", userData);
+      
+      if (!userData || userData.floor === undefined || userData.floor === null) {
+        console.log("Kullanıcı verisi yok veya kat bilgisi eksik, personel yüklenmiyor");
+        return;
+      }
+      
+      // Kat grubuna göre personel koleksiyonu belirleme
+      let personnelCollection = 'personel_z123'; // Zemin, 1, 2, 3 katları için
+      if (userData.floor === 0) {
+        personnelCollection = 'personel_z123'; // Zemin katı için
+        console.log("Zemin katı kullanıcısı tespit edildi, floor:", userData.floor);
+      } else if (userData.floor >= 1 && userData.floor <= 3) {
+        personnelCollection = 'personel_z123'; // 1, 2, 3 katları için
+        console.log("Kat 1-3 kullanıcısı tespit edildi, floor:", userData.floor);
+      } else if (userData.floor >= 4 && userData.floor <= 6) {
+        personnelCollection = 'personel_456'; // 4, 5, 6 katları için
+        console.log("Kat 4-6 kullanıcısı tespit edildi, floor:", userData.floor);
+      } else if (userData.floor >= 7 && userData.floor <= 10) {
+        personnelCollection = 'personel_78910'; // 7, 8, 9, 10 katları için
+        console.log("Kat 7-10 kullanıcısı tespit edildi, floor:", userData.floor);
+      }
+      
+      console.log("Kullanıcı katı:", userData.floor, "Personel koleksiyonu:", personnelCollection);
+      
+      // Firebase'den personel listesini çek
+      firebase.firestore().collection(personnelCollection).get()
+        .then((querySnapshot) => {
+          const personnelOptions = [];
+          querySnapshot.forEach((doc) => {
+            const personnel = doc.data();
+            personnelOptions.push(`${personnel.ad} ${personnel.soyad}`);
+          });
+          
+          console.log("Yüklenen personel sayısı:", personnelOptions.length);
+          console.log("Personel listesi:", personnelOptions);
+          
+          // Global personel listesini güncelle
+          window.personnelList = personnelOptions;
+        })
+        .catch((error) => {
+          console.error("Personel listesi yüklenirken hata:", error);
+        });
+    }
+
+    function loadPersonnelList(orderId) {
+      console.log("loadPersonnelList çağrıldı, orderId:", orderId);
+      
+      if (!window.personnelList || window.personnelList.length === 0) {
+        console.log("Personel listesi yok, yükleniyor...");
+        loadPersonnelOptions();
+        return;
+      }
+      
+      const personnelSelect = document.querySelector(`select[data-order-id="${orderId}"]`);
+      if (!personnelSelect) {
+        console.error("Personel select elementi bulunamadı, orderId:", orderId);
+        return;
+      }
+      
+      // Mevcut seçimi koru
+      const currentValue = personnelSelect.value;
+      
+      // Select'i temizle ve personel listesini ekle
+      personnelSelect.innerHTML = '<option value="">Personel seçin</option>';
+      window.personnelList.forEach(personnel => {
+        const option = document.createElement('option');
+        option.value = personnel;
+        option.textContent = personnel;
+        personnelSelect.appendChild(option);
+      });
+      
+      // Önceki seçimi geri yükle
+      if (currentValue) {
+        personnelSelect.value = currentValue;
+      }
+      
+      // Personel seçimi değiştiğinde submit butonunu aktif et
+      personnelSelect.addEventListener('change', function() {
+        const submitBtn = document.querySelector(`button[onclick="submitRating('${orderId}')"]`);
+        if (submitBtn) {
+          submitBtn.disabled = !this.value;
+        }
+      });
+      
+      console.log("Personel listesi yüklendi, orderId:", orderId);
+    }
 
     // showScreen fonksiyonunu güncelle
     const originalShowScreen = showScreen;
