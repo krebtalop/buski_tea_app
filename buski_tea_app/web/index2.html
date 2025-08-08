@@ -632,6 +632,46 @@
 </div>
 </div>
 </div>
+
+  <!-- Kat Bazlı Satış Raporu Modal -->
+  <div id="floor-report-modal" class="modal-overlay">
+    <div class="modal-content" style="max-width:800px;">
+      <div class="flex justify-between items-center p-4 border-b">
+        <h2 class="text-xl font-bold text-gray-800">Kat Bazlı Satış Raporu</h2>
+        <button id="close-floor-report-btn" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>
+      </div>
+      <div class="p-6">
+        <div class="mb-4">
+          <h3 class="text-lg font-semibold text-gray-700 mb-2">Kat 4-5-6 Satış Raporu</h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table id="floor-sales-table" class="w-full border-collapse border border-gray-300">
+            <thead>
+              <tr class="bg-gray-100">
+                <th class="px-4 py-2 text-left border border-gray-300">Kat</th>
+                <th class="px-4 py-2 text-left border border-gray-300">Sipariş Sayısı</th>
+                <th class="px-4 py-2 text-left border border-gray-300">Toplam Satış</th>
+                <th class="px-4 py-2 text-left border border-gray-300">En Popüler Ürün</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-b">
+                <td class="px-4 py-2 border border-gray-300 text-center text-gray-500" colspan="4">Veri yükleniyor...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Kat Raporu Temizleme Butonu -->
+        <div class="mt-6 pt-4 border-t border-gray-200">
+          <button id="reset-floor-report-btn" class="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg shadow-sm transition-all duration-300 font-medium">
+            <i class="fas fa-trash-alt mr-2"></i>Kat Raporunu Temizle
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
   <!-- Custom Alert Modal -->
   <div id="alert-modal" class="fixed inset-0 z-[9999999] flex items-center justify-center modal-backdrop-light hidden">
     <div class="bg-white rounded-lg shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-95 opacity-0" id="alert-content">
@@ -696,10 +736,15 @@
       <p class="mt-2 opacity-90 text-center">Siparişleri takip edin ve durumlarını güncelleyin</p>
     </div>
     
-    <!-- Rapor Butonu (sol üst) -->
-    <button id="open-report-btn" class="absolute top-4 left-4 z-50 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium">
-Rapor
-    </button>
+    <!-- Rapor Butonları (sol üst) -->
+    <div class="absolute top-4 left-4 z-50 flex flex-col gap-2">
+      <button id="open-report-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium">
+        Rapor
+      </button>
+      <button id="open-floor-report-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium">
+        Kat Raporu
+      </button>
+    </div>
     <!-- Menü ve Personel Butonları (sağ üst) -->
     <div class="absolute top-4 right-4 z-50 flex flex-col items-end gap-2">
       <button id="open-menu-btn" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium w-24 flex items-center justify-center">
@@ -930,6 +975,12 @@ async function updateReport() {
     });
     const floorGroupButtons = document.querySelectorAll('.floor-group-btn');
     const deleteAllOrdersBtn = document.getElementById('delete-all-orders-btn');
+    
+    // Badge elementleri
+    const preparingBadge = document.getElementById('preparing-alert');
+    const deliveredBadge = document.getElementById('delivered-alert');
+    const ratingsBadge = document.getElementById('ratings-alert');
+    
     let editingProductIndex = -1;
     // Modal olay dinleyicileri
     openMenuBtn.addEventListener('click', () => {
@@ -2028,7 +2079,8 @@ async function updateReport() {
           .map(doc => ({
             id: doc.id,
             ...doc.data(),
-            isPreserved: false
+            isPreserved: false,
+            fromSiparisler: true
           }))
           .filter(rating => {
             const floor = Number(rating.floor || 0);
@@ -2062,16 +2114,28 @@ async function updateReport() {
             return floor >= 4 && floor <= 6; // Kat 4-5-6
           });
         
-        // Tüm puanları birleştir ve tarihe göre sırala
-        ratingsData = [...normalRatings, ...ratingsCollectionRatings, ...preservedRatings]
-          .sort((a, b) => {
-            // Tarihe göre sırala (en yeni önce)
-            const dateA = a.ratingDate && a.ratingDate.toDate ? a.ratingDate.toDate() : 
-                         a.timestamp && a.timestamp.toDate ? a.timestamp.toDate() : new Date(0);
-            const dateB = b.ratingDate && b.ratingDate.toDate ? b.ratingDate.toDate() : 
-                         b.timestamp && b.timestamp.toDate ? b.timestamp.toDate() : new Date(0);
-            return dateB - dateA;
-          });
+        // Duplicate'leri kaldır - orderId'ye göre
+        const allRatings = [...normalRatings, ...ratingsCollectionRatings, ...preservedRatings];
+        const uniqueRatings = [];
+        const seenOrderIds = new Set();
+        
+        for (let rating of allRatings) {
+          const orderId = rating.orderId || rating.id;
+          if (!seenOrderIds.has(orderId)) {
+            uniqueRatings.push(rating);
+            seenOrderIds.add(orderId);
+          }
+        }
+        
+        // Tüm puanları tarihe göre sırala
+        ratingsData = uniqueRatings.sort((a, b) => {
+          // Tarihe göre sırala (en yeni önce)
+          const dateA = a.ratingDate && a.ratingDate.toDate ? a.ratingDate.toDate() : 
+                       a.timestamp && a.timestamp.toDate ? a.timestamp.toDate() : new Date(0);
+          const dateB = b.ratingDate && b.ratingDate.toDate ? b.ratingDate.toDate() : 
+                       b.timestamp && b.timestamp.toDate ? b.timestamp.toDate() : new Date(0);
+          return dateB - dateA;
+        });
         
         // Debug: Personel bilgilerini kontrol et
         console.log('Yüklenen puanlama verileri:', ratingsData);
@@ -2322,12 +2386,19 @@ async function updateReport() {
         console.error('Korunan puanlamalar sayılırken hata:', error);
       }
       
-      preparingBadge.textContent = preparingCount;
-      deliveredBadge.textContent = deliveredCount;
-      ratingsBadge.textContent = ratingsCount;
-      preparingBadge.classList.toggle('hidden', preparingCount === 0);
-      deliveredBadge.classList.toggle('hidden', deliveredCount === 0);
-      ratingsBadge.classList.toggle('hidden', ratingsCount === 0);
+      // Badge elementlerinin varlığını kontrol et
+      if (preparingBadge) {
+        preparingBadge.textContent = preparingCount;
+        preparingBadge.classList.toggle('hidden', preparingCount === 0);
+      }
+      if (deliveredBadge) {
+        deliveredBadge.textContent = deliveredCount;
+        deliveredBadge.classList.toggle('hidden', deliveredCount === 0);
+      }
+      if (ratingsBadge) {
+        ratingsBadge.textContent = ratingsCount;
+        ratingsBadge.classList.toggle('hidden', ratingsCount === 0);
+      }
     }
     // Siparişleri Firestore'dan çek
     const q = query(collection(db, "siparisler"), orderBy("tarih", "desc"));
@@ -2370,6 +2441,11 @@ async function updateReport() {
       allOrders = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
       renderFloors();
       updateBadges();
+      
+      // Siparişler değiştiğinde rating'leri de güncelle
+      if (activeTab === 'ratings') {
+        loadRatings();
+      }
     });
     // Personel sistemi
     const personelCollectionName = 'personel_456'; // Kat 4-5-6 için
@@ -2527,6 +2603,179 @@ async function updateReport() {
         }
       }
     }, 60 * 1000); // Her dakika kontrol et
+
+    // Kat Bazlı Satış Raporu Modalı Aç/Kapat
+    const openFloorReportBtn = document.getElementById('open-floor-report-btn');
+    const floorReportModal = document.getElementById('floor-report-modal');
+    const closeFloorReportBtn = document.getElementById('close-floor-report-btn');
+    const floorSalesTable = document.getElementById('floor-sales-table');
+
+    openFloorReportBtn.addEventListener('click', () => {
+      updateFloorSalesReport();
+      floorReportModal.style.display = 'flex';
+      document.body.classList.add('modal-open');
+    });
+    closeFloorReportBtn.addEventListener('click', () => {
+      floorReportModal.style.display = 'none';
+      document.body.classList.remove('modal-open');
+    });
+
+    // Kat Bazlı Satış Raporu Hesaplama
+    async function updateFloorSalesReport() {
+      // index.html index2.html index3.html entegrasyonu
+      // Bu fonksiyon kat bazlı satış raporunu hesaplayacak
+      console.log('Kat bazlı satış raporu güncelleniyor...');
+      
+      try {
+        // Firestore'dan kalıcı kat raporu verilerini al
+        const floorReportRef = doc(db, "kat_raporlari", activeFloorGroup);
+        const floorReportDoc = await getDoc(floorReportRef);
+        
+        let floorSales = {};
+        if (floorReportDoc.exists()) {
+          floorSales = floorReportDoc.data().floorSales || {};
+        }
+        
+        // Mevcut siparişleri de ekle (sadece teslim edilmiş olanlar)
+        const filteredOrders = filterOrdersByPanel(allOrders);
+        
+        filteredOrders.forEach(order => {
+          if (order.status === 'teslim edildi') {
+            const floor = order.floor || 0;
+            if (!floorSales[floor]) {
+              floorSales[floor] = {
+                total: 0,
+                count: 0,
+                items: {},
+                orders: [] // Sipariş detaylarını sakla
+              };
+            }
+            
+            // Sipariş zaten eklenmiş mi kontrol et
+            const orderExists = floorSales[floor].orders.some(existingOrder => existingOrder.id === order.id);
+            if (!orderExists) {
+              floorSales[floor].total += order.toplamFiyat || 0;
+              floorSales[floor].count += 1;
+              
+              // Sipariş detaylarını sakla
+              floorSales[floor].orders.push({
+                id: order.id,
+                totalPrice: order.toplamFiyat || 0,
+                items: order.items || [],
+                date: order.tarih || new Date()
+              });
+              
+              // Ürün bazlı satışları da hesapla
+              if (order.items && Array.isArray(order.items)) {
+                order.items.forEach(item => {
+                  const itemName = item.name || 'Bilinmeyen Ürün';
+                  if (!floorSales[floor].items[itemName]) {
+                    floorSales[floor].items[itemName] = {
+                      quantity: 0,
+                      revenue: 0
+                    };
+                  }
+                  floorSales[floor].items[itemName].quantity += item.adet || 1;
+                  floorSales[floor].items[itemName].revenue += (item.price || 0) * (item.adet || 1);
+                });
+              }
+            }
+          }
+        });
+        
+        // Firestore'a kaydet
+        await setDoc(floorReportRef, {
+          floorSales: floorSales,
+          lastUpdated: new Date(),
+          floorGroup: activeFloorGroup
+        });
+        
+        // Tabloyu güncelle
+        if (floorSalesTable) {
+          let tableHTML = `
+            <thead>
+              <tr class="bg-gray-100">
+                <th class="px-4 py-2 text-left">Kat</th>
+                <th class="px-4 py-2 text-left">Sipariş Sayısı</th>
+                <th class="px-4 py-2 text-left">Toplam Satış</th>
+                <th class="px-4 py-2 text-left">En Popüler Ürün</th>
+              </tr>
+            </thead>
+            <tbody>
+          `;
+          
+          Object.keys(floorSales).sort((a, b) => Number(a) - Number(b)).forEach(floor => {
+            const data = floorSales[floor];
+            const floorName = `Kat ${floor}`;
+            
+            // En popüler ürünü bul
+            let popularItem = 'Yok';
+            let maxQuantity = 0;
+            Object.keys(data.items).forEach(itemName => {
+              if (data.items[itemName].quantity > maxQuantity) {
+                maxQuantity = data.items[itemName].quantity;
+                popularItem = itemName;
+              }
+            });
+            
+            tableHTML += `
+              <tr class="border-b">
+                <td class="px-4 py-2 font-medium">${floorName}</td>
+                <td class="px-4 py-2">${data.count}</td>
+                <td class="px-4 py-2 font-bold text-green-600">${data.total.toFixed(2)} ₺</td>
+                <td class="px-4 py-2">${popularItem}</td>
+              </tr>
+            `;
+          });
+          
+          tableHTML += '</tbody>';
+          floorSalesTable.innerHTML = tableHTML;
+        }
+      } catch (error) {
+        console.error('Kat raporu güncellenirken hata:', error);
+      }
+    }
+
+    // Kat raporu temizleme fonksiyonu
+    async function resetFloorReport() {
+      try {
+        const confirmed = await showConfirm('Kat Raporu Temizleme', 'Kat raporu verilerini sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz.', 'danger');
+        if (confirmed) {
+          const floorReportRef = doc(db, "kat_raporlari", activeFloorGroup);
+          await setDoc(floorReportRef, {
+            floorSales: {},
+            lastUpdated: new Date(),
+            floorGroup: activeFloorGroup
+          });
+          
+          // Tabloyu temizle
+          if (floorSalesTable) {
+            floorSalesTable.innerHTML = `
+              <thead>
+                <tr class="bg-gray-100">
+                  <th class="px-4 py-2 text-left">Kat</th>
+                  <th class="px-4 py-2 text-left">Sipariş Sayısı</th>
+                  <th class="px-4 py-2 text-left">Toplam Satış</th>
+                  <th class="px-4 py-2 text-left">En Popüler Ürün</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="border-b">
+                  <td class="px-4 py-2 border border-gray-300 text-center text-gray-500" colspan="4">Veri yok</td>
+                </tr>
+              </tbody>
+            `;
+          }
+          
+        }
+      } catch (error) {
+        console.error('Kat raporu temizlenirken hata:', error);
+        await showAlert('Kat raporu temizlenirken bir hata oluştu!', 'error');
+      }
+    }
+
+    // Kat raporu temizleme butonu olay dinleyicisi
+    document.getElementById('reset-floor-report-btn').addEventListener('click', resetFloorReport);
 
   </script>
   
