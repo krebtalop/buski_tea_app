@@ -1677,6 +1677,8 @@ async function updateReport() {
       const currentStatus = order.status || "hazırlanıyor";
       if (currentStatus === "hazırlanıyor") {
         await updateDoc(ref, { status: "hazırlandı" });
+        // Kullanıcı geçmişini güncelle
+        await updateUserHistoryStatus(order, "hazırlandı");
       } else if (currentStatus === "hazırlandı") {
         const card = btn.closest('.order-card');
         if (card) {
@@ -1686,10 +1688,14 @@ async function updateReport() {
           setTimeout(async () => {
             await updateDoc(ref, { status: "teslim edildi" });
             await increaseReportTotal(order);
+            // Kullanıcı geçmişine kaydet
+            await saveToUserHistory(order);
           }, 600);
         } else {
           await updateDoc(ref, { status: "teslim edildi" });
           await increaseReportTotal(order);
+          // Kullanıcı geçmişine kaydet
+          await saveToUserHistory(order);
         }
       }
       updateBadges();
@@ -1722,6 +1728,50 @@ async function updateReport() {
         await updateFloorReportData(order);
       } catch (error) {
         console.error('Rapor toplamı artırılırken hata:', error);
+      }
+    }
+    
+    // Kullanıcı geçmişine kaydetme fonksiyonu
+    async function saveToUserHistory(order) {
+      try {
+        if (!order.userId) {
+          console.log('Sipariş userId bilgisi yok, kullanıcı geçmişine kaydedilemiyor');
+          return;
+        }
+        
+        // Kullanıcı geçmişine kaydet
+        const userHistoryRef = doc(db, "user_order_history", order.userId, "orders", order.id);
+        await setDoc(userHistoryRef, {
+          ...order,
+          status: "teslim edildi", // Durumu kesin olarak teslim edildi yap
+          savedAt: new Date(),
+          originalOrderId: order.id
+        });
+        
+        console.log(`Sipariş ${order.id} kullanıcı geçmişine kaydedildi`);
+      } catch (error) {
+        console.error('Kullanıcı geçmişine kaydetme hatası:', error);
+      }
+    }
+    
+    // Kullanıcı geçmişindeki sipariş durumunu güncelleme fonksiyonu
+    async function updateUserHistoryStatus(order, newStatus) {
+      try {
+        if (!order.userId) {
+          console.log('Sipariş userId bilgisi yok, kullanıcı geçmişi güncellenemiyor');
+          return;
+        }
+        
+        // Kullanıcı geçmişindeki sipariş durumunu güncelle
+        const userHistoryRef = doc(db, "user_order_history", order.userId, "orders", order.id);
+        await updateDoc(userHistoryRef, {
+          status: newStatus,
+          updatedAt: new Date()
+        });
+        
+        console.log(`Sipariş ${order.id} kullanıcı geçmişinde durumu güncellendi: ${newStatus}`);
+      } catch (error) {
+        console.error('Kullanıcı geçmişi güncelleme hatası:', error);
       }
     }
     
@@ -1873,8 +1923,21 @@ async function updateReport() {
           }, { merge: true });
           // --- SONU ---
 
-          // Her teslim edilmiş siparişi Firebase'den sil
+          // Her teslim edilmiş siparişi user_order_history'ye kaydet ve siparisler'den sil
           for (const order of deliveredOrders) {
+            // Siparişi user_order_history'ye kaydet
+            try {
+              await setDoc(doc(db, "user_order_history", order.ad, "orders", order.id), {
+                ...order,
+                status: 'teslim edildi',
+                savedAt: new Date(),
+                originalOrderId: order.id
+              });
+              console.log('Sipariş user_order_history\'ye kaydedildi:', order.id);
+            } catch (error) {
+              console.error('Sipariş user_order_history\'ye kaydedilirken hata:', error);
+            }
+            
             // Eğer siparişin puanlaması varsa, puanlama verilerini koru
             if (order.rating > 0 || order.comment) {
               console.log('Toplu silmede puanlama korunuyor:', order.id, order.rating, order.comment);
@@ -1897,7 +1960,11 @@ async function updateReport() {
               await setDoc(doc(db, "preserved_ratings", order.id), ratingData);
             }
             
-            await deleteDoc(doc(db, "siparisler", order.id));
+            // Siparişi tamamen silmek yerine, sadece durumunu "silindi" yap
+            await updateDoc(doc(db, "siparisler", order.id), { 
+              status: "silindi",
+              deletedAt: new Date()
+            });
           }
           
           // Badge sayılarını güncelle
@@ -2371,7 +2438,7 @@ async function updateReport() {
           return;
         }
         
-        ratingsData.forEach(rating => {
+        for (const rating of ratingsData) {
           const ratingCard = document.createElement('div');
           ratingCard.className = 'bg-white rounded-lg shadow-md p-6';
           
@@ -2381,8 +2448,13 @@ async function updateReport() {
           const floor = rating.floor || rating.userFloor || 0;
           const floorName = floor === 0 ? 'Zemin' : `Kat ${floor}`;
           const displayName = userName !== 'İsimsiz Kullanıcı' ? `${userName} (${floorName})` : `İsimsiz Kullanıcı (${floorName})`;
+          // Orijinal puanlama tarihini kullan, yoksa sipariş tarihini kullan
           const tarih = rating.ratingDate && rating.ratingDate.toDate ? 
-            rating.ratingDate.toDate() : new Date();
+            rating.ratingDate.toDate() : 
+            (rating.timestamp && rating.timestamp.toDate ? 
+              rating.timestamp.toDate() : 
+              (rating.tarih && rating.tarih.toDate ? 
+                rating.tarih.toDate() : new Date()));
           
           // Sipariş içeriğini hazırla (her zaman preserved rating'den de bak)
           let orderContent = '';
@@ -2467,7 +2539,7 @@ async function updateReport() {
           `;
           
           ratingsListDiv.appendChild(ratingCard);
-        });
+        }
       }
       
       // Badge sayılarını güncelle - Sadece o kat grubunun siparişlerini say

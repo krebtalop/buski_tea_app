@@ -1024,19 +1024,19 @@ async function updateReport() {
       }
     }
 
-    // Sekme değişiklikleri
-    preparingTab.addEventListener('click', () => {
-      setActiveTab('preparing');
+          // Sekme değişiklikleri
+      preparingTab.addEventListener('click', async () => {
+        await setActiveTab('preparing');
       // Yeni sipariş kartlarını yanıp söndür
       setTimeout(() => {
         blinkNewOrderCards();
       }, 100);
     });
-    deliveredTab.addEventListener('click', () => {
-      setActiveTab('delivered');
+    deliveredTab.addEventListener('click', async () => {
+      await setActiveTab('delivered');
     });
-    ratingsTab.addEventListener('click', () => {
-      setActiveTab('ratings');
+    ratingsTab.addEventListener('click', async () => {
+      await setActiveTab('ratings');
     });
     
 
@@ -1260,7 +1260,7 @@ async function updateReport() {
       });
     }
     // Sekme değiştirme
-    function setActiveTab(tab) {
+    async function setActiveTab(tab) {
       activeTab = tab;
       
       // Tüm sekmeleri pasif yap
@@ -1299,7 +1299,7 @@ async function updateReport() {
         ratingsContainer.classList.remove('hidden');
         deleteAllOrdersBtn.classList.add('hidden');
         deleteAllRatingsBtn.classList.remove('hidden');
-        loadRatings();
+        await loadRatings();
       }
     }
     
@@ -1307,31 +1307,11 @@ async function updateReport() {
     async function loadRatings() {
       console.log('loadRatings fonksiyonu çağrıldı');
       try {
-        // Normal siparişlerden puanları çek
-        const snapshot = await getDocs(query(
-          collection(db, "siparisler"),
-          where("rating", ">", 0)
-        ));
-        
-        // Ratings koleksiyonundan puanları çek
+        // Sadece ratings koleksiyonundan puanları çek (duplicate'leri önlemek için)
         const ratingsSnapshot = await getDocs(collection(db, "ratings"));
         
         // Korunan puanlamalardan da çek
         const preservedSnapshot = await getDocs(collection(db, "preserved_ratings"));
-        
-        // Normal siparişlerden puanları al
-        let normalRatings = snapshot.docs
-          .map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-            isPreserved: false,
-            fromSiparisler: true
-          }))
-          .filter(rating => {
-            const floor = Number(rating.floor || 0);
-            console.log(`Order ${rating.id} floor: ${rating.floor}, filtered floor: ${floor}`);
-            return floor >= 0 && floor <= 3; // Zemin ve kat 1-2-3
-          });
         
         // Ratings koleksiyonundan puanları al
         let ratingsCollectionRatings = ratingsSnapshot.docs
@@ -1360,7 +1340,7 @@ async function updateReport() {
           });
         
         // Duplicate'leri kaldır - orderId'ye göre
-        const allRatings = [...normalRatings, ...ratingsCollectionRatings, ...preservedRatings];
+        const allRatings = [...ratingsCollectionRatings, ...preservedRatings];
         const uniqueRatings = [];
         const seenOrderIds = new Set();
         
@@ -1384,14 +1364,10 @@ async function updateReport() {
         
         // Debug: Personel bilgilerini kontrol et
         console.log('=== PUANLAMA DEBUG BİLGİLERİ ===');
-        console.log('Normal ratings sayısı:', normalRatings.length);
         console.log('Ratings collection ratings sayısı:', ratingsCollectionRatings.length);
         console.log('Preserved ratings sayısı:', preservedRatings.length);
         console.log('Toplam puanlama sayısı:', ratingsData.length);
         
-        if (normalRatings.length > 0) {
-          console.log('Normal ratings örnekleri:', normalRatings.slice(0, 2));
-        }
         if (ratingsCollectionRatings.length > 0) {
           console.log('Ratings collection örnekleri:', ratingsCollectionRatings.slice(0, 2));
         }
@@ -1454,14 +1430,14 @@ async function updateReport() {
         }
         
                   console.log('Puanlar yüklendi, renderRatings çağrılıyor');
-          renderRatings();
+          await renderRatings();
         } catch (error) {
           console.error('Puanlar yüklenirken hata:', error);
         }
     }
     
     // Puanları render et
-    function renderRatings() {
+    async function renderRatings() {
       console.log('renderRatings fonksiyonu çağrıldı');
       console.log('ratingsData:', ratingsData);
       console.log('averageRating:', averageRating);
@@ -1496,7 +1472,7 @@ async function updateReport() {
         return;
       }
       
-      ratingsData.forEach(rating => {
+      for (const rating of ratingsData) {
         const ratingCard = document.createElement('div');
         ratingCard.className = 'bg-white rounded-lg shadow-md p-6';
         
@@ -1506,12 +1482,31 @@ async function updateReport() {
         const floor = rating.floor || rating.userFloor || 0;
         const floorName = floor === 0 ? 'Zemin' : `Kat ${floor}`;
         const displayName = userName !== 'İsimsiz Kullanıcı' ? `${userName} (${floorName})` : `İsimsiz Kullanıcı (${floorName})`;
+        // Orijinal puanlama tarihini kullan, yoksa sipariş tarihini kullan
         const tarih = rating.ratingDate && rating.ratingDate.toDate ? 
-          rating.ratingDate.toDate() : new Date();
+          rating.ratingDate.toDate() : 
+          (rating.timestamp && rating.timestamp.toDate ? 
+            rating.timestamp.toDate() : 
+            (rating.tarih && rating.tarih.toDate ? 
+              rating.tarih.toDate() : new Date()));
         
-        // Sipariş içeriğini hazırla (her zaman preserved rating'den de bak)
+        // Sipariş içeriğini hazırla (user_order_history'den de al)
         let orderContent = '';
         let items = rating.items && Array.isArray(rating.items) && rating.items.length > 0 ? rating.items : (rating.orderItems && Array.isArray(rating.orderItems) && rating.orderItems.length > 0 ? rating.orderItems : []);
+        
+        // Eğer items yoksa, user_order_history'den al
+        if (items.length === 0 && rating.orderId) {
+          try {
+            const userHistoryDoc = await getDoc(doc(db, "user_order_history", rating.userId || rating.userName, "orders", rating.orderId));
+            if (userHistoryDoc.exists()) {
+              const orderData = userHistoryDoc.data();
+              items = orderData.items || [];
+            }
+          } catch (error) {
+            console.error('Sipariş içeriği yüklenirken hata:', error);
+          }
+        }
+        
         if (items.length > 0) {
           orderContent = items.map(item => 
             `${escapeHtml(item.name)}${item.option ? ' (' + escapeHtml(item.option) + ')' : ''} - ${escapeHtml(item.adet?.toString() || '1')} adet`
@@ -1592,7 +1587,7 @@ async function updateReport() {
         `;
         
         ratingsListDiv.appendChild(ratingCard);
-      });
+      }
     }
 
     // Puanlama silme fonksiyonu
@@ -1719,7 +1714,7 @@ async function updateReport() {
                 
                 // Otomatik olarak "Hazırlananlar" sekmesine geç
                 if (activeTab !== 'preparing') {
-                    setActiveTab('preparing');2
+                    await setActiveTab('preparing');2
                 }
                 
                 console.log("Sipariş durumu güncellendi:", id);
@@ -1910,6 +1905,8 @@ async function updateReport() {
       const currentStatus = order.status || "hazırlanıyor";
       if (currentStatus === "hazırlanıyor") {
         await updateDoc(ref, { status: "hazırlandı" });
+        // Kullanıcı geçmişini güncelle
+        await updateUserHistoryStatus(order, "hazırlandı");
       } else if (currentStatus === "hazırlandı") {
         const card = btn.closest('.order-card');
         if (card) {
@@ -1919,10 +1916,14 @@ async function updateReport() {
           setTimeout(async () => {
             await updateDoc(ref, { status: "teslim edildi" });
             await increaseReportTotal(order);
+            // Kullanıcı geçmişine kaydet
+            await saveToUserHistory(order);
           }, 600);
         } else {
           await updateDoc(ref, { status: "teslim edildi" });
           await increaseReportTotal(order);
+          // Kullanıcı geçmişine kaydet
+          await saveToUserHistory(order);
         }
       }
       updateBadges().catch(console.error);
@@ -1955,6 +1956,50 @@ async function updateReport() {
         await updateFloorReportData(order);
       } catch (error) {
         console.error('Rapor toplamı artırılırken hata:', error);
+      }
+    }
+    
+    // Kullanıcı geçmişine kaydetme fonksiyonu
+    async function saveToUserHistory(order) {
+      try {
+        if (!order.userId) {
+          console.log('Sipariş userId bilgisi yok, kullanıcı geçmişine kaydedilemiyor');
+          return;
+        }
+        
+        // Kullanıcı geçmişine kaydet
+        const userHistoryRef = doc(db, "user_order_history", order.userId, "orders", order.id);
+        await setDoc(userHistoryRef, {
+          ...order,
+          status: "teslim edildi", // Durumu kesin olarak teslim edildi yap
+          savedAt: new Date(),
+          originalOrderId: order.id
+        });
+        
+        console.log(`Sipariş ${order.id} kullanıcı geçmişine kaydedildi`);
+      } catch (error) {
+        console.error('Kullanıcı geçmişine kaydetme hatası:', error);
+      }
+    }
+    
+    // Kullanıcı geçmişindeki sipariş durumunu güncelleme fonksiyonu
+    async function updateUserHistoryStatus(order, newStatus) {
+      try {
+        if (!order.userId) {
+          console.log('Sipariş userId bilgisi yok, kullanıcı geçmişi güncellenemiyor');
+          return;
+        }
+        
+        // Kullanıcı geçmişindeki sipariş durumunu güncelle
+        const userHistoryRef = doc(db, "user_order_history", order.userId, "orders", order.id);
+        await updateDoc(userHistoryRef, {
+          status: newStatus,
+          updatedAt: new Date()
+        });
+        
+        console.log(`Sipariş ${order.id} kullanıcı geçmişinde durumu güncellendi: ${newStatus}`);
+      } catch (error) {
+        console.error('Kullanıcı geçmişi güncelleme hatası:', error);
       }
     }
     
@@ -2106,8 +2151,21 @@ async function updateReport() {
           }, { merge: true });
           // --- SONU ---
 
-          // Her teslim edilmiş siparişi "silindi" durumuna çevir
+          // Her teslim edilmiş siparişi user_order_history'ye kaydet ve siparisler'den sil
           for (const order of deliveredOrders) {
+            // Siparişi user_order_history'ye kaydet
+            try {
+              await setDoc(doc(db, "user_order_history", order.ad, "orders", order.id), {
+                ...order,
+                status: 'teslim edildi',
+                savedAt: new Date(),
+                originalOrderId: order.id
+              });
+              console.log('Sipariş user_order_history\'ye kaydedildi:', order.id);
+            } catch (error) {
+              console.error('Sipariş user_order_history\'ye kaydedilirken hata:', error);
+            }
+            
             // Eğer siparişin puanlaması varsa, puanlama verilerini koru
             if (order.rating > 0 || order.comment) {
               console.log('Toplu kaldırmada puanlama korunuyor:', order.id, order.rating, order.comment);
@@ -2130,11 +2188,10 @@ async function updateReport() {
               await setDoc(doc(db, "preserved_ratings", order.id), ratingData);
             }
             
-            // Siparişi "silindi" durumuna çevir, tamamen silme
-            await updateDoc(doc(db, "siparisler", order.id), {
+            // Siparişi tamamen silmek yerine, sadece durumunu "silindi" yap
+            await updateDoc(doc(db, "siparisler", order.id), { 
               status: "silindi",
-              deletedAt: new Date(),
-              deletedBy: "panel_bulk"
+              deletedAt: new Date()
             });
           }
           

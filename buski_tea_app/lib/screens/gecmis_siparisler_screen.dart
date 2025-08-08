@@ -61,13 +61,14 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    // Panel siparişlerindeki değişiklikleri dinle
+    // Kullanıcı geçmişindeki değişiklikleri dinle
     FirebaseFirestore.instance
-        .collection('siparisler')
-        .where('userId', isEqualTo: user.uid)
+        .collection('user_order_history')
+        .doc(user.uid)
+        .collection('orders')
         .snapshots()
         .listen((snapshot) {
-          // Panel'de değişiklik olduğunda siparişleri yeniden yükle
+          // Kullanıcı geçmişinde değişiklik olduğunda siparişleri yeniden yükle
           if (mounted) {
             _fetchOrders();
           }
@@ -179,28 +180,17 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
         startDate = now.subtract(const Duration(days: 30));
       }
 
-      // Panel'den güncel siparişleri al (durum bilgisi dahil)
-      final panelOrdersSnapshot = await FirebaseFirestore.instance
-          .collection('siparisler')
-          .where('userId', isEqualTo: user.uid)
+      // Kullanıcı geçmişi koleksiyonundan siparişleri al
+      final userHistorySnapshot = await FirebaseFirestore.instance
+          .collection('user_order_history')
+          .doc(user.uid)
+          .collection('orders')
           .where('tarih', isGreaterThan: Timestamp.fromDate(startDate))
           .orderBy('tarih', descending: true)
           .get();
 
-      // Kullanıcının geçmiş siparişlerini de al
-      final userOrdersSnapshot = await FirebaseFirestore.instance
-          .collection('user_orders')
-          .doc(user.uid)
-          .collection('orders')
-          .get();
-
-      // Kullanıcı geçmişinde olan sipariş ID'lerini al
-      final userOrderIds = userOrdersSnapshot.docs.map((doc) => doc.id).toSet();
-
-      // Panel siparişlerini filtrele - sadece kullanıcı geçmişinde olanları göster
-      _orders = panelOrdersSnapshot.docs
-          .where((doc) => userOrderIds.contains(doc.id))
-          .toList();
+      // Kullanıcı geçmişinden siparişleri al
+      _orders = userHistorySnapshot.docs;
   
       _totalSpent = 0;
       _categoryData.clear();
@@ -297,7 +287,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
     }
   }
 
-  // Tüm siparişleri sil (sadece kullanıcı geçmişinden)
+  // Tüm siparişleri sil (teslim edilen siparişler hariç)
   Future<void> _clearAllOrders() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -305,9 +295,8 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
         return AlertDialog(
           title: const Text('Siparişleri Sil'),
           content: const Text(
-            'Tüm sipariş geçmişinizi silmek istediğinizden emin misiniz?\n\n'
-            'Bu işlem sadece uygulama ekranından siparişleri kaldırır. '
-            'Panel tarafından kontrol edilen siparişler etkilenmez.',
+            'Teslim edilmemiş sipariş geçmişinizi silmek istediğinizden emin misiniz?\n\n'
+            'Teslim edilen siparişler korunacaktır.',
           ),
           actions: [
             TextButton(
@@ -348,11 +337,17 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
         return;
       }
 
-      // Batch işlemi ile tüm siparişleri sil
+      // Batch işlemi ile teslim edilmemiş siparişleri sil
       final batch = FirebaseFirestore.instance.batch();
+      int deletedCount = 0;
 
       for (var doc in snapshot.docs) {
-        batch.delete(doc.reference);
+        final orderData = doc.data();
+        // Teslim edilen siparişleri silme
+        if (orderData['status'] != 'teslim edildi') {
+          batch.delete(doc.reference);
+          deletedCount++;
+        }
       }
 
       await batch.commit();
@@ -364,7 +359,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '${snapshot.docs.length} sipariş geçmişi başarıyla silindi',
+              '$deletedCount teslim edilmemiş sipariş başarıyla silindi',
             ),
             backgroundColor: Colors.green,
           ),
@@ -639,6 +634,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
     _selectedOrderId = orderId;
     _selectedRating = orderData['rating'] ?? 0;
     _commentController.text = orderData['comment'] ?? '';
+    _secilenGarsonlar[orderId] = orderData['garson'] ?? orderData['selectedPersonnel'];
     setState(() {
       _showRatingDialog = true;
     });
@@ -659,17 +655,35 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
         'garson': _secilenGarsonlar[_selectedOrderId],
       };
 
+      // Ratings koleksiyonuna da kaydet
+      final ratingData = {
+        'orderId': _selectedOrderId,
+        'userId': user.uid,
+        'userEmail': user.email,
+        'userName': user.displayName ?? '',
+        'userFloor': 0, // Kullanıcı verilerinden alınabilir
+        'userDepartment': '', // Kullanıcı verilerinden alınabilir
+        'rating': _selectedRating,
+        'comment': _commentController.text.trim(),
+        'selectedPersonnel': _secilenGarsonlar[_selectedOrderId] ?? '',
+        'timestamp': Timestamp.now(),
+      };
+
       await Future.wait([
         FirebaseFirestore.instance
             .collection('siparisler')
             .doc(_selectedOrderId)
             .update(updateData),
         FirebaseFirestore.instance
-            .collection('user_orders')
+            .collection('user_order_history')
             .doc(user.uid)
             .collection('orders')
             .doc(_selectedOrderId)
             .update(updateData),
+        FirebaseFirestore.instance
+            .collection('ratings')
+            .doc(_selectedOrderId)
+            .set(ratingData),
       ]);
 
       await _fetchOrders();
@@ -929,7 +943,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: _selectedRating > 0 ? _saveRating : null,
+                        onPressed: _selectedRating > 0 && _secilenGarsonlar[_selectedOrderId] != null ? _saveRating : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue[700],
                           foregroundColor: Colors.white,
@@ -961,11 +975,15 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                                   .doc(_selectedOrderId)
                                   .update(updateData),
                               FirebaseFirestore.instance
-                                  .collection('user_orders')
+                                  .collection('user_order_history')
                                   .doc(user.uid)
                                   .collection('orders')
                                   .doc(_selectedOrderId)
                                   .update(updateData),
+                              FirebaseFirestore.instance
+                                  .collection('ratings')
+                                  .doc(_selectedOrderId)
+                                  .delete(),
                             ]);
                             await _fetchOrders();
                             setState(() {
@@ -1479,8 +1497,8 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                                                           ),
                                                           label: Text(
                                                             rating > 0
-                                                                ? 'Puanla'
-                                                                : 'Puanla',
+                                                                ? 'Puanı Güncelle'
+                                                                : 'Değerlendir',
                                                           ),
                                                           style: ElevatedButton.styleFrom(
                                                             backgroundColor:

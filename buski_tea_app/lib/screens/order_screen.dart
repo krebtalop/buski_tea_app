@@ -229,6 +229,11 @@ class _OrderScreenState extends State<OrderScreen>
           .doc(user.uid)
           .collection('orders')
           .doc(orderRef.id);
+      final userHistoryRef = FirebaseFirestore.instance
+          .collection('user_order_history')
+          .doc(user.uid)
+          .collection('orders')
+          .doc(orderRef.id);
       final newOrder = {
         // Kullanıcı bilgileri
         'userId': user.uid,
@@ -240,10 +245,15 @@ class _OrderScreenState extends State<OrderScreen>
         // Sipariş bilgileri
         'id': orderRef.id,
         'tarih': Timestamp.now(),
+        'status': 'hazırlanıyor', // Başlangıç durumu
         'toplamFiyat': totalPrice,
         'items': _cartItems,
       };
-      await Future.wait([orderRef.set(newOrder), userOrderRef.set(newOrder)]);
+      await Future.wait([
+        orderRef.set(newOrder), 
+        userOrderRef.set(newOrder),
+        userHistoryRef.set(newOrder) // Kullanıcı geçmişine de kaydet
+      ]);
       setState(() {
         _cartItems.clear();
         _notificationMessage = 'Tüm siparişleriniz başarıyla alındı!';

@@ -3288,7 +3288,7 @@
       </div>
       <h3 class="clear-history-title">Sipariş Geçmişini Sil</h3>
       <p class="clear-history-message">
-        Tüm sipariş geçmişinizi kalıcı olarak silmek istediğinizden emin misiniz?
+        Tüm sipariş geçmişinizi silmek istediğinizden emin misiniz?
       </p>
       <div class="clear-history-warning">
         ⚠️ Bu işlem geri alınamaz ve tüm sipariş verileriniz kaybolacaktır!
@@ -3397,8 +3397,11 @@
           // Önce kullanıcı verisini yükle, sonra menüyü yükle
           loadUserData();
           
-          // Personel listesini yükle
-          loadPersonnelOptions();
+              // Personel listesini yükle
+    loadPersonnelOptions();
+    
+    // Personel listesini gerçek zamanlı dinle
+    listenToPersonnelUpdates();
         } else {
           console.log("Kullanıcı giriş yapmamış, giriş sayfasında kalıyor");
           currentUser = null;
@@ -4676,6 +4679,7 @@
       
       const orderRef = firebase.firestore().collection('siparisler').doc();
       const userOrderRef = firebase.firestore().collection('user_orders').doc(currentUser.uid).collection('orders').doc(orderRef.id);
+      const userHistoryRef = firebase.firestore().collection('user_order_history').doc(currentUser.uid).collection('orders').doc(orderRef.id);
       
       const newOrder = {
         'userId': currentUser.uid,
@@ -4686,6 +4690,7 @@
         'floor': userData.floor || 0,
         'id': orderRef.id,
         'tarih': firebase.firestore.Timestamp.now(),
+        'status': 'hazırlanıyor', // Başlangıç durumu
         'toplamFiyat': totalPrice,
         'items': cartItems.map(item => ({
           'name': item.name,
@@ -4699,7 +4704,8 @@
 
       Promise.all([
         orderRef.set(newOrder),
-        userOrderRef.set(newOrder)
+        userOrderRef.set(newOrder),
+        userHistoryRef.set(newOrder) // Kullanıcı geçmişine de kaydet
       ])
       .then(() => {
         console.log('Sipariş başarıyla kaydedildi');
@@ -4815,95 +4821,112 @@
       
       console.log("Firebase'den kullanıcı siparişleri çekiliyor, UID:", currentUser.uid);
       
-      // Hem user_orders hem de siparisler koleksiyonlarını bir kez yükle
-      const userOrdersQuery = firebase.firestore().collection('user_orders').doc(currentUser.uid).collection('orders').orderBy('tarih', 'desc');
-      const allOrdersQuery = firebase.firestore().collection('siparisler').where('userId', '==', currentUser.uid).orderBy('tarih', 'desc');
-      
-      // Her iki koleksiyonu da bir kez yükle ve birleştir
-      Promise.all([
-        userOrdersQuery.get(),
-        allOrdersQuery.get()
-      ]).then(([userOrdersSnapshot, allOrdersSnapshot]) => {
-           console.log("User orders:", userOrdersSnapshot.size, "All orders:", allOrdersSnapshot.size);
-           
-           // Siparişleri birleştir ve güncelle
-           const ordersMap = new Map();
-           
-           // Boş sipariş kontrolü
-           if (userOrdersSnapshot.empty && allOrdersSnapshot.empty) {
-             console.log("Kullanıcının sipariş geçmişi boş");
-             orderHistoryDiv.innerHTML = '<p style="text-align: center; color: #64748b;">Henüz sipariş geçmişiniz bulunmuyor</p>';
-             displayOrderHistory([]);
-             createOrderChart([]);
-             updateOrderStats([]);
-             return;
-           }
+      // Önce kullanıcının geçmişi temizleyip temizlemediğini kontrol et
+      firebase.firestore().collection('users').doc(currentUser.uid).get().then((userDoc) => {
+        const userData = userDoc.data() || {};
+        const historyClearedAt = userData.historyClearedAt;
+        
+        // Kullanıcı geçmişi için ayrı koleksiyon kullan
+        const userHistoryQuery = firebase.firestore().collection('user_order_history').doc(currentUser.uid).collection('orders').orderBy('tarih', 'desc');
+        
+        userHistoryQuery.get().then((userHistorySnapshot) => {
+          console.log("User history orders:", userHistorySnapshot.size);
           
-          // Önce user_orders'dan yükle
-          userOrdersSnapshot.forEach((doc) => {
+          const ordersMap = new Map();
+          
+          // Boş sipariş kontrolü
+          if (userHistorySnapshot.empty) {
+            console.log("Kullanıcının sipariş geçmişi boş");
+            orderHistoryDiv.innerHTML = '<p style="text-align: center; color: #64748b;">Henüz sipariş geçmişiniz bulunmuyor</p>';
+            displayOrderHistory([]);
+            createOrderChart([]);
+            updateOrderStats([]);
+            return;
+          }
+          
+          // Kullanıcı geçmişinden siparişleri yükle
+          userHistorySnapshot.forEach((doc) => {
             const order = doc.data();
             order.id = doc.id;
-            ordersMap.set(doc.id, order);
-          });
-          
-          // Sonra siparisler'den güncelle (durum bilgisi için)
-          allOrdersSnapshot.forEach((doc) => {
-            const order = doc.data();
-            if (ordersMap.has(doc.id)) {
-              // Mevcut siparişi güncelle
-              const existingOrder = ordersMap.get(doc.id);
-              const oldStatus = existingOrder.status;
-              existingOrder.status = order.status; // Durumu güncelle
-              existingOrder.rating = order.rating; // Puanlamayı güncelle
-              existingOrder.comment = order.comment; // Yorumu güncelle
+            
+            // Eğer kullanıcı geçmişi temizlediyse, sadece temizleme tarihinden sonraki siparişleri göster
+            if (historyClearedAt) {
+              const orderDate = order.tarih.toDate ? order.tarih.toDate() : new Date(order.tarih);
+              const clearedDate = historyClearedAt.toDate ? historyClearedAt.toDate() : new Date(historyClearedAt);
               
-              // Eğer durum değiştiyse dinamik olarak güncelle
-              if (oldStatus !== order.status) {
-                console.log(`Sipariş ${doc.id} durumu değişti: ${oldStatus} -> ${order.status}`);
-                updateOrderStatus(doc.id, order.status);
+              if (orderDate > clearedDate) {
+                ordersMap.set(doc.id, order);
               }
             } else {
-              // Yeni sipariş ekle
-              order.id = doc.id;
+              // Geçmiş temizlenmemişse tüm siparişleri göster
               ordersMap.set(doc.id, order);
             }
           });
-          
-          // Map'i array'e çevir ve tarihe göre sırala
-          orderHistoryData = Array.from(ordersMap.values()).sort((a, b) => {
-            const dateA = a.tarih.toDate ? a.tarih.toDate() : new Date(a.tarih);
-            const dateB = b.tarih.toDate ? b.tarih.toDate() : new Date(b.tarih);
-            return dateB - dateA;
+            
+            // Map'i array'e çevir ve tarihe göre sırala
+            orderHistoryData = Array.from(ordersMap.values()).sort((a, b) => {
+              const dateA = a.tarih.toDate ? a.tarih.toDate() : new Date(a.tarih);
+              const dateB = b.tarih.toDate ? b.tarih.toDate() : new Date(b.tarih);
+              return dateB - dateA;
+            });
+            
+            console.log("Toplam yüklenen sipariş sayısı:", orderHistoryData.length);
+            displayOrderHistory(orderHistoryData);
+            createOrderChart(orderHistoryData);
+            updateOrderStats(orderHistoryData);
+          }).catch((error) => {
+            console.error('Sipariş geçmişi yüklenirken hata:', error);
+            orderHistoryDiv.innerHTML = '<p style="text-align: center; color: #ef4444;">Sipariş geçmişi yüklenirken hata oluştu</p>';
           });
-          
-          console.log("Toplam yüklenen sipariş sayısı:", orderHistoryData.length);
-          displayOrderHistory(orderHistoryData);
-          createOrderChart(orderHistoryData);
-          updateOrderStats(orderHistoryData);
-        }).catch((error) => {
-          console.error('Sipariş geçmişi yüklenirken hata:', error);
-          orderHistoryDiv.innerHTML = '<p style="text-align: center; color: #ef4444;">Sipariş geçmişi yüklenirken hata oluştu</p>';
+      }).catch((error) => {
+        console.error('Kullanıcı bilgisi alınırken hata:', error);
+        // Hata durumunda tüm siparişleri göster
+        loadOrderHistoryFallback();
+      });
+    }
+    
+    // Fallback fonksiyon - hata durumunda tüm siparişleri göster
+    function loadOrderHistoryFallback() {
+      const userHistoryQuery = firebase.firestore().collection('user_order_history').doc(currentUser.uid).collection('orders').orderBy('tarih', 'desc');
+      
+      userHistoryQuery.get().then((userHistorySnapshot) => {
+        const ordersMap = new Map();
+        userHistorySnapshot.forEach((doc) => {
+          const order = doc.data();
+          order.id = doc.id;
+          ordersMap.set(doc.id, order);
         });
+        
+        orderHistoryData = Array.from(ordersMap.values()).sort((a, b) => {
+          const dateA = a.tarih.toDate ? a.tarih.toDate() : new Date(a.tarih);
+          const dateB = b.tarih.toDate ? b.tarih.toDate() : new Date(b.tarih);
+          return dateB - dateA;
+        });
+        
+        displayOrderHistory(orderHistoryData);
+        createOrderChart(orderHistoryData);
+        updateOrderStats(orderHistoryData);
+      });
     }
 
     // Sipariş durumunu dinamik olarak güncelle
     function updateOrderStatus(orderId, newStatus) {
       console.log(`updateOrderStatus çağrıldı: ${orderId}, yeni durum: ${newStatus}`);
       
-      // Siparişi orderHistoryData'dan bul
-      const orderIndex = orderHistoryData.findIndex(order => order.id === orderId);
-      if (orderIndex === -1) {
-        console.log(`Sipariş ${orderId} orderHistoryData'da bulunamadı`);
-        return;
-      }
-      
-      // Sipariş durumunu güncelle
-      orderHistoryData[orderIndex].status = newStatus;
-      
-      // Sipariş elementini yeniden oluştur
-      const orderElement = document.querySelector(`[data-order-id="${orderId}"]`);
-      if (orderElement) {
-        const order = orderHistoryData[orderIndex];
+      // Siparişi user_order_history'den al
+      firebase.firestore().collection('user_order_history').doc(currentUser.uid).collection('orders').doc(orderId).get()
+        .then((doc) => {
+          if (!doc.exists) {
+            console.log(`Sipariş ${orderId} user_order_history'de bulunamadı`);
+            return;
+          }
+          
+          const order = doc.data();
+          order.id = orderId;
+          
+          // Sipariş elementini yeniden oluştur
+          const orderElement = document.querySelector(`[data-order-id="${orderId}"]`);
+          if (orderElement) {
         const orderDate = order.tarih.toDate ? order.tarih.toDate().toLocaleString('tr-TR') : new Date(order.tarih).toLocaleString('tr-TR');
         const orderItems = order.items.map(item => {
           return `
@@ -5023,6 +5046,12 @@
           // Yıldız event listener'larını ekle
           addStarEventListeners();
           
+          // Değerlendirme butonunu aktif et (teslim edildi durumunda)
+          const submitBtn = document.querySelector(`button[onclick="submitRating('${orderId}')"]`);
+          if (submitBtn) {
+            submitBtn.disabled = false;
+          }
+          
           console.log(`Sipariş ${orderId} teslim edildi, değerlendirme bölümleri aktif edildi`);
         } else {
           // Eğer teslim edilmediyse, personel seçimini devre dışı bırak
@@ -5032,11 +5061,15 @@
           }
         }
       }
+        })
+        .catch((error) => {
+          console.error(`Sipariş ${orderId} yüklenirken hata:`, error);
+        });
     }
 
     // Belirli siparişin durumunu dinle
     function listenToOrderStatus(orderId) {
-      firebase.firestore().collection('siparisler').doc(orderId)
+      firebase.firestore().collection('user_order_history').doc(currentUser.uid).collection('orders').doc(orderId)
         .onSnapshot((doc) => {
           if (doc.exists) {
             const orderData = doc.data();
@@ -5066,50 +5099,22 @@
       // Close modal
       closeClearHistoryModal();
       
-      // Tüm koleksiyonları temizle
-      Promise.all([
-        // user_orders koleksiyonunu temizle
-        firebase.firestore().collection('user_orders').doc(currentUser.uid).collection('orders').get()
-          .then((querySnapshot) => {
-            const deletePromises = [];
-            querySnapshot.forEach((doc) => {
-              deletePromises.push(doc.ref.delete());
-            });
-            return Promise.all(deletePromises);
-          }),
-        
-        // siparisler koleksiyonundan kullanıcının siparişlerini temizle
-        firebase.firestore().collection('siparisler').where('userId', '==', currentUser.uid).get()
-          .then((querySnapshot) => {
-            const deletePromises = [];
-            querySnapshot.forEach((doc) => {
-              deletePromises.push(doc.ref.delete());
-            });
-            return Promise.all(deletePromises);
-          }),
-        
-        // ratings koleksiyonundan kullanıcının değerlendirmelerini temizle
-        firebase.firestore().collection('ratings').where('userId', '==', currentUser.uid).get()
-          .then((querySnapshot) => {
-            const deletePromises = [];
-            querySnapshot.forEach((doc) => {
-              deletePromises.push(doc.ref.delete());
-            });
-            return Promise.all(deletePromises);
-          })
-      ])
-      .then(() => {
-        orderHistoryData = [];
-        displayOrderHistory([]);
-        createOrderChart([]);
-        updateOrderStats([]);
-        showNotification('Sipariş geçmişi ve değerlendirmeler başarıyla temizlendi!', 'success');
-      })
-      .catch((error) => {
-        console.error('Error clearing order history:', error);
-        showNotification('Sipariş geçmişi temizlenirken hata oluştu!', 'error');
-        loadOrderHistory(); // Reload the history
+      // Kullanıcının geçmişi temizlediğini kaydet
+      firebase.firestore().collection('users').doc(currentUser.uid).update({
+        historyCleared: true,
+        historyClearedAt: new Date()
+      }).then(() => {
+        console.log('Kullanıcı geçmişi temizlendi olarak işaretlendi');
+      }).catch((error) => {
+        console.error('Geçmiş temizleme durumu kaydedilirken hata:', error);
       });
+      
+      // Görüntülemeyi temizle
+      orderHistoryData = [];
+      displayOrderHistory(orderHistoryData);
+      createOrderChart(orderHistoryData);
+      updateOrderStats(orderHistoryData);
+      showNotification('Tüm sipariş geçmişi başarıyla silindi!', 'success');
     }
 
     function updateOrderStats(orders) {
@@ -5311,6 +5316,14 @@
         
         // Siparişin durumunu dinle
         listenToOrderStatus(orderId);
+        
+        // Teslim edildi durumunda butonu aktif et
+        if (order.status === 'teslim edildi') {
+          const submitBtn = document.querySelector(`button[onclick="submitRating('${orderId}')"]`);
+          if (submitBtn) {
+            submitBtn.disabled = false;
+          }
+        }
         
         // Eğer yeni bir siparişse (reorder ise), sipariş durumunu dinle
         if (order.isReordered) {
@@ -5754,8 +5767,8 @@
         return;
       }
       
-      // Sipariş durumunu kontrol et
-      firebase.firestore().collection('siparisler').doc(orderId).get()
+      // Sipariş durumunu kontrol et (user_order_history'den)
+      firebase.firestore().collection('user_order_history').doc(currentUser.uid).collection('orders').doc(orderId).get()
         .then((orderDoc) => {
           if (!orderDoc.exists) {
             showNotification('Sipariş bulunamadı!', 'error');
@@ -5786,10 +5799,10 @@
             timestamp: firebase.firestore.Timestamp.now()
           };
           
-          // Save rating to both ratings collection and the order itself
+          // Save rating to ratings collection and user_order_history
           Promise.all([
             firebase.firestore().collection('ratings').doc(orderId).set(ratingData),
-            firebase.firestore().collection('siparisler').doc(orderId).update({
+            firebase.firestore().collection('user_order_history').doc(currentUser.uid).collection('orders').doc(orderId).update({
               rating: rating,
               comment: comment,
               selectedPersonnel: selectedPersonnel,
@@ -5926,10 +5939,10 @@
 
 
     function loadExistingRating(orderId) {
-      // Try to load from ratings collection first, then from siparisler
+      // Try to load from ratings collection first, then from user_order_history
       Promise.all([
         firebase.firestore().collection('ratings').doc(orderId).get(),
-        firebase.firestore().collection('siparisler').doc(orderId).get()
+        firebase.firestore().collection('user_order_history').doc(currentUser.uid).collection('orders').doc(orderId).get()
       ])
         .then(([ratingDoc, orderDoc]) => {
           let ratingData = null;
@@ -5938,13 +5951,14 @@
           if (ratingDoc.exists) {
             ratingData = ratingDoc.data();
           }
-          // If no rating in ratings collection, check siparisler
+          // If no rating in ratings collection, check user_order_history
           else if (orderDoc.exists) {
             const orderData = orderDoc.data();
             if (orderData.rating && orderData.rating > 0) {
               ratingData = {
                 rating: orderData.rating,
-                comment: orderData.comment || ''
+                comment: orderData.comment || '',
+                selectedPersonnel: orderData.selectedPersonnel || ''
               };
             }
           }
@@ -5969,6 +5983,49 @@
             if (submitBtn) {
               submitBtn.disabled = false;
             }
+          } else {
+            // Rating yoksa sipariş içeriğini yükle
+            if (orderDoc.exists) {
+              const orderData = orderDoc.data();
+              console.log('Sipariş içeriği yükleniyor:', orderData);
+              
+              // Sipariş detaylarını göster
+              const orderDetails = document.getElementById(`order-details-${orderId}`);
+              if (orderDetails && orderData.items) {
+                const orderItems = orderData.items.map(item => {
+                  return `
+                    <div class="order-item-entry">
+                      <div class="order-item-name">${item.name}</div>
+                      <div class="order-item-details">
+                        ${item.option ? `<span class="order-item-option">${item.option}</span>` : ''}
+                        <span class="order-item-quantity">${item.adet} adet</span>
+                      </div>
+                    </div>
+                  `;
+                }).join('');
+                
+                const orderItemsContainer = orderDetails.querySelector('.order-item-list');
+                if (orderItemsContainer) {
+                  orderItemsContainer.innerHTML = orderItems;
+                }
+              }
+            }
+            // Mevcut değerlendirme yoksa, teslim edildi durumunda butonu aktif et
+            firebase.firestore().collection('user_order_history').doc(currentUser.uid).collection('orders').doc(orderId).get()
+              .then((doc) => {
+                if (doc.exists) {
+                  const orderData = doc.data();
+                  if (orderData.status === 'teslim edildi') {
+                    const submitBtn = document.querySelector(`button[onclick="submitRating('${orderId}')"]`);
+                    if (submitBtn) {
+                      submitBtn.disabled = false;
+                    }
+                  }
+                }
+              })
+              .catch((error) => {
+                console.error('Sipariş durumu kontrol edilirken hata:', error);
+              });
           }
         })
         .catch((error) => {
@@ -6488,7 +6545,7 @@
       
       if (!userData || userData.floor === undefined || userData.floor === null) {
         console.log("Kullanıcı verisi yok veya kat bilgisi eksik, personel yüklenmiyor");
-        return;
+        return Promise.resolve([]);
       }
       
       // Kat grubuna göre personel koleksiyonu belirleme
@@ -6509,8 +6566,8 @@
       
       console.log("Kullanıcı katı:", userData.floor, "Personel koleksiyonu:", personnelCollection);
       
-      // Firebase'den personel listesini çek
-      firebase.firestore().collection(personnelCollection).get()
+      // Firebase'den personel listesini çek ve Promise döndür
+      return firebase.firestore().collection(personnelCollection).get()
         .then((querySnapshot) => {
           const personnelOptions = [];
           querySnapshot.forEach((doc) => {
@@ -6523,33 +6580,53 @@
           
           // Global personel listesini güncelle
           window.personnelList = personnelOptions;
+          return personnelOptions;
         })
         .catch((error) => {
           console.error("Personel listesi yüklenirken hata:", error);
+          return [];
         });
     }
 
     function loadPersonnelList(orderId) {
       console.log("loadPersonnelList çağrıldı, orderId:", orderId);
-      
-      if (!window.personnelList || window.personnelList.length === 0) {
-        console.log("Personel listesi yok, yükleniyor...");
-        loadPersonnelOptions();
-        return;
-      }
+      console.log("userData:", userData);
+      console.log("window.personnelList:", window.personnelList);
       
       const personnelSelect = document.querySelector(`select[data-order-id="${orderId}"]`);
       if (!personnelSelect) {
         console.error("Personel select elementi bulunamadı, orderId:", orderId);
+        console.log("Mevcut personnel-select elementleri:", document.querySelectorAll('.personnel-select'));
         return;
       }
       
       // Mevcut seçimi koru
       const currentValue = personnelSelect.value;
       
+      // Personel listesi yoksa veya boşsa, yeniden yükle
+      if (!window.personnelList || window.personnelList.length === 0) {
+        console.log("Personel listesi yok, yükleniyor...");
+        loadPersonnelOptions().then((personnelOptions) => {
+          populatePersonnelDropdown(personnelSelect, personnelOptions, currentValue, orderId);
+          // Teslim edildi durumunda butonu aktif et
+          enableSubmitButtonIfDelivered(orderId);
+        });
+      } else {
+        // Mevcut listeyi kullan
+        populatePersonnelDropdown(personnelSelect, window.personnelList, currentValue, orderId);
+        // Teslim edildi durumunda butonu aktif et
+        enableSubmitButtonIfDelivered(orderId);
+      }
+    }
+
+    function populatePersonnelDropdown(personnelSelect, personnelList, currentValue, orderId) {
+      console.log("populatePersonnelDropdown çağrıldı, orderId:", orderId);
+      console.log("personnelList:", personnelList);
+      console.log("personnelSelect:", personnelSelect);
+      
       // Select'i temizle ve personel listesini ekle
       personnelSelect.innerHTML = '<option value="">Personel seçin</option>';
-      window.personnelList.forEach(personnel => {
+      personnelList.forEach(personnel => {
         const option = document.createElement('option');
         option.value = personnel;
         option.textContent = personnel;
@@ -6561,8 +6638,9 @@
         personnelSelect.value = currentValue;
       }
       
-      // Personel seçimi değiştiğinde submit butonunu aktif et
-      personnelSelect.addEventListener('change', function() {
+      // Event listener'ı temizle ve yeniden ekle (çift eklemeyi önlemek için)
+      personnelSelect.removeEventListener('change', personnelSelect._changeHandler);
+      personnelSelect._changeHandler = function() {
         const submitBtn = document.querySelector(`button[onclick="submitRating('${orderId}')"]`);
         if (submitBtn) {
           // Eğer puanlama zaten yapılmışsa butonu aktif tut
@@ -6574,9 +6652,84 @@
             submitBtn.disabled = !this.value;
           }
         }
-      });
+      };
+      personnelSelect.addEventListener('change', personnelSelect._changeHandler);
       
       console.log("Personel listesi yüklendi, orderId:", orderId);
+    }
+
+    // Personel listesini gerçek zamanlı dinle
+    function listenToPersonnelUpdates() {
+      if (!userData || userData.floor === undefined || userData.floor === null) {
+        console.log("Kullanıcı verisi yok, personel dinleme başlatılmıyor");
+        return;
+      }
+      
+      // Kat grubuna göre personel koleksiyonu belirleme
+      let personnelCollection = 'personel_z123';
+      if (userData.floor === 0) {
+        personnelCollection = 'personel_z123';
+      } else if (userData.floor >= 1 && userData.floor <= 3) {
+        personnelCollection = 'personel_z123';
+      } else if (userData.floor >= 4 && userData.floor <= 6) {
+        personnelCollection = 'personel_456';
+      } else if (userData.floor >= 7 && userData.floor <= 10) {
+        personnelCollection = 'personel_78910';
+      }
+      
+      console.log("Personel koleksiyonu dinleniyor:", personnelCollection);
+      
+      // Personel koleksiyonunu gerçek zamanlı dinle
+      firebase.firestore().collection(personnelCollection).onSnapshot((querySnapshot) => {
+        const personnelOptions = [];
+        querySnapshot.forEach((doc) => {
+          const personnel = doc.data();
+          personnelOptions.push(`${personnel.ad} ${personnel.soyad}`);
+        });
+        
+        console.log("Personel listesi güncellendi, yeni personel sayısı:", personnelOptions.length);
+        
+        // Global personel listesini güncelle
+        window.personnelList = personnelOptions;
+        
+        // Tüm aktif personel dropdown'larını güncelle
+        updateAllPersonnelDropdowns(personnelOptions);
+      }, (error) => {
+        console.error("Personel listesi dinlenirken hata:", error);
+      });
+    }
+
+    // Tüm personel dropdown'larını güncelle
+    function updateAllPersonnelDropdowns(personnelList) {
+      const personnelSelects = document.querySelectorAll('.personnel-select');
+      personnelSelects.forEach(select => {
+        const orderId = select.getAttribute('data-order-id');
+        if (orderId) {
+          const currentValue = select.value;
+          populatePersonnelDropdown(select, personnelList, currentValue, orderId);
+        }
+      });
+    }
+
+    // Teslim edildi durumunda submit butonunu aktif et
+    function enableSubmitButtonIfDelivered(orderId) {
+      // Siparişin durumunu kontrol et
+      firebase.firestore().collection('user_order_history').doc(currentUser.uid).collection('orders').doc(orderId).get()
+        .then((doc) => {
+          if (doc.exists) {
+            const orderData = doc.data();
+            if (orderData.status === 'teslim edildi') {
+              const submitBtn = document.querySelector(`button[onclick="submitRating('${orderId}')"]`);
+              if (submitBtn) {
+                submitBtn.disabled = false;
+                console.log(`Submit butonu aktif edildi, orderId: ${orderId}`);
+              }
+            }
+          }
+        })
+        .catch((error) => {
+          console.error('Sipariş durumu kontrol edilirken hata:', error);
+        });
     }
 
     // showScreen fonksiyonunu güncelle
