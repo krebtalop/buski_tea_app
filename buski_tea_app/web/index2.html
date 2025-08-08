@@ -741,7 +741,7 @@
       <button id="open-report-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium">
         Rapor
       </button>
-      <button id="open-floor-report-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium">
+      <button id="open-floor-report-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium">
         Kat Raporu
       </button>
     </div>
@@ -767,6 +767,8 @@ Personel
     <div class="flex justify-center border-b border-gray-200 mb-6 relative">
       <button id="preparing-tab" class="tab-active px-6 py-3 text-lg relative">
         Hazırlananlar
+        <!-- Hazırlananlar Bildirim Alerti -->
+        <div id="preparing-alert" class="absolute -top-2 -right-2 w-4 h-4 bg-red-500 rounded-full animate-pulse hidden"></div>
       </button>
       <button id="delivered-tab" class="tab-inactive px-6 py-3 text-lg relative">
         Teslim Edilenler
@@ -1623,8 +1625,73 @@ async function updateReport() {
             eklenenSiparisler: [order.id],
           });
         }
+        
+        // Kat raporunu da güncelle
+        await updateFloorReportData(order);
       } catch (error) {
         console.error('Rapor toplamı artırılırken hata:', error);
+      }
+    }
+    
+    // Kat raporu verilerini güncelleyen fonksiyon
+    async function updateFloorReportData(order) {
+      try {
+        const floorReportRef = doc(db, "kat_raporlari", activeFloorGroup);
+        const floorReportDoc = await getDoc(floorReportRef);
+        
+        let floorSales = {};
+        if (floorReportDoc.exists()) {
+          floorSales = floorReportDoc.data().floorSales || {};
+        }
+        
+        const floor = order.floor || 0;
+        if (!floorSales[floor]) {
+          floorSales[floor] = {
+            total: 0,
+            count: 0,
+            items: {},
+            orders: []
+          };
+        }
+        
+        // Sipariş zaten eklenmiş mi kontrol et
+        const orderExists = floorSales[floor].orders.some(existingOrder => existingOrder.id === order.id);
+        if (!orderExists) {
+          floorSales[floor].total += order.toplamFiyat || 0;
+          floorSales[floor].count += 1;
+          
+          // Sipariş detaylarını sakla
+          floorSales[floor].orders.push({
+            id: order.id,
+            totalPrice: order.toplamFiyat || 0,
+            items: order.items || [],
+            date: order.tarih || new Date()
+          });
+          
+          // Ürün bazlı satışları da hesapla
+          if (order.items && Array.isArray(order.items)) {
+            order.items.forEach(item => {
+              const itemName = item.name || 'Bilinmeyen Ürün';
+              if (!floorSales[floor].items[itemName]) {
+                floorSales[floor].items[itemName] = {
+                  quantity: 0,
+                  revenue: 0
+                };
+              }
+              floorSales[floor].items[itemName].quantity += item.adet || 1;
+              floorSales[floor].items[itemName].revenue += (item.price || 0) * (item.adet || 1);
+            });
+          }
+          
+          // Firestore'a kaydet
+          await setDoc(floorReportRef, {
+            floorSales: floorSales,
+            lastUpdated: new Date(),
+            floorGroup: activeFloorGroup
+          }, { merge: true });
+        }
+      } catch (error) {
+        console.error('Kat raporu güncellenirken hata:', error);
       }
     }
     // Siparişi sil (geçmiş siparişler için korunur)
@@ -2388,7 +2455,6 @@ async function updateReport() {
       
       // Badge elementlerinin varlığını kontrol et
       if (preparingBadge) {
-        preparingBadge.textContent = preparingCount;
         preparingBadge.classList.toggle('hidden', preparingCount === 0);
       }
       if (deliveredBadge) {
@@ -2622,8 +2688,7 @@ async function updateReport() {
 
     // Kat Bazlı Satış Raporu Hesaplama
     async function updateFloorSalesReport() {
-      // index.html index2.html index3.html entegrasyonu
-      // Bu fonksiyon kat bazlı satış raporunu hesaplayacak
+      // Rapor kısmı gibi kalıcı toplamı kullan
       console.log('Kat bazlı satış raporu güncelleniyor...');
       
       try {
@@ -2636,59 +2701,7 @@ async function updateReport() {
           floorSales = floorReportDoc.data().floorSales || {};
         }
         
-        // Mevcut siparişleri de ekle (sadece teslim edilmiş olanlar)
-        const filteredOrders = filterOrdersByPanel(allOrders);
-        
-        filteredOrders.forEach(order => {
-          if (order.status === 'teslim edildi') {
-            const floor = order.floor || 0;
-            if (!floorSales[floor]) {
-              floorSales[floor] = {
-                total: 0,
-                count: 0,
-                items: {},
-                orders: [] // Sipariş detaylarını sakla
-              };
-            }
-            
-            // Sipariş zaten eklenmiş mi kontrol et
-            const orderExists = floorSales[floor].orders.some(existingOrder => existingOrder.id === order.id);
-            if (!orderExists) {
-              floorSales[floor].total += order.toplamFiyat || 0;
-              floorSales[floor].count += 1;
-              
-              // Sipariş detaylarını sakla
-              floorSales[floor].orders.push({
-                id: order.id,
-                totalPrice: order.toplamFiyat || 0,
-                items: order.items || [],
-                date: order.tarih || new Date()
-              });
-              
-              // Ürün bazlı satışları da hesapla
-              if (order.items && Array.isArray(order.items)) {
-                order.items.forEach(item => {
-                  const itemName = item.name || 'Bilinmeyen Ürün';
-                  if (!floorSales[floor].items[itemName]) {
-                    floorSales[floor].items[itemName] = {
-                      quantity: 0,
-                      revenue: 0
-                    };
-                  }
-                  floorSales[floor].items[itemName].quantity += item.adet || 1;
-                  floorSales[floor].items[itemName].revenue += (item.price || 0) * (item.adet || 1);
-                });
-              }
-            }
-          }
-        });
-        
-        // Firestore'a kaydet
-        await setDoc(floorReportRef, {
-          floorSales: floorSales,
-          lastUpdated: new Date(),
-          floorGroup: activeFloorGroup
-        });
+        // Sadece kalıcı verileri göster, mevcut siparişleri tekrar hesaplama
         
         // Tabloyu güncelle
         if (floorSalesTable) {
@@ -2766,6 +2779,15 @@ async function updateReport() {
               </tbody>
             `;
           }
+          
+          // Rapor kısmını da temizle (aynı veri kaynağını kullandığı için)
+          const raporRef = doc(db, "raporlar", activeFloorGroup);
+          await setDoc(raporRef, {
+            kaliciToplam: 0,
+            eklenenSiparisler: [],
+            lastUpdated: new Date(),
+            floorGroup: activeFloorGroup
+          });
           
         }
       } catch (error) {
