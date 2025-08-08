@@ -201,7 +201,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
       _orders = panelOrdersSnapshot.docs
           .where((doc) => userOrderIds.contains(doc.id))
           .toList();
-
+  
       _totalSpent = 0;
       _categoryData.clear();
       _categoryCounts.clear();

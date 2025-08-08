@@ -635,7 +635,7 @@
 
   <!-- Kat Bazlı Satış Raporu Modal -->
   <div id="floor-report-modal" class="modal-overlay">
-    <div class="modal-content" style="max-width:800px;">
+    <div class="modal-content" style="max-width:1000px;">
       <div class="flex justify-between items-center p-4 border-b">
         <h2 class="text-xl font-bold text-gray-800">Kat Bazlı Satış Raporu</h2>
         <button id="close-floor-report-btn" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>
@@ -643,6 +643,7 @@
       <div class="p-6">
         <div class="mb-4">
           <h3 class="text-lg font-semibold text-gray-700 mb-2">Kat 4-5-6 Satış Raporu</h3>
+          <p class="text-sm text-gray-600">Kat satırlarına tıklayarak detay bilgileri görebilirsiniz</p>
         </div>
         <div class="overflow-x-auto">
           <table id="floor-sales-table" class="w-full border-collapse border border-gray-300">
@@ -651,7 +652,7 @@
                 <th class="px-4 py-2 text-left border border-gray-300">Kat</th>
                 <th class="px-4 py-2 text-left border border-gray-300">Sipariş Sayısı</th>
                 <th class="px-4 py-2 text-left border border-gray-300">Toplam Satış</th>
-                <th class="px-4 py-2 text-left border border-gray-300">En Popüler Ürün</th>
+                <th class="px-4 py-2 text-left border border-gray-300">Detay</th>
               </tr>
             </thead>
             <tbody>
@@ -660,6 +661,21 @@
               </tr>
             </tbody>
           </table>
+        </div>
+        
+        <!-- Kat Detay Modal -->
+        <div id="floor-detail-modal" class="fixed inset-0 z-[999999] flex items-center justify-center modal-backdrop-light hidden">
+          <div class="bg-white rounded-lg shadow-2xl max-w-4xl w-full mx-4 transform transition-all duration-300 scale-95 opacity-0" id="floor-detail-content">
+            <div class="p-6">
+              <div class="flex justify-between items-center mb-4">
+                <h3 id="floor-detail-title" class="text-xl font-bold text-gray-800">Kat Detay Raporu</h3>
+                <button id="close-floor-detail-btn" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>
+              </div>
+              <div id="floor-detail-content-body" class="max-h-96 overflow-y-auto">
+                <!-- Detay içeriği buraya gelecek -->
+              </div>
+            </div>
+          </div>
         </div>
         
         <!-- Kat Raporu Temizleme Butonu -->
@@ -726,6 +742,7 @@
   <!-- Bildirim Sesi -->
       <audio id="order-notification-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3" preload="auto"></audio>
     <audio id="bell-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-bell-notification-933.mp3" preload="auto"></audio>
+    <audio id="notification-sound" src="assets/sounds/notification.mp3" preload="auto"></audio>
   <!-- Ana İçerik -->
   <header class="header-gradient text-white py-6 px-4 shadow-lg relative">
     <div class="container mx-auto">
@@ -756,9 +773,9 @@ Personel
       <button id="delete-all-orders-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium hidden" style="margin-top: 30px;">
         <i class="fas fa-trash-alt mr-1"></i>Tüm Teslim Edilenleri Sil
       </button>
-      <button id="delete-all-ratings-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium hidden" style="margin-top: 30px;">
-        <i class="fas fa-trash-alt mr-1"></i>Tüm Puanları Sil
-      </button>
+              <button id="delete-all-ratings-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium hidden" style="margin-top: 30px;">
+          <i class="fas fa-trash-alt mr-1"></i>Tüm Puanları Sil
+        </button>
 
     </div>
   </header>
@@ -768,7 +785,7 @@ Personel
       <button id="preparing-tab" class="tab-active px-6 py-3 text-lg relative">
         Hazırlananlar
         <!-- Hazırlananlar Bildirim Alerti -->
-        <div id="preparing-alert" class="absolute -top-2 -right-2 w-4 h-4 bg-red-500 rounded-full animate-pulse hidden"></div>
+        <div id="preparing-alert" class="absolute -top-2 -right-2 w-4 h-4 bg-red-500 rounded-full animate-pulse hidden" style="z-index: 1000;"></div>
       </button>
       <button id="delivered-tab" class="tab-inactive px-6 py-3 text-lg relative">
         Teslim Edilenler
@@ -1052,6 +1069,45 @@ async function updateReport() {
             }, 1000);
           }
         });
+      }
+    }
+
+    // Bildirim işaretini 5 saniye boyunca yanıp söndür ve ses çal
+    let notificationTimeoutId = null;
+    function showNotificationAlert() {
+      const notificationSound = document.getElementById('notification-sound');
+      const preparingBadge = document.getElementById('preparing-alert');
+      
+      if (preparingBadge && notificationSound) {
+        // Ses her zaman çal
+        notificationSound.currentTime = 0;
+        notificationSound.play().catch(error => {
+          console.log('Ses çalınamadı:', error);
+        });
+        
+        // Bildirim işareti sadece teslim edilenler veya puanlar sekmesindeyken yanıp sönsün
+        if (activeTab === 'delivered' || activeTab === 'ratings') {
+          // Önceki timeout'u temizle
+          if (notificationTimeoutId) {
+            clearTimeout(notificationTimeoutId);
+          }
+          
+          // Bildirim işaretini göster
+          preparingBadge.classList.remove('hidden');
+          
+          // 5 saniye sonra bildirim işaretini gizle
+          notificationTimeoutId = setTimeout(() => {
+            preparingBadge.classList.add('hidden');
+            notificationTimeoutId = null;
+            console.log('Bildirim işareti 5 saniye sonra gizlendi');
+          }, 5000);
+          
+          console.log('Bildirim işareti 5 saniye boyunca gösterildi (teslim edilenler/puanlar sekmesinde)');
+        } else {
+          console.log('Bildirim işareti gösterilmedi (hazırlananlar sekmesinde)');
+        }
+        
+        console.log('Ses çalındı ve bildirim işareti durumu kontrol edildi');
       }
     }
 
@@ -1384,6 +1440,7 @@ async function updateReport() {
           if (ordersWithRatings.length > 0) {
             await showAlert(`${ordersWithRatings.length} puanlama başarıyla silindi.`, 'success');
           }
+          
         } catch (error) {
           console.error("Tüm puanlar silinirken hata oluştu:", error);
           await showAlert("Tüm puanlar silinirken bir sorun oluştu.", 'error');
@@ -1508,15 +1565,19 @@ async function updateReport() {
       // Ürünler listesi
       let itemsHtml = '-';
       if (Array.isArray(order.items) && order.items.length > 0) {
-        itemsHtml = order.items.map(item =>
-          `<div class='flex justify-between items-center bg-white rounded-lg px-3 py-2 mb-2 border border-gray-100'>
-            <span class='font-medium text-gray-900'>${escapeHtml(item.name)}</span>
+        itemsHtml = order.items.map(item => {
+          const option = item.option || item.sugar || null;
+          return `<div class='flex justify-between items-center bg-white rounded-lg px-3 py-2 mb-2 border border-gray-100'>
+            <div class='flex flex-col'>
+              <span class='font-medium text-gray-900'>${escapeHtml(item.name)}</span>
+              ${option ? `<span class='text-sm text-gray-600'>${escapeHtml(option)}</span>` : ''}
+            </div>
             <div class='flex items-center space-x-3'>
               <span class='bg-green-100 text-green-700 text-sm font-bold px-3 py-1 rounded'>${item.adet} adet</span>
               <span class='font-bold text-black'>${escapeHtml(((item.price || item.fiyat || 0) * item.adet).toString())} ₺</span>
             </div>
-          </div>`
-        ).join('');
+          </div>`;
+        }).join('');
       }
       // Buton metni ve sınıfı
       let buttonText = 'Hazırlanıyor...';
@@ -2351,13 +2412,7 @@ async function updateReport() {
             <div class="flex items-center gap-2">
               ${starsHtml}
               <span class="ml-2 text-sm text-gray-500">(${ratingValue}/5)</span>
-              <button 
-                onclick="deleteRating('${rating.id}')" 
-                class="ml-2 text-red-500 hover:text-red-700 p-1 rounded"
-                title="Bu puanlamayı sil"
-              >
-                <i class="fas fa-trash"></i>
-              </button>
+
             </div>
           </div>
           
@@ -2420,7 +2475,7 @@ async function updateReport() {
       let filteredOrders = filterOrdersByPanel(allOrders);
       
       const preparingCount = filteredOrders.filter(order => 
-        order.status !== "teslim edildi"
+        order.status === "hazırlanıyor"
       ).length;
       const deliveredCount = filteredOrders.filter(order => 
         order.status === "teslim edildi"
@@ -2455,7 +2510,10 @@ async function updateReport() {
       
       // Badge elementlerinin varlığını kontrol et
       if (preparingBadge) {
-        preparingBadge.classList.toggle('hidden', preparingCount === 0);
+        // Eğer notification timeout aktifse, badge'i değiştirme
+        if (!notificationTimeoutId) {
+          preparingBadge.classList.toggle('hidden', preparingCount === 0);
+        }
       }
       if (deliveredBadge) {
         deliveredBadge.textContent = deliveredCount;
@@ -2472,33 +2530,29 @@ async function updateReport() {
     let lastOrderCount = 0;
     
     onSnapshot(q, (snapshot) => {
-      const currentOrderIds = snapshot.docs.map(docSnap => docSnap.id);
+      // Sadece bu panele ait siparişleri filtrele
+      const panelOrders = snapshot.docs.filter(docSnap => {
+        const order = docSnap.data();
+        const floor = Number(order.floor);
+        return floor >= 4 && floor <= 6;
+      });
+      
+      const currentOrderIds = panelOrders.map(docSnap => docSnap.id);
       const currentOrderCount = currentOrderIds.length;
       
       // Yeni sipariş geldiyse çan sesi çal ve yanıp sönen buton başlat
       if (lastOrderIds.length > 0 && currentOrderCount > lastOrderCount) {
-        // Sadece bu panele ait yeni siparişler için çan sesi çal
-        const newOrders = snapshot.docs.filter(docSnap => {
-          const order = docSnap.data();
-          const floor = Number(order.floor);
-          if (activeFloorGroup === 'z123') {
-            return floor >= 1 && floor <= 3;
-          } else if (activeFloorGroup === '456') {
-            return floor >= 4 && floor <= 6;
-          } else if (activeFloorGroup === '78910') {
-            return floor >= 7 && floor <= 10;
+        // Yeni sipariş ID'lerini kaydet
+        panelOrders.forEach(docSnap => {
+          if (!lastOrderIds.includes(docSnap.id)) {
+            newOrderIds.add(docSnap.id);
           }
-          return false;
         });
         
-        if (newOrders.length > 0) {
-          // Yeni sipariş ID'lerini kaydet
-          newOrders.forEach(docSnap => {
-            newOrderIds.add(docSnap.id);
-          });
-          
-          // Ses çal
+        if (newOrderIds.size > 0) {
+          // Ses çal ve bildirim işaretini göster
           playBellSound();
+          showNotificationAlert();
         }
       }
       
@@ -2639,7 +2693,7 @@ async function updateReport() {
       listenMenuRealtime();
       renderFloors();
       updateBadges();
-      loadRatings(); // Puanları da yükle
+      loadRatings(); // İlk yüklemede ortalama puanı da yükle
     });
 
     // 10 dakikalık kontrol sistemi
@@ -2711,7 +2765,7 @@ async function updateReport() {
                 <th class="px-4 py-2 text-left">Kat</th>
                 <th class="px-4 py-2 text-left">Sipariş Sayısı</th>
                 <th class="px-4 py-2 text-left">Toplam Satış</th>
-                <th class="px-4 py-2 text-left">En Popüler Ürün</th>
+                <th class="px-4 py-2 text-left">Detay</th>
               </tr>
             </thead>
             <tbody>
@@ -2721,28 +2775,29 @@ async function updateReport() {
             const data = floorSales[floor];
             const floorName = `Kat ${floor}`;
             
-            // En popüler ürünü bul
-            let popularItem = 'Yok';
-            let maxQuantity = 0;
-            Object.keys(data.items).forEach(itemName => {
-              if (data.items[itemName].quantity > maxQuantity) {
-                maxQuantity = data.items[itemName].quantity;
-                popularItem = itemName;
-              }
-            });
-            
             tableHTML += `
-              <tr class="border-b">
+              <tr class="border-b hover:bg-gray-50 cursor-pointer floor-row" data-floor="${floor}" data-floor-name="${floorName}">
                 <td class="px-4 py-2 font-medium">${floorName}</td>
                 <td class="px-4 py-2">${data.count}</td>
                 <td class="px-4 py-2 font-bold text-green-600">${data.total.toFixed(2)} ₺</td>
-                <td class="px-4 py-2">${popularItem}</td>
+                <td class="px-4 py-2 text-blue-600 hover:text-blue-800">
+                  <i class="fas fa-eye"></i> Detay
+                </td>
               </tr>
             `;
           });
           
           tableHTML += '</tbody>';
           floorSalesTable.innerHTML = tableHTML;
+          
+          // Kat satırlarına tıklama olayı ekle
+          document.querySelectorAll('.floor-row').forEach(row => {
+            row.addEventListener('click', () => {
+              const floor = row.getAttribute('data-floor');
+              const floorName = row.getAttribute('data-floor-name');
+              showFloorDetail(floor, floorName, floorSales[floor]);
+            });
+          });
         }
       } catch (error) {
         console.error('Kat raporu güncellenirken hata:', error);
@@ -2795,6 +2850,100 @@ async function updateReport() {
         await showAlert('Kat raporu temizlenirken bir hata oluştu!', 'error');
       }
     }
+
+    // Kat detay modal'ını göster
+    function showFloorDetail(floor, floorName, floorData) {
+      const modal = document.getElementById('floor-detail-modal');
+      const content = document.getElementById('floor-detail-content');
+      const title = document.getElementById('floor-detail-title');
+      const body = document.getElementById('floor-detail-content-body');
+      
+      title.textContent = `${floorName} Detay Raporu`;
+      
+      let detailHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <h4 class="font-semibold text-gray-800 mb-3">Genel Bilgiler</h4>
+            <div class="space-y-2">
+              <div class="flex justify-between">
+                <span class="text-gray-600">Toplam Sipariş:</span>
+                <span class="font-semibold">${floorData.count || 0}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600">Toplam Satış:</span>
+                <span class="font-semibold text-green-600">${(floorData.total || 0).toFixed(2)} ₺</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600">Ortalama Sipariş:</span>
+                <span class="font-semibold">${(floorData.count || 0) > 0 ? ((floorData.total || 0) / (floorData.count || 1)).toFixed(2) : '0.00'} ₺</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <h4 class="font-semibold text-gray-800 mb-3">Ürün Dağılımı</h4>
+            <div class="space-y-2 max-h-48 overflow-y-auto">
+      `;
+      
+      if (floorData.items && Object.keys(floorData.items).length > 0) {
+        Object.entries(floorData.items).forEach(([itemName, itemData]) => {
+          detailHTML += `
+            <div class="flex justify-between items-center p-2 bg-white rounded border">
+              <span class="text-gray-700">${itemName}</span>
+              <div class="text-right">
+                <div class="font-semibold">${itemData.quantity || 0} adet</div>
+                <div class="text-sm text-green-600">${(itemData.revenue || 0).toFixed(2)} ₺</div>
+              </div>
+            </div>
+          `;
+        });
+      } else {
+        detailHTML += `
+          <div class="text-gray-500 text-center py-4">
+            <i class="fas fa-info-circle mr-2"></i>
+            Bu kat için ürün detayı bulunmuyor
+          </div>
+        `;
+      }
+      
+      detailHTML += `
+            </div>
+          </div>
+        </div>
+      `;
+      
+      body.innerHTML = detailHTML;
+      
+      // Modal'ı göster
+      modal.classList.remove('hidden');
+      setTimeout(() => {
+        content.classList.remove('scale-95', 'opacity-0');
+        content.classList.add('scale-100', 'opacity-100');
+      }, 10);
+    }
+    
+    // Kat detay modal'ını kapat
+    function closeFloorDetail() {
+      const modal = document.getElementById('floor-detail-modal');
+      const content = document.getElementById('floor-detail-content');
+      
+      content.classList.remove('scale-100', 'opacity-100');
+      content.classList.add('scale-95', 'opacity-0');
+      
+      setTimeout(() => {
+        modal.classList.add('hidden');
+      }, 300);
+    }
+    
+    // Kat detay modal kapatma butonu
+    document.getElementById('close-floor-detail-btn').addEventListener('click', closeFloorDetail);
+    
+    // Modal dışına tıklayınca kapat
+    document.getElementById('floor-detail-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'floor-detail-modal') {
+        closeFloorDetail();
+      }
+    });
 
     // Kat raporu temizleme butonu olay dinleyicisi
     document.getElementById('reset-floor-report-btn').addEventListener('click', resetFloorReport);
