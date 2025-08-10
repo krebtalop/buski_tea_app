@@ -191,7 +191,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
 
       // Kullanıcı geçmişinden siparişleri al
       _orders = userHistorySnapshot.docs;
-  
+
       _totalSpent = 0;
       _categoryData.clear();
       _categoryCounts.clear();
@@ -258,7 +258,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
 
       // Sadece kullanıcı geçmişinden sil
       await FirebaseFirestore.instance
-          .collection('user_orders')
+          .collection('user_order_history')
           .doc(user.uid)
           .collection('orders')
           .doc(orderId)
@@ -293,10 +293,10 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Siparişleri Sil'),
+          title: const Text('Tüm Siparişleri Sil'),
           content: const Text(
-            'Teslim edilmemiş sipariş geçmişinizi silmek istediğinizden emin misiniz?\n\n'
-            'Teslim edilen siparişler korunacaktır.',
+            'Tüm sipariş geçmişinizi (teslim edilenler dahil) silmek istediğinizden emin misiniz?\n\n'
+            'Bu işlem sadece uygulamadaki geçmişinizi temizler, panel kayıtlarını etkilemez.',
           ),
           actions: [
             TextButton(
@@ -320,7 +320,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
 
       // Kullanıcının tüm siparişlerini al
       final snapshot = await FirebaseFirestore.instance
-          .collection('user_orders')
+          .collection('user_order_history')
           .doc(user.uid)
           .collection('orders')
           .get();
@@ -337,17 +337,13 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
         return;
       }
 
-      // Batch işlemi ile teslim edilmemiş siparişleri sil
+      // Batch işlemi ile TÜM siparişleri sil
       final batch = FirebaseFirestore.instance.batch();
       int deletedCount = 0;
 
       for (var doc in snapshot.docs) {
-        final orderData = doc.data();
-        // Teslim edilen siparişleri silme
-        if (orderData['status'] != 'teslim edildi') {
-          batch.delete(doc.reference);
-          deletedCount++;
-        }
+        batch.delete(doc.reference);
+        deletedCount++;
       }
 
       await batch.commit();
@@ -358,9 +354,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              '$deletedCount teslim edilmemiş sipariş başarıyla silindi',
-            ),
+            content: Text('$deletedCount sipariş geçmişinizden silindi'),
             backgroundColor: Colors.green,
           ),
         );
@@ -436,10 +430,6 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
 
     // Pasta grafiğinin boyutuna göre dinamik kart boyutu hesapla
     final int categoryCount = categories.length;
-    final double totalValue = _categoryData.values.fold(
-      0.0,
-      (sum, value) => sum + value,
-    );
 
     // Grafiğin büyüklüğüne göre boyut hesapla
     double chartSize;
@@ -634,7 +624,8 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
     _selectedOrderId = orderId;
     _selectedRating = orderData['rating'] ?? 0;
     _commentController.text = orderData['comment'] ?? '';
-    _secilenGarsonlar[orderId] = orderData['garson'] ?? orderData['selectedPersonnel'];
+    _secilenGarsonlar[orderId] =
+        orderData['garson'] ?? orderData['selectedPersonnel'];
     setState(() {
       _showRatingDialog = true;
     });
@@ -648,6 +639,33 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
 
+      // Kullanıcı profilinden kat ve departman bilgilerini al
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      final userData = userDoc.data() ?? {};
+
+      // Floor'u güvenli şekilde sayıya çevir
+      int userFloor = 0;
+      final dynamic floorValue = userData['floor'];
+      if (floorValue is int) {
+        userFloor = floorValue;
+      } else if (floorValue is String) {
+        userFloor = int.tryParse(floorValue) ?? 0;
+      }
+
+      final String userDepartment = (userData['department'] ?? '').toString();
+      final String userFullName =
+          (user.displayName ??
+                  (userData['fullName'] ??
+                      ((userData['name'] ?? '') +
+                          (userData['surname'] != null
+                              ? ' ' + userData['surname']
+                              : ''))))
+              .toString()
+              .trim();
+
       final updateData = {
         'rating': _selectedRating,
         'ratingDate': Timestamp.now(),
@@ -660,9 +678,9 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
         'orderId': _selectedOrderId,
         'userId': user.uid,
         'userEmail': user.email,
-        'userName': user.displayName ?? '',
-        'userFloor': 0, // Kullanıcı verilerinden alınabilir
-        'userDepartment': '', // Kullanıcı verilerinden alınabilir
+        'userName': userFullName,
+        'userFloor': userFloor,
+        'userDepartment': userDepartment,
         'rating': _selectedRating,
         'comment': _commentController.text.trim(),
         'selectedPersonnel': _secilenGarsonlar[_selectedOrderId] ?? '',
@@ -943,7 +961,11 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: _selectedRating > 0 && _secilenGarsonlar[_selectedOrderId] != null ? _saveRating : null,
+                        onPressed:
+                            _selectedRating > 0 &&
+                                _secilenGarsonlar[_selectedOrderId] != null
+                            ? _saveRating
+                            : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue[700],
                           foregroundColor: Colors.white,
