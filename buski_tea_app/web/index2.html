@@ -2483,11 +2483,11 @@ async function updateReport() {
           </div>
           
           <!-- Personel Bilgisi - Her zaman göster -->
-          ${(rating.selectedPersonnel || rating.deliveryPersonnel) ? `
+          ${(rating.selectedPersonnel || rating.deliveryPersonnel || rating.garson) ? `
             <div class="bg-green-50 rounded-lg p-3 mb-3">
               <div class="flex items-center">
                 <i class="fas fa-user-check text-green-600 mr-2"></i>
-                <span class="text-sm text-gray-700">Değerlendirilen Personel: <span class="font-semibold text-green-700">${escapeHtml(rating.selectedPersonnel || rating.deliveryPersonnel)}</span></span>
+                <span class="text-sm text-gray-700">Değerlendirilen Personel: <span class="font-semibold text-green-700">${escapeHtml(rating.selectedPersonnel || rating.deliveryPersonnel || rating.garson)}</span></span>
               </div>
             </div>
           ` : ''}

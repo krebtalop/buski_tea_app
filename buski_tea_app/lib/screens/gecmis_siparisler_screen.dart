@@ -575,6 +575,8 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
         'status': 'hazırlanıyor',
         'isRepeated': true,
         'originalOrderId': orderData['id'] ?? '',
+        'garson': orderData['garson'] ?? orderData['selectedPersonnel'] ?? '', // Personel bilgisini de ekle
+        'selectedPersonnel': orderData['garson'] ?? orderData['selectedPersonnel'] ?? '', // Web sayfaları için
       };
 
       // Siparişi hem panel koleksiyonuna hem de kullanıcı geçmişine kaydet
@@ -625,7 +627,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
     _selectedRating = orderData['rating'] ?? 0;
     _commentController.text = orderData['comment'] ?? '';
     _secilenGarsonlar[orderId] =
-        orderData['garson'] ?? orderData['selectedPersonnel'];
+        orderData['garson'] ?? orderData['selectedPersonnel'] ?? '';
     setState(() {
       _showRatingDialog = true;
     });
@@ -666,12 +668,13 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
               .toString()
               .trim();
 
-      final updateData = {
-        'rating': _selectedRating,
-        'ratingDate': Timestamp.now(),
-        'comment': _commentController.text.trim(),
-        'garson': _secilenGarsonlar[_selectedOrderId],
-      };
+             final updateData = {
+         'rating': _selectedRating,
+         'ratingDate': Timestamp.now(),
+         'comment': _commentController.text.trim(),
+         'garson': _secilenGarsonlar[_selectedOrderId] ?? '',
+         'selectedPersonnel': _secilenGarsonlar[_selectedOrderId] ?? '', // Web sayfaları için eklendi
+       };
 
       // Ratings koleksiyonuna da kaydet
       final ratingData = {
@@ -684,6 +687,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
         'rating': _selectedRating,
         'comment': _commentController.text.trim(),
         'selectedPersonnel': _secilenGarsonlar[_selectedOrderId] ?? '',
+        'garson': _secilenGarsonlar[_selectedOrderId] ?? '', // Web sayfaları için eklendi
         'timestamp': Timestamp.now(),
       };
 
@@ -907,34 +911,51 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                // Garson seçimi dropdown'u
-                Container(
-                  width: double.infinity,
-                  child: DropdownButtonFormField<String>(
-                    value: _secilenGarsonlar[_selectedOrderId],
-                    decoration: const InputDecoration(
-                      labelText: 'Siparişi getiren garson',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(8)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(8)),
-                        borderSide: BorderSide(color: Colors.blue),
-                      ),
-                    ),
-                    items: _garsonlar.map((String garson) {
-                      return DropdownMenuItem<String>(
-                        value: garson,
-                        child: Text(garson),
-                      );
-                    }).toList(),
-                    onChanged: (String? yeniGarson) {
-                      setState(() {
-                        _secilenGarsonlar[_selectedOrderId!] = yeniGarson;
-                      });
-                    },
-                  ),
-                ),
+                                 // Garson seçimi dropdown'u
+                 if (_garsonlar.isNotEmpty) ...[
+                   Container(
+                     width: double.infinity,
+                     child: DropdownButtonFormField<String>(
+                       value: _garsonlar.contains(_secilenGarsonlar[_selectedOrderId]) 
+                           ? _secilenGarsonlar[_selectedOrderId] 
+                           : null,
+                       decoration: const InputDecoration(
+                         labelText: 'Siparişi getiren garson',
+                         border: OutlineInputBorder(
+                           borderRadius: BorderRadius.all(Radius.circular(8)),
+                         ),
+                         focusedBorder: OutlineInputBorder(
+                           borderRadius: BorderRadius.all(Radius.circular(8)),
+                           borderSide: BorderSide(color: Colors.blue),
+                         ),
+                       ),
+                       items: _garsonlar.map((String garson) {
+                         return DropdownMenuItem<String>(
+                           value: garson,
+                           child: Text(garson),
+                         );
+                       }).toList(),
+                       onChanged: (String? yeniGarson) {
+                         setState(() {
+                           _secilenGarsonlar[_selectedOrderId!] = yeniGarson;
+                         });
+                       },
+                     ),
+                   ),
+                 ] else ...[
+                   Container(
+                     width: double.infinity,
+                     padding: const EdgeInsets.all(12),
+                     decoration: BoxDecoration(
+                       border: Border.all(color: Colors.grey),
+                       borderRadius: BorderRadius.circular(8),
+                     ),
+                     child: const Text(
+                       'Personel listesi yüklenemedi. Lütfen daha sonra tekrar deneyin.',
+                       style: TextStyle(color: Colors.grey),
+                     ),
+                   ),
+                 ],
                 const SizedBox(height: 20),
                 // Yorum alanı
                 Container(
@@ -961,11 +982,11 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                        onPressed:
-                            _selectedRating > 0 &&
-                                _secilenGarsonlar[_selectedOrderId] != null
-                            ? _saveRating
-                            : null,
+                                                 onPressed:
+                             _selectedRating > 0 &&
+                                 (_garsonlar.isEmpty || _secilenGarsonlar[_selectedOrderId] != null)
+                             ? _saveRating
+                             : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue[700],
                           foregroundColor: Colors.white,
@@ -990,6 +1011,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                               'comment': '',
                               'ratingDate': null,
                               'garson': null,
+                              'selectedPersonnel': null, // Web sayfaları için eklendi
                             };
                             await Future.wait([
                               FirebaseFirestore.instance
@@ -1224,7 +1246,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                             );
                             final rating = data['rating'] ?? 0;
                             final comment = data['comment'] ?? '';
-                            final garson = data['garson'] ?? '';
+                            final garson = data['garson'] ?? data['selectedPersonnel'] ?? '';
                             final status = data['status'] ?? 'hazırlanıyor';
                             final orderId = _orders[i].id;
                             final isExpanded =
@@ -1409,7 +1431,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                                                     ),
                                                     const SizedBox(width: 8),
                                                     Text(
-                                                      'Garson: $garson',
+                                                      'Değerlendirilen Personel: $garson',
                                                       style: TextStyle(
                                                         fontSize: 13,
                                                         fontWeight:
