@@ -2484,10 +2484,10 @@ async function updateReport() {
       let filteredOrders = filterOrdersByPanel(allOrders);
       
       const preparingCount = filteredOrders.filter(order => 
-        order.status === "hazırlanıyor"
+        order.status === "hazırlanıyor" && order.status !== "silindi"
       ).length;
       const deliveredCount = filteredOrders.filter(order => 
-        order.status === "teslim edildi"
+        order.status === "teslim edildi" && order.status !== "silindi"
       ).length;
       
       // Normal siparişlerden puanlama sayısı

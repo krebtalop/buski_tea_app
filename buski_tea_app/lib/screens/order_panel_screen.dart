@@ -103,6 +103,7 @@ class OrderPanelScreen extends StatelessWidget {
                               floorInt = int.tryParse(floorValue);
                             }
                             return floorInt == floor &&
+                                status != 'silindi' &&
                                 (controller.showTeslimEdildi.value
                                     ? status == 'teslim edildi'
                                     : status != 'teslim edildi');
