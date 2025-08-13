@@ -1601,7 +1601,7 @@ async function updateReport() {
 
     // Tüm puanları sil
     window.deleteAllRatings = async function() {
-      const confirmed = await showConfirm('Tüm Puanları Sil', 'Bu işlem tüm puanları ve yorumları kalıcı olarak silecektir. Devam etmek istediğinizden emin misiniz?', 'danger');
+      const confirmed = await showConfirm('Tüm Puanları Sil', 'Tüm puanları ve yorumları kalıcı olarak silmek istediğinizden emin misiniz?', 'danger');
       if (confirmed) {
         try {
           // Kat grubuna göre siparişleri filtrele
@@ -2103,7 +2103,7 @@ async function updateReport() {
     }
     // Siparişi sil (geçmiş siparişler için korunur)
     window.deleteOrder = async function(id, btn) {
-      const confirmed = await showConfirm('Siparişi Sil', 'Bu siparişi panelden kaldırmak istediğinizden emin misiniz? Sipariş geçmiş siparişlerde korunacaktır.', 'danger');
+      const confirmed = await showConfirm('Siparişi Sil', 'Bu siparişi silmek istediğinizden emin misiniz?', 'danger');
       if (confirmed) {
         try {
           const order = allOrders.find(o => o.id === id);
@@ -2156,7 +2156,7 @@ async function updateReport() {
     
     // Tüm teslim edilmiş siparişleri sil fonksiyonu
     async function deleteAllOrders() {
-      const confirmed = await showConfirm('Tüm Siparişleri Sil', 'Tüm teslim edilmiş siparişleri silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.', 'danger');
+      const confirmed = await showConfirm('Tüm Siparişleri Sil', 'Tüm teslim edilen siparişleri silmek istediğinizden emin misiniz?', 'danger');
       if (confirmed) {
         try {
           // Panele göre siparişleri filtrele ve sadece teslim edilmiş olanları al
@@ -3116,7 +3116,7 @@ async function updateReport() {
     // Kat raporu temizleme fonksiyonu
     async function resetFloorReport() {
       try {
-        const confirmed = await showConfirm('Kat Raporu Temizleme', 'Kat raporu verilerini sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz.', 'danger');
+        const confirmed = await showConfirm('Kat Raporu Temizleme', 'Kat raporu verilerini sıfırlamak istediğinizden emin misiniz?', 'danger');
         if (confirmed) {
           const floorReportRef = doc(db, "kat_raporlari", activeFloorGroup);
           await setDoc(floorReportRef, {
