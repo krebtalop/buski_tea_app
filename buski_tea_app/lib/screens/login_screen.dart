@@ -22,8 +22,18 @@ class _LoginScreenState extends State<LoginScreen> {
     'Çayınız demli mi olsun, demsiz mi?',
     'Çalışırken bi kahve molası fena mı olur?',
     'Yoğun tempoya küçük bir tebessüm molası.',
-    'Mesain en güzel demlikçisi taze demlenmiş bir bardak çay.',
+    'Mesainin en güzel demlikçisi taze demlenmiş bir bardak çay.',
     'Hayat kısa, çaylar demli!',
+    'Her yudum bir hikaye, her bardak bir anı.',
+    'Çay demlerken hayaller de demlensin.',
+    'Sıcak çaylar, soğuk günlerin dostu.',
+    'Çay saati, kalp saati.',
+    'Demli çay, demli sohbet.',
+    'Çay içerken zaman durur.',
+    'Her çay molası yeni bir başlangıç.',
+    'Çayın tadı, sevginin tadı.',
+    'Bir bardak çay, bin bir dertlerin ilacı.',
+    'Çay demlenirken sabır da demlensin.'
   ];
   late final String _randomSentence;
 

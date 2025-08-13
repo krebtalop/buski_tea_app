@@ -667,19 +667,6 @@
         <div class="mb-4">
           <h3 class="text-lg font-semibold text-gray-700 mb-2">Zemin ve Kat 1-2-3 Satış Raporu</h3>
           <p class="text-sm text-gray-600">Kat satırlarına tıklayarak detay bilgileri görebilirsiniz</p>
-          
-          <!-- Kat Raporu Periyot Butonları -->
-          <div class="flex gap-2 mt-3">
-            <button id="floor-daily-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300">
-              Günlük
-            </button>
-            <button id="floor-weekly-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300">
-              Haftalık
-            </button>
-            <button id="floor-monthly-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300">
-              Aylık
-            </button>
-          </div>
         </div>
         <div class="overflow-x-auto">
           <table id="floor-sales-table" class="w-full border-collapse border border-gray-300">
@@ -789,29 +776,8 @@
       <p class="mt-2 opacity-90 text-center">Siparişleri takip edin ve durumlarını güncelleyin</p>
     </div>
     
-    <!-- Rapor Butonları (sol üst) -->
-    <div class="absolute top-4 left-4 z-50 flex flex-col gap-2">
-      <button id="open-report-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium">
-        Rapor
-      </button>
-      <button id="open-floor-report-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium">
-        Kat Raporu
-      </button>
-    </div>
-        <!-- Menü ve Personel Butonları (sağ üst) -->
-    <div class="absolute top-4 right-4 z-50 flex flex-col items-end gap-2">
-      <button id="open-menu-btn" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium w-24 flex items-center justify-center">
-Menü
-      </button>
-      <button id="open-personel-btn" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium w-24 flex items-center justify-center">
-Personel
-      </button>
-      <button id="delete-all-orders-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium hidden" style="margin-top: 30px;">
-        <i class="fas fa-trash-alt mr-1"></i>Tüm Teslim Edilenleri Sil
-      </button>
-              <button id="delete-all-ratings-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium hidden" style="margin-top: 30px;">
-          <i class="fas fa-trash-alt mr-1"></i>Tüm Puanları Sil
-        </button>
+
+
 
     </div>
   </header>
@@ -834,6 +800,16 @@ Personel
       <button id="ratings-tab" class="tab-inactive px-8 py-4 text-lg font-semibold relative border-b-4 border-transparent hover:border-yellow-300 hover:bg-yellow-50">
         Puanlama
       </button>
+      
+      <!-- Silme Butonları - Sağ Köşe -->
+      <div class="absolute right-0 top-0.5 flex gap-2">
+        <button id="delete-all-orders-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium hidden">
+          <i class="fas fa-trash-alt mr-1"></i>Tüm Teslim Edilenleri Sil
+        </button>
+        <button id="delete-all-ratings-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium hidden">
+          <i class="fas fa-trash-alt mr-1"></i>Tüm Puanları Sil
+        </button>
+      </div>
     </div>
     
 
@@ -872,7 +848,6 @@ Personel
   <script type="module">
     // Rapor modal elemanları
 const reportModal = document.getElementById('report-modal');
-const openReportBtn = document.getElementById('open-report-btn');
 const closeReportBtn = document.getElementById('close-report-btn');
 const reportDate = document.getElementById('report-date');
 const dailyTotal = document.getElementById('daily-total');
@@ -880,13 +855,11 @@ const weeklyTotal = document.getElementById('weekly-total');
 const monthlyTotal = document.getElementById('monthly-total');
 
 // Rapor modal olay dinleyicileri
-openReportBtn.addEventListener('click', () => {
-  updateReport();
-  reportModal.style.display = 'flex';
-});
-closeReportBtn.addEventListener('click', () => {
-  reportModal.style.display = 'none';
-});
+if (closeReportBtn) {
+  closeReportBtn.addEventListener('click', () => {
+    reportModal.style.display = 'none';
+  });
+}
 
 // Rapor hesaplama fonksiyonları - Panele göre filtrele
 function calculateDailyTotal(orders, date) {
@@ -933,151 +906,25 @@ function calculateMonthlyTotal(orders, date) {
   }).reduce((sum, order) => sum + (order.toplamFiyat || 0), 0);
 }
 
-// Otomatik sıfırlama için değişkenler
-let lastDailyReset = null;
-let lastWeeklyReset = null;
-let lastMonthlyReset = null;
-
-// Kat raporu için değişkenler
-let activeFloorReportPeriod = 'daily'; // 'daily', 'weekly', 'monthly'
-let lastFloorDailyReset = null;
-let lastFloorWeeklyReset = null;
-let lastFloorMonthlyReset = null;
-
-// Otomatik sıfırlama kontrolü
-async function checkAutoReset() {
-  const now = new Date();
-  const raporRef = doc(db, "raporlar", activeFloorGroup);
-  const raporDoc = await getDoc(raporRef);
-  
-  if (raporDoc.exists()) {
-    const data = raporDoc.data();
-    lastDailyReset = data.lastDailyReset ? data.lastDailyReset.toDate() : null;
-    lastWeeklyReset = data.lastWeeklyReset ? data.lastWeeklyReset.toDate() : null;
-    lastMonthlyReset = data.lastMonthlyReset ? data.lastMonthlyReset.toDate() : null;
-    
-    let needsUpdate = false;
-    const updateData = {};
-    
-    // Günlük sıfırlama kontrolü (her gün 00:00)
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    if (!lastDailyReset || lastDailyReset < today) {
-      updateData.dailyTotal = 0;
-      updateData.lastDailyReset = Timestamp.fromDate(today);
-      needsUpdate = true;
-      console.log('Günlük rapor sıfırlandı');
-    }
-    
-    // Haftalık sıfırlama kontrolü (her pazartesi 00:00)
-    const monday = new Date(now);
-    monday.setDate(now.getDate() - now.getDay() + 1); // Pazartesi
-    monday.setHours(0, 0, 0, 0);
-    if (!lastWeeklyReset || lastWeeklyReset < monday) {
-      updateData.weeklyTotal = 0;
-      updateData.lastWeeklyReset = Timestamp.fromDate(monday);
-      needsUpdate = true;
-      console.log('Haftalık rapor sıfırlandı');
-    }
-    
-    // Aylık sıfırlama kontrolü (her ayın 1'i 00:00)
-    const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    if (!lastMonthlyReset || lastMonthlyReset < firstOfMonth) {
-      updateData.monthlyTotal = 0;
-      updateData.lastMonthlyReset = Timestamp.fromDate(firstOfMonth);
-      needsUpdate = true;
-      console.log('Aylık rapor sıfırlandı');
-    }
-    
-    if (needsUpdate) {
-      await updateDoc(raporRef, updateData);
-    }
-  }
-}
-
-// Kat raporu otomatik sıfırlama kontrolü
-async function checkFloorAutoReset() {
-  const now = new Date();
-  const floorReportRef = doc(db, "kat_raporlari", activeFloorGroup);
-  const floorReportDoc = await getDoc(floorReportRef);
-  
-  if (floorReportDoc.exists()) {
-    const data = floorReportDoc.data();
-    lastFloorDailyReset = data.lastFloorDailyReset ? data.lastFloorDailyReset.toDate() : null;
-    lastFloorWeeklyReset = data.lastFloorWeeklyReset ? data.lastFloorWeeklyReset.toDate() : null;
-    lastFloorMonthlyReset = data.lastFloorMonthlyReset ? data.lastFloorMonthlyReset.toDate() : null;
-    
-    let needsUpdate = false;
-    const updateData = {};
-    
-    // Günlük sıfırlama kontrolü (her gün 00:00)
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    if (!lastFloorDailyReset || lastFloorDailyReset < today) {
-      updateData.floorDailySales = {};
-      updateData.lastFloorDailyReset = Timestamp.fromDate(today);
-      needsUpdate = true;
-      console.log('Kat raporu günlük sıfırlandı');
-    }
-    
-    // Haftalık sıfırlama kontrolü (her pazartesi 00:00)
-    const monday = new Date(now);
-    monday.setDate(now.getDate() - now.getDay() + 1); // Pazartesi
-    monday.setHours(0, 0, 0, 0);
-    if (!lastFloorWeeklyReset || lastFloorWeeklyReset < monday) {
-      updateData.floorWeeklySales = {};
-      updateData.lastFloorWeeklyReset = Timestamp.fromDate(monday);
-      needsUpdate = true;
-      console.log('Kat raporu haftalık sıfırlandı');
-    }
-    
-    // Aylık sıfırlama kontrolü (her ayın 1'i 00:00)
-    const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    if (!lastFloorMonthlyReset || lastFloorMonthlyReset < firstOfMonth) {
-      updateData.floorMonthlySales = {};
-      updateData.lastFloorMonthlyReset = Timestamp.fromDate(firstOfMonth);
-      needsUpdate = true;
-      console.log('Kat raporu aylık sıfırlandı');
-    }
-    
-    if (needsUpdate) {
-      await updateDoc(floorReportRef, updateData);
-    }
-  }
-}
-
 async function updateReport() {
   const now = new Date();
-  
-  // Otomatik sıfırlama kontrolü
-  await checkAutoReset();
-  
-  // Rapor verilerini al
+  // Sadece kalıcı toplamı göster
   const raporRef = doc(db, "raporlar", activeFloorGroup);
   const raporDoc = await getDoc(raporRef);
-  
   let kaliciToplam = 0;
-  let dailyTotalValue = 0;
-  let weeklyTotalValue = 0;
-  let monthlyTotalValue = 0;
-  
   if (raporDoc.exists()) {
-    const data = raporDoc.data();
-    kaliciToplam = data.kaliciToplam || 0;
-    dailyTotalValue = data.dailyTotal || 0;
-    weeklyTotalValue = data.weeklyTotal || 0;
-    monthlyTotalValue = data.monthlyTotal || 0;
+    kaliciToplam = raporDoc.data().kaliciToplam || 0;
   }
-  
   // Tarih formatla
   reportDate.textContent = now.toLocaleDateString('tr-TR', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric'
   });
-  
-  // Raporları göster
-  dailyTotal.textContent = dailyTotalValue.toFixed(2) + ' ₺';
-  weeklyTotal.textContent = weeklyTotalValue.toFixed(2) + ' ₺';
-  monthlyTotal.textContent = monthlyTotalValue.toFixed(2) + ' ₺';
+  // Sadece toplamı göster
+  dailyTotal.textContent = kaliciToplam.toFixed(2) + ' ₺';
+  weeklyTotal.textContent = kaliciToplam.toFixed(2) + ' ₺';
+  monthlyTotal.textContent = kaliciToplam.toFixed(2) + ' ₺';
 }
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
     import {
@@ -1107,7 +954,7 @@ async function updateReport() {
     const menuModal = document.getElementById('menu-modal');
     const menuListContainer = document.getElementById('menu-list');
     const closeMenuBtn = document.getElementById('close-menu-btn');
-    const openMenuBtn = document.getElementById('open-menu-btn');
+
     const addProductModal = document.getElementById('add-product-modal');
     const closeAddProductBtn = document.getElementById('close-add-product-btn');
     const addProductForm = document.getElementById('add-product-form');
@@ -1144,10 +991,6 @@ async function updateReport() {
     
     let editingProductIndex = -1;
     // Modal olay dinleyicileri
-    openMenuBtn.addEventListener('click', () => {
-      renderMenuList();
-      menuModal.style.display = 'flex';
-    });
     closeMenuBtn.addEventListener('click', () => {
       menuModal.style.display = 'none';
     });
@@ -2108,49 +1951,23 @@ async function updateReport() {
       try {
         const raporRef = doc(db, "raporlar", activeFloorGroup);
         const raporDoc = await getDoc(raporRef);
-        
-        const now = new Date();
-        const orderAmount = order.toplamFiyat || 0;
-        
-        let reportData = {
-          kaliciToplam: 0,
-          dailyTotal: 0,
-          weeklyTotal: 0,
-          monthlyTotal: 0,
-          eklenenSiparisler: [],
-          lastDailyReset: Timestamp.fromDate(new Date(now.getFullYear(), now.getMonth(), now.getDate())),
-          lastWeeklyReset: Timestamp.fromDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay() + 1)),
-          lastMonthlyReset: Timestamp.fromDate(new Date(now.getFullYear(), now.getMonth(), 1))
-        };
-        
+        let total = 0;
         if (raporDoc.exists()) {
-          const existingData = raporDoc.data();
-          reportData = {
-            ...reportData,
-            ...existingData
-          };
-          
+          total = raporDoc.data().kaliciToplam || 0;
           // Sipariş zaten eklendiyse tekrar ekleme
-          const eklenenSiparisler = existingData.eklenenSiparisler || [];
+          const eklenenSiparisler = raporDoc.data().eklenenSiparisler || [];
           if (eklenenSiparisler.includes(order.id)) return;
-          
           eklenenSiparisler.push(order.id);
-          reportData.eklenenSiparisler = eklenenSiparisler;
-          reportData.kaliciToplam = (existingData.kaliciToplam || 0) + orderAmount;
-          
-          // Günlük, haftalık ve aylık toplamları güncelle
-          reportData.dailyTotal = (existingData.dailyTotal || 0) + orderAmount;
-          reportData.weeklyTotal = (existingData.weeklyTotal || 0) + orderAmount;
-          reportData.monthlyTotal = (existingData.monthlyTotal || 0) + orderAmount;
+          await setDoc(raporRef, {
+            kaliciToplam: total + (order.toplamFiyat || 0),
+            eklenenSiparisler,
+          }, { merge: true });
         } else {
-          reportData.kaliciToplam = orderAmount;
-          reportData.dailyTotal = orderAmount;
-          reportData.weeklyTotal = orderAmount;
-          reportData.monthlyTotal = orderAmount;
-          reportData.eklenenSiparisler = [order.id];
+          await setDoc(raporRef, {
+            kaliciToplam: (order.toplamFiyat || 0),
+            eklenenSiparisler: [order.id],
+          });
         }
-        
-        await setDoc(raporRef, reportData);
         
         // Kat raporunu da güncelle
         await updateFloorReportData(order);
@@ -2209,33 +2026,14 @@ async function updateReport() {
         const floorReportRef = doc(db, "kat_raporlari", activeFloorGroup);
         const floorReportDoc = await getDoc(floorReportRef);
         
-        const now = new Date();
-        const orderAmount = order.toplamFiyat || 0;
-        const floor = order.floor || 0;
-        
-        let reportData = {
-          floorSales: {},
-          floorDailySales: {},
-          floorWeeklySales: {},
-          floorMonthlySales: {},
-          lastFloorDailyReset: Timestamp.fromDate(new Date(now.getFullYear(), now.getMonth(), now.getDate())),
-          lastFloorWeeklyReset: Timestamp.fromDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay() + 1)),
-          lastFloorMonthlyReset: Timestamp.fromDate(new Date(now.getFullYear(), now.getMonth(), 1)),
-          lastUpdated: Timestamp.now(),
-          floorGroup: activeFloorGroup
-        };
-        
+        let floorSales = {};
         if (floorReportDoc.exists()) {
-          const existingData = floorReportDoc.data();
-          reportData = {
-            ...reportData,
-            ...existingData
-          };
+          floorSales = floorReportDoc.data().floorSales || {};
         }
         
-        // Kalıcı verileri güncelle
-        if (!reportData.floorSales[floor]) {
-          reportData.floorSales[floor] = {
+        const floor = order.floor || 0;
+        if (!floorSales[floor]) {
+          floorSales[floor] = {
             total: 0,
             count: 0,
             items: {},
@@ -2243,134 +2041,50 @@ async function updateReport() {
           };
         }
         
-        // Günlük verileri güncelle
-        if (!reportData.floorDailySales[floor]) {
-          reportData.floorDailySales[floor] = {
-            total: 0,
-            count: 0,
-            items: {},
-            orders: []
-          };
-        }
-        
-        // Haftalık verileri güncelle
-        if (!reportData.floorWeeklySales[floor]) {
-          reportData.floorWeeklySales[floor] = {
-            total: 0,
-            count: 0,
-            items: {},
-            orders: []
-          };
-        }
-        
-        // Aylık verileri güncelle
-        if (!reportData.floorMonthlySales[floor]) {
-          reportData.floorMonthlySales[floor] = {
-            total: 0,
-            count: 0,
-            items: {},
-            orders: []
-          };
-        }
-        
-        // Sipariş zaten eklenmiş mi kontrol et (kalıcı veriler için)
-        const orderExists = reportData.floorSales[floor].orders.some(existingOrder => existingOrder.id === order.id);
+        // Sipariş zaten eklenmiş mi kontrol et
+        const orderExists = floorSales[floor].orders.some(existingOrder => existingOrder.id === order.id);
         if (!orderExists) {
-          // Kalıcı verileri güncelle
-          reportData.floorSales[floor].total += orderAmount;
-          reportData.floorSales[floor].count += 1;
-          
-          // Günlük verileri güncelle
-          reportData.floorDailySales[floor].total += orderAmount;
-          reportData.floorDailySales[floor].count += 1;
-          
-          // Haftalık verileri güncelle
-          reportData.floorWeeklySales[floor].total += orderAmount;
-          reportData.floorWeeklySales[floor].count += 1;
-          
-          // Aylık verileri güncelle
-          reportData.floorMonthlySales[floor].total += orderAmount;
-          reportData.floorMonthlySales[floor].count += 1;
+          floorSales[floor].total += order.toplamFiyat || 0;
+          floorSales[floor].count += 1;
           
           // Sipariş detaylarını sakla
-          const orderDetail = {
+          floorSales[floor].orders.push({
             id: order.id,
             totalPrice: order.toplamFiyat || 0,
             items: order.items || [],
             date: order.tarih || new Date()
-          };
-          
-          // Tüm periyotlara sipariş detayını ekle
-          reportData.floorSales[floor].orders.push(orderDetail);
-          reportData.floorDailySales[floor].orders.push(orderDetail);
-          reportData.floorWeeklySales[floor].orders.push(orderDetail);
-          reportData.floorMonthlySales[floor].orders.push(orderDetail);
+          });
           
           // Ürün bazlı satışları da hesapla
           if (order.items && Array.isArray(order.items)) {
             order.items.forEach(item => {
               const itemName = item.name || 'Bilinmeyen Ürün';
-              
-              // Kalıcı veriler için
-              if (!reportData.floorSales[floor].items[itemName]) {
-                reportData.floorSales[floor].items[itemName] = {
+              if (!floorSales[floor].items[itemName]) {
+                floorSales[floor].items[itemName] = {
                   quantity: 0,
                   revenue: 0,
                   tickets: 0
                 };
               }
-              reportData.floorSales[floor].items[itemName].quantity += item.adet || 1;
-              reportData.floorSales[floor].items[itemName].revenue += (item.price || 0) * (item.adet || 1);
-              reportData.floorSales[floor].items[itemName].tickets += (item.teaTickets || 0) * (item.adet || 1);
-              
-              // Günlük veriler için
-              if (!reportData.floorDailySales[floor].items[itemName]) {
-                reportData.floorDailySales[floor].items[itemName] = {
-                  quantity: 0,
-                  revenue: 0,
-                  tickets: 0
-                };
-              }
-              reportData.floorDailySales[floor].items[itemName].quantity += item.adet || 1;
-              reportData.floorDailySales[floor].items[itemName].revenue += (item.price || 0) * (item.adet || 1);
-              reportData.floorDailySales[floor].items[itemName].tickets += (item.teaTickets || 0) * (item.adet || 1);
-              
-              // Haftalık veriler için
-              if (!reportData.floorWeeklySales[floor].items[itemName]) {
-                reportData.floorWeeklySales[floor].items[itemName] = {
-                  quantity: 0,
-                  revenue: 0,
-                  tickets: 0
-                };
-              }
-              reportData.floorWeeklySales[floor].items[itemName].quantity += item.adet || 1;
-              reportData.floorWeeklySales[floor].items[itemName].revenue += (item.price || 0) * (item.adet || 1);
-              reportData.floorWeeklySales[floor].items[itemName].tickets += (item.teaTickets || 0) * (item.adet || 1);
-              
-              // Aylık veriler için
-              if (!reportData.floorMonthlySales[floor].items[itemName]) {
-                reportData.floorMonthlySales[floor].items[itemName] = {
-                  quantity: 0,
-                  revenue: 0,
-                  tickets: 0
-                };
-              }
-              reportData.floorMonthlySales[floor].items[itemName].quantity += item.adet || 1;
-              reportData.floorMonthlySales[floor].items[itemName].revenue += (item.price || 0) * (item.adet || 1);
-              reportData.floorMonthlySales[floor].items[itemName].tickets += (item.teaTickets || 0) * (item.adet || 1);
+              floorSales[floor].items[itemName].quantity += item.adet || 1;
+              floorSales[floor].items[itemName].revenue += (item.price || 0) * (item.adet || 1);
+              floorSales[floor].items[itemName].tickets += (item.teaTickets || 0) * (item.adet || 1);
             });
           }
+          
+          // Firestore'a kaydet
+          await setDoc(floorReportRef, {
+            floorSales: floorSales,
+            lastUpdated: new Date(),
+            floorGroup: activeFloorGroup
+          }, { merge: true });
         }
-        
-        // Firestore'a kaydet
-        await setDoc(floorReportRef, reportData);
       } catch (error) {
         console.error('Kat raporu güncellenirken hata:', error);
       }
     }
-  
-  // Siparişi sil (geçmiş siparişler için korunur)
-  window.deleteOrder = async function(id, btn) {
+    // Siparişi sil (geçmiş siparişler için korunur)
+    window.deleteOrder = async function(id, btn) {
       const confirmed = await showConfirm('Siparişi Sil', 'Bu siparişi panelden kaldırmak istediğinizden emin misiniz? Sipariş geçmiş siparişlerde korunacaktır.', 'danger');
       if (confirmed) {
         try {
@@ -2905,10 +2619,7 @@ async function updateReport() {
     // Kat grubu belirleme (z123, 456, 78910)
     const personelCollectionName = activeFloorGroup === 'z123' ? 'personel_z123' : (activeFloorGroup === '456' ? 'personel_456' : 'personel_78910');
 
-    openPersonelBtn.addEventListener('click', () => {
-      personelModal.style.display = 'flex';
-      loadPersonelList();
-    });
+
     closePersonelBtn.addEventListener('click', () => {
       personelModal.style.display = 'none';
     });
@@ -3066,55 +2777,7 @@ async function updateReport() {
     const closeFloorReportBtn = document.getElementById('close-floor-report-btn');
     const floorSalesTable = document.getElementById('floor-sales-table');
 
-    openFloorReportBtn.addEventListener('click', () => {
-      updateFloorSalesReport();
-      floorReportModal.style.display = 'flex';
-      document.body.classList.add('modal-open');
-    });
-    
-    // Kat raporu periyot butonları
-    const floorDailyBtn = document.getElementById('floor-daily-btn');
-    const floorWeeklyBtn = document.getElementById('floor-weekly-btn');
-    const floorMonthlyBtn = document.getElementById('floor-monthly-btn');
-    
-    floorDailyBtn.addEventListener('click', () => {
-      activeFloorReportPeriod = 'daily';
-      updateFloorButtonStyles();
-      updateFloorSalesReport();
-    });
-    
-    floorWeeklyBtn.addEventListener('click', () => {
-      activeFloorReportPeriod = 'weekly';
-      updateFloorButtonStyles();
-      updateFloorSalesReport();
-    });
-    
-    floorMonthlyBtn.addEventListener('click', () => {
-      activeFloorReportPeriod = 'monthly';
-      updateFloorButtonStyles();
-      updateFloorSalesReport();
-    });
-    
-    // Kat raporu buton stillerini güncelle
-    function updateFloorButtonStyles() {
-      // Tüm butonları varsayılan stile getir
-      floorDailyBtn.className = 'bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300';
-      floorWeeklyBtn.className = 'bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300';
-      floorMonthlyBtn.className = 'bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300';
-      
-      // Aktif butonu vurgula
-      switch (activeFloorReportPeriod) {
-        case 'daily':
-          floorDailyBtn.className = 'bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300';
-          break;
-        case 'weekly':
-          floorWeeklyBtn.className = 'bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300';
-          break;
-        case 'monthly':
-          floorMonthlyBtn.className = 'bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300';
-          break;
-      }
-    }
+
     closeFloorReportBtn.addEventListener('click', () => {
       floorReportModal.style.display = 'none';
       document.body.classList.remove('modal-open');
@@ -3122,35 +2785,20 @@ async function updateReport() {
 
     // Kat Bazlı Satış Raporu Hesaplama
     async function updateFloorSalesReport() {
+      // Rapor kısmı gibi kalıcı toplamı kullan
       console.log('Kat bazlı satış raporu güncelleniyor...');
       
       try {
-        // Otomatik sıfırlama kontrolü
-        await checkFloorAutoReset();
-        
-        // Firestore'dan kat raporu verilerini al
+        // Firestore'dan kalıcı kat raporu verilerini al
         const floorReportRef = doc(db, "kat_raporlari", activeFloorGroup);
         const floorReportDoc = await getDoc(floorReportRef);
         
         let floorSales = {};
         if (floorReportDoc.exists()) {
-          const data = floorReportDoc.data();
-          
-          // Aktif periyoda göre verileri seç
-          switch (activeFloorReportPeriod) {
-            case 'daily':
-              floorSales = data.floorDailySales || {};
-              break;
-            case 'weekly':
-              floorSales = data.floorWeeklySales || {};
-              break;
-            case 'monthly':
-              floorSales = data.floorMonthlySales || {};
-              break;
-            default:
-              floorSales = data.floorSales || {}; // Kalıcı veriler
-          }
+          floorSales = floorReportDoc.data().floorSales || {};
         }
+        
+        // Sadece kalıcı verileri göster, mevcut siparişleri tekrar hesaplama
         
         // Tabloyu güncelle
         if (floorSalesTable) {
@@ -3166,31 +2814,21 @@ async function updateReport() {
             <tbody>
           `;
           
-          if (Object.keys(floorSales).length === 0) {
+          Object.keys(floorSales).sort((a, b) => Number(a) - Number(b)).forEach(floor => {
+            const data = floorSales[floor];
+            const floorName = floor === '0' ? 'Zemin' : `Kat ${floor}`;
+            
             tableHTML += `
-              <tr class="border-b">
-                <td class="px-4 py-2 border border-gray-300 text-center text-gray-500" colspan="4">
-                  ${activeFloorReportPeriod === 'daily' ? 'Günlük' : activeFloorReportPeriod === 'weekly' ? 'Haftalık' : 'Aylık'} veri bulunamadı
+              <tr class="border-b hover:bg-gray-50 cursor-pointer floor-row" data-floor="${floor}" data-floor-name="${floorName}">
+                <td class="px-4 py-2 font-medium">${floorName}</td>
+                <td class="px-4 py-2">${data.count}</td>
+                <td class="px-4 py-2 font-bold text-green-600">${data.total.toFixed(2)} ₺</td>
+                <td class="px-4 py-2 text-blue-600 hover:text-blue-800">
+                  <i class="fas fa-eye"></i> Detay
                 </td>
               </tr>
             `;
-          } else {
-            Object.keys(floorSales).sort((a, b) => Number(a) - Number(b)).forEach(floor => {
-              const data = floorSales[floor];
-              const floorName = floor === '0' ? 'Zemin' : `Kat ${floor}`;
-              
-              tableHTML += `
-                <tr class="border-b hover:bg-gray-50 cursor-pointer floor-row" data-floor="${floor}" data-floor-name="${floorName}">
-                  <td class="px-4 py-2 font-medium">${floorName}</td>
-                  <td class="px-4 py-2">${data.count || 0}</td>
-                  <td class="px-4 py-2 font-bold text-green-600">${(data.total || 0).toFixed(2)} ₺</td>
-                  <td class="px-4 py-2 text-blue-600 hover:text-blue-800">
-                    <i class="fas fa-eye"></i> Detay
-                  </td>
-                </tr>
-              `;
-            });
-          }
+          });
           
           tableHTML += '</tbody>';
           floorSalesTable.innerHTML = tableHTML;

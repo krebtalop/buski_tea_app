@@ -6,6 +6,7 @@ class OrderModel {
   final Timestamp tarih;
   final double toplamFiyat;
   final List<Map<String, dynamic>> items;
+  final int? toplamFis;
 
   OrderModel({
     required this.id,
@@ -13,6 +14,7 @@ class OrderModel {
     required this.tarih,
     required this.toplamFiyat,
     required this.items,
+    this.toplamFis,
   });
 
   Map<String, dynamic> toMap() {
@@ -22,6 +24,7 @@ class OrderModel {
       'tarih': tarih,
       'toplamFiyat': toplamFiyat,
       'items': items,
+      'toplamFis': toplamFis,
     };
   }
 
@@ -32,6 +35,7 @@ class OrderModel {
       tarih: map['tarih'] ?? Timestamp.now(),
       toplamFiyat: (map['toplamFiyat'] ?? 0.0).toDouble(),
       items: List<Map<String, dynamic>>.from(map['items'] ?? []),
+      toplamFis: map['toplamFis'],
     );
   }
 }

@@ -230,8 +230,6 @@
     
     .modal-backdrop-light {
       background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(2px);
-      -webkit-backdrop-filter: blur(2px);
     }
     
     /* Modal açıkken header ve navigation'ı arkaya at */
@@ -698,11 +696,12 @@
           </div>
         </div>
       </div>
-     <!-- Rapor Sıfırlama Butonu -->
-     <div class="mt-6 pt-4 border-t border-gray-200">
-      <button id="reset-report-btn" class="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg shadow-sm transition-all duration-300 font-medium">
-        <i class="fas fa-trash-alt mr-2"></i>Rapor Verilerini Sıfırla
-      </button>
+      <!-- Rapor Sıfırlama Butonu -->
+      <div class="mt-6 pt-4 border-t border-gray-200">
+        <button id="reset-report-btn" class="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg shadow-sm transition-all duration-300 font-medium">
+          <i class="fas fa-trash-alt mr-2"></i>Rapor Verilerini Sıfırla
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -718,21 +717,8 @@
       </div>
       <div class="p-6">
         <div class="mb-4">
-          <h3 class="text-lg font-semibold text-gray-700 mb-2">Kat 4-5-6 Satış Raporu</h3>
+          <h3 class="text-lg font-semibold text-gray-700 mb-2">Kat 7-8-9-10 Satış Raporu</h3>
           <p class="text-sm text-gray-600">Kat satırlarına tıklayarak detay bilgileri görebilirsiniz</p>
-          
-          <!-- Kat Raporu Periyot Butonları -->
-          <div class="flex gap-2 mt-3">
-            <button id="floor-daily-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300">
-              Günlük
-            </button>
-            <button id="floor-weekly-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300">
-              Haftalık
-            </button>
-            <button id="floor-monthly-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300">
-              Aylık
-            </button>
-          </div>
         </div>
         <div class="overflow-x-auto">
           <table id="floor-sales-table" class="w-full border-collapse border border-gray-300">
@@ -778,7 +764,7 @@
   </div>
   
   <!-- Custom Alert Modal -->
-  <div id="alert-modal" class="fixed inset-0 z-[9999999] flex items-center justify-center modal-backdrop-light hidden">
+  <div id="alert-modal" class="fixed inset-0 z-[90] flex items-center justify-center modal-backdrop-light hidden">
     <div class="bg-white rounded-lg shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-95 opacity-0" id="alert-content">
       <div class="p-6">
         <div class="flex items-center mb-4">
@@ -842,29 +828,8 @@
       <p class="mt-2 opacity-90 text-center">Siparişleri takip edin ve durumlarını güncelleyin</p>
     </div>
     
-    <!-- Rapor Butonları (sol üst) -->
-    <div class="absolute top-4 left-4 z-50 flex flex-col gap-2">
-      <button id="open-report-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium">
-        Rapor
-      </button>
-      <button id="open-floor-report-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium">
-        Kat Raporu
-      </button>
-    </div>
-    <!-- Menü ve Personel Butonları (sağ üst) -->
-    <div class="absolute top-4 right-4 z-50 flex flex-col items-end gap-2">
-      <button id="open-menu-btn" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium w-24 flex items-center justify-center">
-Menü
-      </button>
-      <button id="open-personel-btn" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium w-24 flex items-center justify-center">
-Personel
-      </button>
-      <button id="delete-all-orders-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium hidden" style="margin-top: 30px;">
-        <i class="fas fa-trash-alt mr-1"></i>Tüm Teslim Edilenleri Sil
-      </button>
-              <button id="delete-all-ratings-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium hidden" style="margin-top: 30px;">
-          <i class="fas fa-trash-alt mr-1"></i>Tüm Puanları Sil
-        </button>
+    
+
 
     </div>
   </header>
@@ -887,6 +852,16 @@ Personel
       <button id="ratings-tab" class="tab-inactive px-8 py-4 text-lg font-semibold relative border-b-4 border-transparent hover:border-yellow-300 hover:bg-yellow-50">
         Puanlama
       </button>
+      
+      <!-- Silme Butonları - Sağ Köşe -->
+      <div class="absolute right-0 top-0.5 flex gap-2">
+        <button id="delete-all-orders-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium hidden">
+          <i class="fas fa-trash-alt mr-1"></i>Tüm Teslim Edilenleri Sil
+        </button>
+        <button id="delete-all-ratings-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium hidden">
+          <i class="fas fa-trash-alt mr-1"></i>Tüm Puanları Sil
+        </button>
+      </div>
     </div>
     
 
@@ -925,7 +900,7 @@ Personel
   <script type="module">
     // Rapor modal elemanları
 const reportModal = document.getElementById('report-modal');
-const openReportBtn = document.getElementById('open-report-btn');
+
 const closeReportBtn = document.getElementById('close-report-btn');
 const reportDate = document.getElementById('report-date');
 const dailyTotal = document.getElementById('daily-total');
@@ -949,10 +924,6 @@ const confirmOk = document.getElementById('confirm-ok');
 const confirmCancel = document.getElementById('confirm-cancel');
 
 // Rapor modal olay dinleyicileri
-openReportBtn.addEventListener('click', () => {
-  updateReport();
-  reportModal.style.display = 'flex';
-});
 closeReportBtn.addEventListener('click', () => {
   reportModal.style.display = 'none';
 });
@@ -1002,151 +973,25 @@ function calculateMonthlyTotal(orders, date) {
   }).reduce((sum, order) => sum + (order.toplamFiyat || 0), 0);
 }
 
-// Otomatik sıfırlama için değişkenler
-let lastDailyReset = null;
-let lastWeeklyReset = null;
-let lastMonthlyReset = null;
-
-// Kat raporu için değişkenler
-let activeFloorReportPeriod = 'daily'; // 'daily', 'weekly', 'monthly'
-let lastFloorDailyReset = null;
-let lastFloorWeeklyReset = null;
-let lastFloorMonthlyReset = null;
-
-// Otomatik sıfırlama kontrolü
-async function checkAutoReset() {
-  const now = new Date();
-  const raporRef = doc(db, "raporlar", activeFloorGroup);
-  const raporDoc = await getDoc(raporRef);
-  
-  if (raporDoc.exists()) {
-    const data = raporDoc.data();
-    lastDailyReset = data.lastDailyReset ? data.lastDailyReset.toDate() : null;
-    lastWeeklyReset = data.lastWeeklyReset ? data.lastWeeklyReset.toDate() : null;
-    lastMonthlyReset = data.lastMonthlyReset ? data.lastMonthlyReset.toDate() : null;
-    
-    let needsUpdate = false;
-    const updateData = {};
-    
-    // Günlük sıfırlama kontrolü (her gün 00:00)
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    if (!lastDailyReset || lastDailyReset < today) {
-      updateData.dailyTotal = 0;
-      updateData.lastDailyReset = Timestamp.fromDate(today);
-      needsUpdate = true;
-      console.log('Günlük rapor sıfırlandı');
-    }
-    
-    // Haftalık sıfırlama kontrolü (her pazartesi 00:00)
-    const monday = new Date(now);
-    monday.setDate(now.getDate() - now.getDay() + 1); // Pazartesi
-    monday.setHours(0, 0, 0, 0);
-    if (!lastWeeklyReset || lastWeeklyReset < monday) {
-      updateData.weeklyTotal = 0;
-      updateData.lastWeeklyReset = Timestamp.fromDate(monday);
-      needsUpdate = true;
-      console.log('Haftalık rapor sıfırlandı');
-    }
-    
-    // Aylık sıfırlama kontrolü (her ayın 1'i 00:00)
-    const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    if (!lastMonthlyReset || lastMonthlyReset < firstOfMonth) {
-      updateData.monthlyTotal = 0;
-      updateData.lastMonthlyReset = Timestamp.fromDate(firstOfMonth);
-      needsUpdate = true;
-      console.log('Aylık rapor sıfırlandı');
-    }
-    
-    if (needsUpdate) {
-      await updateDoc(raporRef, updateData);
-    }
-  }
-}
-
-// Kat raporu otomatik sıfırlama kontrolü
-async function checkFloorAutoReset() {
-  const now = new Date();
-  const floorReportRef = doc(db, "kat_raporlari", activeFloorGroup);
-  const floorReportDoc = await getDoc(floorReportRef);
-  
-  if (floorReportDoc.exists()) {
-    const data = floorReportDoc.data();
-    lastFloorDailyReset = data.lastFloorDailyReset ? data.lastFloorDailyReset.toDate() : null;
-    lastFloorWeeklyReset = data.lastFloorWeeklyReset ? data.lastFloorWeeklyReset.toDate() : null;
-    lastFloorMonthlyReset = data.lastFloorMonthlyReset ? data.lastFloorMonthlyReset.toDate() : null;
-    
-    let needsUpdate = false;
-    const updateData = {};
-    
-    // Günlük sıfırlama kontrolü (her gün 00:00)
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    if (!lastFloorDailyReset || lastFloorDailyReset < today) {
-      updateData.floorDailySales = {};
-      updateData.lastFloorDailyReset = Timestamp.fromDate(today);
-      needsUpdate = true;
-      console.log('Kat raporu günlük sıfırlandı');
-    }
-    
-    // Haftalık sıfırlama kontrolü (her pazartesi 00:00)
-    const monday = new Date(now);
-    monday.setDate(now.getDate() - now.getDay() + 1); // Pazartesi
-    monday.setHours(0, 0, 0, 0);
-    if (!lastFloorWeeklyReset || lastFloorWeeklyReset < monday) {
-      updateData.floorWeeklySales = {};
-      updateData.lastFloorWeeklyReset = Timestamp.fromDate(monday);
-      needsUpdate = true;
-      console.log('Kat raporu haftalık sıfırlandı');
-    }
-    
-    // Aylık sıfırlama kontrolü (her ayın 1'i 00:00)
-    const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    if (!lastFloorMonthlyReset || lastFloorMonthlyReset < firstOfMonth) {
-      updateData.floorMonthlySales = {};
-      updateData.lastFloorMonthlyReset = Timestamp.fromDate(firstOfMonth);
-      needsUpdate = true;
-      console.log('Kat raporu aylık sıfırlandı');
-    }
-    
-    if (needsUpdate) {
-      await updateDoc(floorReportRef, updateData);
-    }
-  }
-}
-
 async function updateReport() {
   const now = new Date();
-  
-  // Otomatik sıfırlama kontrolü
-  await checkAutoReset();
-  
-  // Rapor verilerini al
+  // Sadece kalıcı toplamı göster
   const raporRef = doc(db, "raporlar", activeFloorGroup);
   const raporDoc = await getDoc(raporRef);
-  
   let kaliciToplam = 0;
-  let dailyTotalValue = 0;
-  let weeklyTotalValue = 0;
-  let monthlyTotalValue = 0;
-  
   if (raporDoc.exists()) {
-    const data = raporDoc.data();
-    kaliciToplam = data.kaliciToplam || 0;
-    dailyTotalValue = data.dailyTotal || 0;
-    weeklyTotalValue = data.weeklyTotal || 0;
-    monthlyTotalValue = data.monthlyTotal || 0;
+    kaliciToplam = raporDoc.data().kaliciToplam || 0;
   }
-  
   // Tarih formatla
   reportDate.textContent = now.toLocaleDateString('tr-TR', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric'
   });
-  
-  // Raporları göster
-  dailyTotal.textContent = dailyTotalValue.toFixed(2) + ' ₺';
-  weeklyTotal.textContent = weeklyTotalValue.toFixed(2) + ' ₺';
-  monthlyTotal.textContent = monthlyTotalValue.toFixed(2) + ' ₺';
+  // Sadece toplamı göster
+  dailyTotal.textContent = kaliciToplam.toFixed(2) + ' ₺';
+  weeklyTotal.textContent = kaliciToplam.toFixed(2) + ' ₺';
+  monthlyTotal.textContent = kaliciToplam.toFixed(2) + ' ₺';
 }
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
     import {
@@ -1169,14 +1014,14 @@ async function updateReport() {
     let menuData = [];
     let allOrders = [];
     let activeTab = 'preparing'; // 'preparing', 'delivered' veya 'ratings'
-    let activeFloorGroup = '456'; // Sadece kat 4-5-6
+    let activeFloorGroup = '78910'; // Sadece kat 7-8-9-10
     let ratingsData = [];
     let averageRating = 0.0;
     // DOM Elemanları
     const menuModal = document.getElementById('menu-modal');
     const menuListContainer = document.getElementById('menu-list');
     const closeMenuBtn = document.getElementById('close-menu-btn');
-    const openMenuBtn = document.getElementById('open-menu-btn');
+
     const addProductModal = document.getElementById('add-product-modal');
     const closeAddProductBtn = document.getElementById('close-add-product-btn');
     const addProductForm = document.getElementById('add-product-form');
@@ -1203,15 +1048,6 @@ async function updateReport() {
     const averageStarsDiv = document.getElementById('average-stars');
     const totalRatingsSpan = document.getElementById('total-ratings');
     const ratingsListDiv = document.getElementById('ratings-list');
-    
-    // DOM elementlerini kontrol et
-    console.log('DOM Elementleri:', {
-      preparingTab: preparingTab,
-      deliveredTab: deliveredTab,
-      ratingsTab: ratingsTab,
-      floorsContainer: floorsContainer,
-      ratingsContainer: ratingsContainer
-    });
     const floorGroupButtons = document.querySelectorAll('.floor-group-btn');
     const deleteAllOrdersBtn = document.getElementById('delete-all-orders-btn');
     
@@ -1222,10 +1058,6 @@ async function updateReport() {
     
     let editingProductIndex = -1;
     // Modal olay dinleyicileri
-    openMenuBtn.addEventListener('click', () => {
-      renderMenuList();
-      menuModal.style.display = 'flex';
-    });
     
     // İkinci menü butonu için event listener
     const openMenuBtnSecondary = document.getElementById('open-menu-btn-secondary');
@@ -1332,21 +1164,18 @@ async function updateReport() {
     }
 
     // Sekme değişiklikleri
-    preparingTab.addEventListener('click', async () => {
-      console.log('Preparing tab tıklandı');
-      await setActiveTab('preparing');
+    preparingTab.addEventListener('click', () => {
+      setActiveTab('preparing');
       // Yeni sipariş kartlarını yanıp söndür
       setTimeout(() => {
         blinkNewOrderCards();
       }, 100);
     });
-    deliveredTab.addEventListener('click', async () => {
-      console.log('Delivered tab tıklandı');
-      await setActiveTab('delivered');
+    deliveredTab.addEventListener('click', () => {
+      setActiveTab('delivered');
     });
-    ratingsTab.addEventListener('click', async () => {
-      console.log('Ratings tab tıklandı');
-      await setActiveTab('ratings');
+    ratingsTab.addEventListener('click', () => {
+      setActiveTab('ratings');
     });
     
 
@@ -1354,7 +1183,7 @@ async function updateReport() {
     // Tüm puanları sil butonu
     const deleteAllRatingsBtn = document.getElementById('delete-all-ratings-btn');
     deleteAllRatingsBtn.addEventListener('click', () => {
-      window.deleteAllRatings();
+      deleteAllRatings();
     });
     
     // Real-time puanlama listener'ı - Siparişlerden
@@ -1393,8 +1222,8 @@ async function updateReport() {
         deleteAllOrders();
       });
     }
-    // Kat grubu değişiklikleri - Sadece kat 4-5-6
-    // Bu panel sadece kat 4-5-6 için olduğundan değişiklik yok
+    // Kat grubu değişiklikleri - Sadece kat 7-8-9-10
+    // Bu panel sadece kat 7-8-9-10 için olduğundan değişiklik yok
     // Menü listesini render et
     function renderMenuList() {
       menuListContainer.innerHTML = '';
@@ -1545,9 +1374,9 @@ async function updateReport() {
         }
       }
     });
-    // Firestore'dan menüyü oku - Kat 4-5-6 için
+    // Firestore'dan menüyü oku - Kat 7-8-9-10 için
     async function fetchMenuFromFirestore() {
-      const menuDocRef = doc(db, "menu", "kat456");
+      const menuDocRef = doc(db, "menu", "kat78910");
       const menuDoc = await getDoc(menuDocRef);
       if (menuDoc.exists()) {
         menuData = menuDoc.data().items || [];
@@ -1557,14 +1386,14 @@ async function updateReport() {
       }
       renderMenuList();
     }
-    // Firestore'a menüyü kaydet - Kat 4-5-6 için
+    // Firestore'a menüyü kaydet - Kat 7-8-9-10 için
     async function saveMenuToFirestore() {
-      const menuDocRef = doc(db, "menu", "kat456");
+      const menuDocRef = doc(db, "menu", "kat78910");
       await setDoc(menuDocRef, { items: menuData });
     }
-    // Firestore'daki menüde değişiklikleri dinle - Kat 4-5-6 için
+    // Firestore'daki menüde değişiklikleri dinle - Kat 7-8-9-10 için
     function listenMenuRealtime() {
-      const menuDocRef = doc(db, "menu", "kat456");
+      const menuDocRef = doc(db, "menu", "kat78910");
       onSnapshot(menuDocRef, (docSnap) => {
         if (docSnap.exists()) {
           menuData = docSnap.data().items || [];
@@ -1572,7 +1401,6 @@ async function updateReport() {
         }
       });
     }
-
     // Puanlama silme fonksiyonu
     window.deleteRating = async function(ratingId) {
       const confirmed = await showConfirm('Puanlamayı Sil', 'Bu puanlamayı silmek istediğinizden emin misiniz?', 'danger');
@@ -1605,7 +1433,7 @@ async function updateReport() {
           }
           
           // Puanlamaları yeniden yükle
-          await loadRatings();
+          loadRatings();
         } catch (error) {
           console.error("Puanlama silinirken hata oluştu:", error);
           await showAlert("Puanlama silinirken bir sorun oluştu.", 'error');
@@ -1641,7 +1469,7 @@ async function updateReport() {
           ratingsSnapshot.docs.forEach(doc => {
             const ratingData = doc.data();
             const floor = Number(ratingData.userFloor || 0);
-            if (floor >= 4 && floor <= 6) { // Kat 4-5-6
+            if (floor >= 7 && floor <= 10) { // Kat 7-8-9-10
               ratingsBatch.delete(doc.ref);
             }
           });
@@ -1653,7 +1481,7 @@ async function updateReport() {
           preservedSnapshot.docs.forEach(doc => {
             const ratingData = doc.data();
             const floor = Number(ratingData.userFloor || 0);
-            if (floor >= 4 && floor <= 6) { // Kat 4-5-6
+            if (floor >= 7 && floor <= 10) { // Kat 7-8-9-10
               preservedBatch.delete(doc.ref);
             }
           });
@@ -1673,6 +1501,59 @@ async function updateReport() {
       }
     };
 
+    // Sekme değiştirme
+    function setActiveTab(tab) {
+      activeTab = tab;
+      
+      // Tüm sekmeleri pasif yap
+      preparingTab.classList.remove('tab-active');
+      preparingTab.classList.add('tab-inactive');
+      deliveredTab.classList.remove('tab-active');
+      deliveredTab.classList.add('tab-inactive');
+      ratingsTab.classList.remove('tab-active');
+      ratingsTab.classList.add('tab-inactive');
+      
+      // Tüm container'ları gizle
+      floorsContainer.classList.add('hidden');
+      ratingsContainer.classList.add('hidden');
+      
+      if (tab === 'preparing') {
+        preparingTab.classList.add('tab-active');
+        preparingTab.classList.remove('tab-inactive');
+        floorsContainer.classList.remove('hidden');
+        deleteAllOrdersBtn.classList.add('hidden');
+        deleteAllRatingsBtn.classList.add('hidden');
+        renderFloors();
+      } else if (tab === 'delivered') {
+        deliveredTab.classList.add('tab-active');
+        deliveredTab.classList.remove('tab-inactive');
+        floorsContainer.classList.remove('hidden');
+        deleteAllRatingsBtn.classList.add('hidden');
+        renderFloors();
+        // Butonu tekrar bul ve hidden class'ını kaldır
+        const newDeleteAllOrdersBtn = document.getElementById('delete-all-orders-btn');
+        if (newDeleteAllOrdersBtn) {
+          newDeleteAllOrdersBtn.classList.remove('hidden');
+        }
+      } else if (tab === 'ratings') {
+        ratingsTab.classList.add('tab-active');
+        ratingsTab.classList.remove('tab-inactive');
+        ratingsContainer.classList.remove('hidden');
+        deleteAllOrdersBtn.classList.add('hidden');
+        deleteAllRatingsBtn.classList.remove('hidden');
+        
+        // Eğer puanlamalar zaten yüklendiyse hemen göster, yoksa yükle
+        if (ratingsData && ratingsData.length >= 0) {
+          renderRatings();
+        } else {
+          // Puanlamaları arka planda yükle
+          setTimeout(() => {
+            loadRatings();
+          }, 100);
+        }
+      }
+    }
+
     // Hata butonu işlevi: Siparişi hazırlananlar sekmesine geri döndürür
     window.revertToPreparing = async function(id, btn) {
         const confirmed = await showConfirm('Siparişi Geri Al', 'Bu siparişi hazırlananlar sekmesine geri almak istediğinizden emin misiniz?', 'warning');
@@ -1683,7 +1564,7 @@ async function updateReport() {
                 
                 // Otomatik olarak "Hazırlananlar" sekmesine geç
                 if (activeTab !== 'preparing') {
-                    await setActiveTab('preparing');
+                    setActiveTab('preparing');
                 }
                 
                 console.log("Sipariş durumu güncellendi:", id);
@@ -1694,16 +1575,17 @@ async function updateReport() {
         }
     };
 
-    // Katları render et - Sadece kat 4-5-6
+    // Katları render et - Sadece kat 7-8-9-10
     function renderFloors() {
       floorsContainer.innerHTML = '';
       
       const floorsToShow = [
-        { floor: 4, name: 'Kat 4' },
-        { floor: 5, name: 'Kat 5' },
-        { floor: 6, name: 'Kat 6' }
+        { floor: 7, name: 'Kat 7' },
+        { floor: 8, name: 'Kat 8' },
+        { floor: 9, name: 'Kat 9' },
+        { floor: 10, name: 'Kat 10' }
       ];
-      const groupName = "Kat 4 - 5 - 6";
+      const groupName = "Kat 7 - 8 - 9 - 10";
       
       const groupRow = document.createElement('div');
       groupRow.className = 'mb-8';
@@ -1903,49 +1785,23 @@ async function updateReport() {
       try {
         const raporRef = doc(db, "raporlar", activeFloorGroup);
         const raporDoc = await getDoc(raporRef);
-        
-        const now = new Date();
-        const orderAmount = order.toplamFiyat || 0;
-        
-        let reportData = {
-          kaliciToplam: 0,
-          dailyTotal: 0,
-          weeklyTotal: 0,
-          monthlyTotal: 0,
-          eklenenSiparisler: [],
-          lastDailyReset: Timestamp.fromDate(new Date(now.getFullYear(), now.getMonth(), now.getDate())),
-          lastWeeklyReset: Timestamp.fromDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay() + 1)),
-          lastMonthlyReset: Timestamp.fromDate(new Date(now.getFullYear(), now.getMonth(), 1))
-        };
-        
+        let total = 0;
         if (raporDoc.exists()) {
-          const existingData = raporDoc.data();
-          reportData = {
-            ...reportData,
-            ...existingData
-          };
-          
+          total = raporDoc.data().kaliciToplam || 0;
           // Sipariş zaten eklendiyse tekrar ekleme
-          const eklenenSiparisler = existingData.eklenenSiparisler || [];
+          const eklenenSiparisler = raporDoc.data().eklenenSiparisler || [];
           if (eklenenSiparisler.includes(order.id)) return;
-          
           eklenenSiparisler.push(order.id);
-          reportData.eklenenSiparisler = eklenenSiparisler;
-          reportData.kaliciToplam = (existingData.kaliciToplam || 0) + orderAmount;
-          
-          // Günlük, haftalık ve aylık toplamları güncelle
-          reportData.dailyTotal = (existingData.dailyTotal || 0) + orderAmount;
-          reportData.weeklyTotal = (existingData.weeklyTotal || 0) + orderAmount;
-          reportData.monthlyTotal = (existingData.monthlyTotal || 0) + orderAmount;
+          await setDoc(raporRef, {
+            kaliciToplam: total + (order.toplamFiyat || 0),
+            eklenenSiparisler,
+          }, { merge: true });
         } else {
-          reportData.kaliciToplam = orderAmount;
-          reportData.dailyTotal = orderAmount;
-          reportData.weeklyTotal = orderAmount;
-          reportData.monthlyTotal = orderAmount;
-          reportData.eklenenSiparisler = [order.id];
+          await setDoc(raporRef, {
+            kaliciToplam: (order.toplamFiyat || 0),
+            eklenenSiparisler: [order.id],
+          });
         }
-        
-        await setDoc(raporRef, reportData);
         
         // Kat raporunu da güncelle
         await updateFloorReportData(order);
@@ -2116,7 +1972,7 @@ async function updateReport() {
     
     // Tüm teslim edilmiş siparişleri sil fonksiyonu
     async function deleteAllOrders() {
-      const confirmed = await showConfirm('Tüm Siparişleri Sil', 'TÜM TESLİM EDİLMİŞ SİPARİŞLERİ SİLMEK İSTEDİĞİNİZDEN EMİN MİSİNİZ? Bu işlem geri alınamaz!', 'danger');
+      const confirmed = await showConfirm('Tüm Siparişleri Sil', 'Tüm teslim edilmiş siparişleri silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.', 'danger');
       if (confirmed) {
         try {
           // Panele göre siparişleri filtrele ve sadece teslim edilmiş olanları al
@@ -2418,6 +2274,24 @@ async function updateReport() {
       }, 300);
     }
 
+    // Notification gösterme fonksiyonu
+    function showNotification(message, type = 'info') {
+      // Basit bir notification sistemi
+      const notification = document.createElement('div');
+      notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 ${
+        type === 'error' ? 'bg-red-500 text-white' : 
+        type === 'success' ? 'bg-green-500 text-white' : 
+        'bg-blue-500 text-white'
+      }`;
+      notification.textContent = message;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    }
+
     // Rapor sıfırlama butonu olay dinleyicisi
     document.getElementById('reset-report-btn').addEventListener('click', resetReportData);
     // Bildirim sesi çal
@@ -2458,238 +2332,195 @@ async function updateReport() {
           return orderFloor >= 7 && orderFloor <= 10;
         });
       }
-      return orders; // Varsayılan olarak tüm siparişler
-    }
-    
-    // Sekme değiştirme
-    async function setActiveTab(tab) {
-      console.log('setActiveTab çağrıldı:', tab);
-      activeTab = tab;
-      
-      // Tüm sekmeleri pasif yap
-      preparingTab.classList.remove('tab-active');
-      preparingTab.classList.add('tab-inactive');
-      deliveredTab.classList.remove('tab-active');
-      deliveredTab.classList.add('tab-inactive');
-      ratingsTab.classList.remove('tab-active');
-      ratingsTab.classList.add('tab-inactive');
-      
-      // Tüm container'ları gizle
-      floorsContainer.classList.add('hidden');
-      ratingsContainer.classList.add('hidden');
-      
-      if (tab === 'preparing') {
-        console.log('Preparing sekmesi aktif ediliyor');
-        preparingTab.classList.add('tab-active');
-        preparingTab.classList.remove('tab-inactive');
-        floorsContainer.classList.remove('hidden');
-        deleteAllOrdersBtn.classList.add('hidden');
-        deleteAllRatingsBtn.classList.add('hidden');
-        renderFloors();
-      } else if (tab === 'delivered') {
-        console.log('Delivered sekmesi aktif ediliyor');
-        deliveredTab.classList.add('tab-active');
-        deliveredTab.classList.remove('tab-inactive');
-        floorsContainer.classList.remove('hidden');
-        deleteAllRatingsBtn.classList.add('hidden');
-        renderFloors();
-        // Butonu tekrar bul ve hidden class'ını kaldır
-        const newDeleteAllOrdersBtn = document.getElementById('delete-all-orders-btn');
-        if (newDeleteAllOrdersBtn) {
-          newDeleteAllOrdersBtn.classList.remove('hidden');
-        }
-      } else if (tab === 'ratings') {
-        console.log('Ratings sekmesi aktif ediliyor');
-        ratingsTab.classList.add('tab-active');
-        ratingsTab.classList.remove('tab-inactive');
-        ratingsContainer.classList.remove('hidden');
-        deleteAllOrdersBtn.classList.add('hidden');
-        deleteAllRatingsBtn.classList.remove('hidden');
-        
-        // Eğer puanlamalar zaten yüklendiyse hemen göster, yoksa yükle
-        if (ratingsData && ratingsData.length >= 0) {
-          renderRatings();
-        } else {
-          // Puanlamaları arka planda yükle
-          setTimeout(() => {
-            loadRatings();
-          }, 100);
-        }
+              return orders; // Varsayılan olarak tüm siparişler
       }
-    }
-    
-    // Puanları yükle - Sadece kat 4-5-6 için
-    async function loadRatings() {
-      try {
-        // Sadece ratings koleksiyonundan puanları çek (duplicate'leri önlemek için)
-        const ratingsSnapshot = await getDocs(collection(db, "ratings"));
-        
-        // Korunan puanlamalardan da çek
-        const preservedSnapshot = await getDocs(collection(db, "preserved_ratings"));
-        
-        // Ratings koleksiyonundan puanları al
-        let ratingsCollectionRatings = ratingsSnapshot.docs
-          .map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-            isPreserved: false,
-            fromRatingsCollection: true
-          }))
-          .filter(rating => {
-            const floor = Number(rating.userFloor || 0);
-            return floor >= 4 && floor <= 6; // Kat 4-5-6
-          });
-        
-        // Korunan puanlamalardan al
-        let preservedRatings = preservedSnapshot.docs
-          .map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-            isPreserved: true
-          }))
-          .filter(rating => {
-            const floor = Number(rating.userFloor);
-            return floor >= 4 && floor <= 6; // Kat 4-5-6
-          });
-        
-        // Duplicate'leri kaldır - orderId'ye göre
-        const allRatings = [...ratingsCollectionRatings, ...preservedRatings];
-        const uniqueRatings = [];
-        const seenOrderIds = new Set();
-        
-        for (let rating of allRatings) {
-          const orderId = rating.orderId || rating.id;
-          if (!seenOrderIds.has(orderId)) {
-            uniqueRatings.push(rating);
-            seenOrderIds.add(orderId);
+      
+      // Puanları yükle - Sadece kat 7-8-9-10 için
+      async function loadRatings() {
+        try {
+          // Normal siparişlerden puanları çek
+          const snapshot = await getDocs(query(
+            collection(db, "siparisler"),
+            where("rating", ">", 0)
+          ));
+          
+          // Ratings koleksiyonundan puanları çek
+          const ratingsSnapshot = await getDocs(collection(db, "ratings"));
+          
+          // Korunan puanlamalardan da çek
+          const preservedSnapshot = await getDocs(collection(db, "preserved_ratings"));
+          
+          // Normal siparişlerden puanları al
+          let normalRatings = snapshot.docs
+            .map(doc => ({
+              id: doc.id,
+              ...doc.data(),
+              isPreserved: false,
+              fromSiparisler: true
+            }))
+            .filter(rating => {
+              const floor = Number(rating.floor || 0);
+              return floor >= 7 && floor <= 10; // Kat 7-8-9-10
+            });
+          
+          // Ratings koleksiyonundan puanları al
+          let ratingsCollectionRatings = ratingsSnapshot.docs
+            .map(doc => ({
+              id: doc.id,
+              ...doc.data(),
+              isPreserved: false,
+              fromRatingsCollection: true
+            }))
+            .filter(rating => {
+              const floor = Number(rating.userFloor || 0);
+              return floor >= 7 && floor <= 10; // Kat 7-8-9-10
+            });
+          
+          // Korunan puanlamalardan al
+          let preservedRatings = preservedSnapshot.docs
+            .map(doc => ({
+              id: doc.id,
+              ...doc.data(),
+              isPreserved: true
+            }))
+            .filter(rating => {
+              const floor = Number(rating.userFloor);
+              return floor >= 7 && floor <= 10; // Kat 7-8-9-10
+            });
+          
+          // Duplicate'leri kaldır - orderId'ye göre
+          const allRatings = [...normalRatings, ...ratingsCollectionRatings, ...preservedRatings];
+          const uniqueRatings = [];
+          const seenOrderIds = new Set();
+          
+          for (let rating of allRatings) {
+            const orderId = rating.orderId || rating.id;
+            if (!seenOrderIds.has(orderId)) {
+              uniqueRatings.push(rating);
+              seenOrderIds.add(orderId);
+            }
           }
+          
+          // Tüm puanları tarihe göre sırala
+          ratingsData = uniqueRatings.sort((a, b) => {
+            // Tarihe göre sırala (en yeni önce)
+            const dateA = a.ratingDate && a.ratingDate.toDate ? a.ratingDate.toDate() : 
+                         a.timestamp && a.timestamp.toDate ? a.timestamp.toDate() : new Date(0);
+            const dateB = b.ratingDate && b.ratingDate.toDate ? b.ratingDate.toDate() : 
+                         b.timestamp && b.timestamp.toDate ? b.timestamp.toDate() : new Date(0);
+            return dateB - dateA;
+          });
+          
+          // Kullanıcı bilgilerini çek - sadece gerekli olanları
+          for (let rating of ratingsData) {
+            if (rating.userId && !rating.isPreserved && !rating.fromRatingsCollection) {
+              // Kullanıcı bilgisi yoksa varsayılan değer ata
+              rating.userName = rating.userName || 'İsimsiz Kullanıcı';
+            } else if (rating.isPreserved || rating.fromRatingsCollection) {
+              // Korunan puanlamalarda ve ratings koleksiyonundan gelen verilerde kullanıcı adı zaten var
+              rating.userName = rating.userName || 'İsimsiz Kullanıcı';
+            } else {
+              rating.userName = 'İsimsiz Kullanıcı';
+            }
         }
-        
-        // Tüm puanları tarihe göre sırala
-        ratingsData = uniqueRatings.sort((a, b) => {
-          // Tarihe göre sırala (en yeni önce)
-          const dateA = a.ratingDate && a.ratingDate.toDate ? a.ratingDate.toDate() : 
-                       a.timestamp && a.timestamp.toDate ? a.timestamp.toDate() : new Date(0);
-          const dateB = b.ratingDate && b.ratingDate.toDate ? b.ratingDate.toDate() : 
-                       b.timestamp && b.timestamp.toDate ? b.timestamp.toDate() : new Date(0);
-          return dateB - dateA;
-        });
-        
-        // Kullanıcı bilgilerini çek - sadece gerekli olanları
-        for (let rating of ratingsData) {
-          if (rating.userId && !rating.isPreserved && !rating.fromRatingsCollection) {
-            // Kullanıcı bilgisi yoksa varsayılan değer ata
-            rating.userName = rating.userName || 'İsimsiz Kullanıcı';
-          } else if (rating.isPreserved || rating.fromRatingsCollection) {
-            // Korunan puanlamalarda ve ratings koleksiyonundan gelen verilerde kullanıcı adı zaten var
-            rating.userName = rating.userName || 'İsimsiz Kullanıcı';
+          
+          // Ortalama puanı hesapla
+          if (ratingsData.length > 0) {
+            const totalRating = ratingsData.reduce((sum, rating) => sum + (rating.rating || 0), 0);
+            averageRating = totalRating / ratingsData.length;
           } else {
-            rating.userName = 'İsimsiz Kullanıcı';
+            averageRating = 0;
           }
+          
+          console.log('Puanlar yüklendi, renderRatings çağrılıyor');
+          renderRatings();
+        } catch (error) {
+          console.error('Puanlar yüklenirken hata:', error);
         }
-        
-        // Ortalama puanı hesapla
-        if (ratingsData.length > 0) {
-          const totalRating = ratingsData.reduce((sum, rating) => sum + (rating.rating || 0), 0);
-          averageRating = totalRating / ratingsData.length;
-        } else {
-          averageRating = 0;
-        }
-        
-        renderRatings();
-      } catch (error) {
-        console.error('Puanlar yüklenirken hata:', error);
       }
-    }
-    
-    // Sipariş içeriği toggle fonksiyonu
-    window.toggleOrderContent = function(ratingId) {
-      const contentDiv = document.getElementById(`order-content-${ratingId}`);
-      const toggleIcon = document.getElementById(`toggle-icon-${ratingId}`);
       
-      if (contentDiv.style.display === 'none') {
-        contentDiv.style.display = 'block';
-        toggleIcon.className = 'fas fa-chevron-up';
-      } else {
-        contentDiv.style.display = 'none';
-        toggleIcon.className = 'fas fa-chevron-down';
-      }
-    };
+      // Sipariş içeriği toggle fonksiyonu
+      window.toggleOrderContent = function(ratingId) {
+        const contentDiv = document.getElementById(`order-content-${ratingId}`);
+        const toggleIcon = document.getElementById(`toggle-icon-${ratingId}`);
+        
+        if (contentDiv.style.display === 'none') {
+          contentDiv.style.display = 'block';
+          toggleIcon.className = 'fas fa-chevron-up';
+        } else {
+          contentDiv.style.display = 'none';
+          toggleIcon.className = 'fas fa-chevron-down';
+        }
+      };
 
-    // Puanları render et
-    function renderRatings() {
-      // Ortalama puanı güncelle
-      averageRatingSpan.textContent = averageRating.toFixed(1);
-      totalRatingsSpan.textContent = `${ratingsData.length} değerlendirme`;
-      
-      // Ortalama yıldızları render et
-      averageStarsDiv.innerHTML = '';
-      for (let i = 0; i < 5; i++) {
-        const star = document.createElement('i');
-        if (i < Math.floor(averageRating)) {
-          star.className = 'fas fa-star text-yellow-400 text-2xl';
-        } else if (i < averageRating) {
-          star.className = 'fas fa-star-half-alt text-yellow-400 text-2xl';
-        } else {
-          star.className = 'far fa-star text-gray-300 text-2xl';
-        }
-        averageStarsDiv.appendChild(star);
-      }
-      
-      // Puan listesini render et
-      ratingsListDiv.innerHTML = '';
-      
-      if (ratingsData.length === 0) {
-        ratingsListDiv.innerHTML = `
-          <div class="text-center py-8">
-            <i class="fas fa-star text-4xl text-gray-300 mb-4"></i>
-            <p class="text-gray-500 text-lg">Henüz puanlama yapılmamış</p>
-          </div>
-        `;
-        return;
-      }
-      
-      for (const rating of ratingsData) {
-        const ratingCard = document.createElement('div');
-        ratingCard.className = 'bg-white rounded-lg shadow-md p-6';
+      // Puanları render et
+      function renderRatings() {
+        // Ortalama puanı güncelle
+        averageRatingSpan.textContent = averageRating.toFixed(1);
+        totalRatingsSpan.textContent = `${ratingsData.length} değerlendirme`;
         
-        const ratingValue = rating.rating || 0;
-        const comment = rating.comment || '';
-        const userName = rating.userName || 'İsimsiz Kullanıcı';
-        const floor = rating.floor || rating.userFloor || 0;
-        const floorName = floor === 0 ? 'Zemin' : `Kat ${floor}`;
-        const displayName = userName !== 'İsimsiz Kullanıcı' ? `${userName} (${floorName})` : `İsimsiz Kullanıcı (${floorName})`;
-        // Orijinal puanlama tarihini kullan, yoksa sipariş tarihini kullan
-        const tarih = rating.ratingDate && rating.ratingDate.toDate ? 
-          rating.ratingDate.toDate() : 
-          (rating.timestamp && rating.timestamp.toDate ? 
-            rating.timestamp.toDate() : 
-            (rating.tarih && rating.tarih.toDate ? 
-              rating.tarih.toDate() : new Date()));
-        
-        // Sipariş içeriğini hazırla (user_order_history'den de al)
-        let orderContent = '';
-        let items = rating.items && Array.isArray(rating.items) && rating.items.length > 0 ? rating.items : (rating.orderItems && Array.isArray(rating.orderItems) && rating.orderItems.length > 0 ? rating.orderItems : []);
-        
-        // Eğer items yoksa, mevcut verileri kullan
-        if (items.length === 0) {
-          items = rating.items || rating.orderItems || [];
-        }
-        
-        if (items.length > 0) {
-          orderContent = items.map(item => 
-            `${escapeHtml(item.name)}${item.option ? ' (' + escapeHtml(item.option) + ')' : ''} - ${escapeHtml(item.adet?.toString() || '1')} adet`
-          ).join('<br>');
-        } else {
-          orderContent = '';
-        }
-        
-        let starsHtml = '';
+        // Ortalama yıldızları render et
+        averageStarsDiv.innerHTML = '';
         for (let i = 0; i < 5; i++) {
-          starsHtml += `<i class="fas fa-star ${i < ratingValue ? 'text-yellow-400' : 'text-gray-300'}" style="font-size: 16px;"></i>`;
+          const star = document.createElement('i');
+          if (i < Math.floor(averageRating)) {
+            star.className = 'fas fa-star text-yellow-400 text-2xl';
+          } else if (i < averageRating) {
+            star.className = 'fas fa-star-half-alt text-yellow-400 text-2xl';
+          } else {
+            star.className = 'far fa-star text-gray-300 text-2xl';
+          }
+          averageStarsDiv.appendChild(star);
         }
         
-        ratingCard.innerHTML = `
+        // Puan listesini render et
+        ratingsListDiv.innerHTML = '';
+        
+        if (ratingsData.length === 0) {
+          ratingsListDiv.innerHTML = `
+            <div class="text-center py-8">
+              <i class="fas fa-star text-4xl text-gray-300 mb-4"></i>
+              <p class="text-gray-500 text-lg">Henüz puanlama yapılmamış</p>
+            </div>
+          `;
+          return;
+        }
+        
+        for (const rating of ratingsData) {
+          const ratingCard = document.createElement('div');
+          ratingCard.className = 'bg-white rounded-lg shadow-md p-6';
+          
+          const ratingValue = rating.rating || 0;
+          const comment = rating.comment || '';
+          const userName = rating.userName || 'İsimsiz Kullanıcı';
+          const floor = rating.floor || rating.userFloor || 0;
+          const floorName = floor === 0 ? 'Zemin' : `Kat ${floor}`;
+          const displayName = userName !== 'İsimsiz Kullanıcı' ? `${userName} (${floorName})` : `İsimsiz Kullanıcı (${floorName})`;
+          // Orijinal puanlama tarihini kullan, yoksa sipariş tarihini kullan
+          const tarih = rating.ratingDate && rating.ratingDate.toDate ? 
+            rating.ratingDate.toDate() : 
+            (rating.timestamp && rating.timestamp.toDate ? 
+              rating.timestamp.toDate() : 
+              (rating.tarih && rating.tarih.toDate ? 
+                rating.tarih.toDate() : new Date()));
+          
+          // Sipariş içeriğini hazırla (her zaman preserved rating'den de bak)
+          let orderContent = '';
+          let items = rating.items && Array.isArray(rating.items) && rating.items.length > 0 ? rating.items : (rating.orderItems && Array.isArray(rating.orderItems) && rating.orderItems.length > 0 ? rating.orderItems : []);
+          if (items.length > 0) {
+            orderContent = items.map(item => 
+              `${escapeHtml(item.name)}${item.option ? ' (' + escapeHtml(item.option) + ')' : ''} - ${escapeHtml(item.adet?.toString() || '1')} adet`
+            ).join('<br>');
+          } else {
+            orderContent = '';
+          }
+          
+          let starsHtml = '';
+          for (let i = 0; i < 5; i++) {
+            starsHtml += `<i class="fas fa-star ${i < ratingValue ? 'text-yellow-400' : 'text-gray-300'}" style="font-size: 16px;"></i>`;
+          }
+          
+                  ratingCard.innerHTML = `
           <div class="flex justify-between items-start mb-4">
             <div>
               <h3 class="font-bold text-lg text-gray-800">${escapeHtml(displayName)}</h3>
@@ -2726,40 +2557,40 @@ async function updateReport() {
               <p class="text-gray-700 ml-6">${escapeHtml(comment)}</p>
             </div>
           ` : ''}
-          
-          ${orderContent ? `
-            <div class="bg-blue-50 rounded-lg p-4">
-              <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center">
-                  <i class="fas fa-shopping-cart text-blue-600 mr-2"></i>
-                  <h4 class="font-semibold text-blue-800">Sipariş İçeriği:</h4>
-                </div>
-                <button 
-                  onclick="toggleOrderContent('${rating.id}')" 
-                  class="text-blue-600 hover:text-blue-800 p-1 rounded transition-all duration-200"
-                  title="Sipariş içeriğini göster/gizle"
-                  id="toggle-btn-${rating.id}"
-                >
-                  <i class="fas fa-chevron-down" id="toggle-icon-${rating.id}"></i>
-                </button>
-              </div>
-              <div class="text-sm text-gray-700 ml-6 order-content" id="order-content-${rating.id}" style="display: none;">
-                ${orderContent}
-                ${(typeof rating.toplamFiyat !== 'undefined' && rating.toplamFiyat !== null) ? `
-                  <div class="mt-2 font-bold text-blue-800">
-                    Toplam: ${escapeHtml((rating.toplamFiyat || 0).toString())} ₺
+            
+            ${orderContent ? `
+              <div class="bg-blue-50 rounded-lg p-4">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center">
+                    <i class="fas fa-shopping-cart text-blue-600 mr-2"></i>
+                    <h4 class="font-semibold text-blue-800">Sipariş İçeriği:</h4>
                   </div>
-                ` : ''}
+                  <button 
+                    onclick="toggleOrderContent('${rating.id}')" 
+                    class="text-blue-600 hover:text-blue-800 p-1 rounded transition-all duration-200"
+                    title="Sipariş içeriğini göster/gizle"
+                    id="toggle-btn-${rating.id}"
+                  >
+                    <i class="fas fa-chevron-down" id="toggle-icon-${rating.id}"></i>
+                  </button>
+                </div>
+                <div class="text-sm text-gray-700 ml-6 order-content" id="order-content-${rating.id}" style="display: none;">
+                  ${orderContent}
+                  ${(typeof rating.toplamFiyat !== 'undefined' && rating.toplamFiyat !== null) ? `
+                    <div class="mt-2 font-bold text-blue-800">
+                      Toplam: ${escapeHtml((rating.toplamFiyat || 0).toString())} ₺
+                    </div>
+                  ` : ''}
+                </div>
               </div>
-            </div>
-          ` : ''}
-        `;
-        
-        ratingsListDiv.appendChild(ratingCard);
+            ` : ''}
+          `;
+          
+          ratingsListDiv.appendChild(ratingCard);
+        }
       }
-    }
-    
-    // Badge sayılarını güncelle - Sadece o kat grubunun siparişlerini say
+      
+      // Badge sayılarını güncelle - Sadece o kat grubunun siparişlerini say
     async function updateBadges() {
       // Kat grubuna göre siparişleri filtrele
       let filteredOrders = filterOrdersByPanel(allOrders);
@@ -2830,7 +2661,7 @@ async function updateReport() {
       const panelOrders = snapshot.docs.filter(docSnap => {
         const order = docSnap.data();
         const floor = Number(order.floor);
-        return floor >= 4 && floor <= 6;
+        return floor >= 7 && floor <= 10;
       });
       
       const currentOrderIds = panelOrders.map(docSnap => docSnap.id);
@@ -2864,7 +2695,7 @@ async function updateReport() {
       }
     });
     // Personel sistemi
-    const personelCollectionName = 'personel_456'; // Kat 4-5-6 için
+    const personelCollectionName = 'personel_78910'; // Kat 7-8-9-10 için
     
     // Personel listesini yükle
     async function loadPersonelList() {
@@ -2987,9 +2818,7 @@ async function updateReport() {
     // Sayfa yüklendiğinde
     window.addEventListener('DOMContentLoaded', () => {
       listenMenuRealtime();
-      renderFloors();
-      updateBadges();
-      loadRatings(); // İlk yüklemede ortalama puanı da yükle
+      setActiveTab('preparing'); // Varsayılan olarak preparing sekmesini aktif et
     });
 
     // 10 dakikalık kontrol sistemi
@@ -3026,11 +2855,7 @@ async function updateReport() {
     const closeFloorReportBtn = document.getElementById('close-floor-report-btn');
     const floorSalesTable = document.getElementById('floor-sales-table');
 
-    openFloorReportBtn.addEventListener('click', () => {
-      updateFloorSalesReport();
-      floorReportModal.style.display = 'flex';
-      document.body.classList.add('modal-open');
-    });
+
     closeFloorReportBtn.addEventListener('click', () => {
       floorReportModal.style.display = 'none';
       document.body.classList.remove('modal-open');
@@ -3112,40 +2937,40 @@ async function updateReport() {
             floorGroup: activeFloorGroup
           });
           
-          // Tabloyu temizle
+                    // Tabloyu temizle
           if (floorSalesTable) {
             floorSalesTable.innerHTML = `
               <thead>
                 <tr class="bg-gray-100">
                   <th class="px-4 py-2 text-left">Kat</th>
                   <th class="px-4 py-2 text-left">Sipariş Sayısı</th>
-                  <th class="px-4 py-2 text-left">Toplam Satış</th>
+                <th class="px-4 py-2 text-left">Toplam Satış</th>
                   <th class="px-4 py-2 text-left">En Popüler Ürün</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr class="border-b">
-                  <td class="px-4 py-2 border border-gray-300 text-center text-gray-500" colspan="4">Veri yok</td>
-                </tr>
-              </tbody>
-            `;
-          }
-          
-          // Rapor kısmını da temizle (aynı veri kaynağını kullandığı için)
-          const raporRef = doc(db, "raporlar", activeFloorGroup);
-          await setDoc(raporRef, {
-            kaliciToplam: 0,
-            eklenenSiparisler: [],
-            lastUpdated: new Date(),
-            floorGroup: activeFloorGroup
-          });
-          
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-b">
+                <td class="px-4 py-2 border border-gray-300 text-center text-gray-500" colspan="4">Veri yok</td>
+              </tr>
+            </tbody>
+          `;
         }
-      } catch (error) {
-        console.error('Kat raporu temizlenirken hata:', error);
-        await showAlert('Kat raporu temizlenirken bir hata oluştu!', 'error');
+        
+        // Rapor kısmını da temizle (aynı veri kaynağını kullandığı için)
+        const raporRef = doc(db, "raporlar", activeFloorGroup);
+        await setDoc(raporRef, {
+          kaliciToplam: 0,
+          eklenenSiparisler: [],
+          lastUpdated: new Date(),
+          floorGroup: activeFloorGroup
+        });
+        
       }
+    } catch (error) {
+      console.error('Kat raporu temizlenirken hata:', error);
+      await showAlert('Kat raporu temizlenirken bir hata oluştu!', 'error');
     }
+  }
 
     // Kat detay modal'ını göster
     function showFloorDetail(floor, floorName, floorData) {

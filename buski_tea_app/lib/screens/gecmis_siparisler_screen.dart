@@ -871,8 +871,23 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       ...items.map(
-                        (item) => Text(
-                          '• ${item['name']} ${item['option'] != null && item['option'] != '' ? '(${item['option']})' : ''} x${item['adet']}',
+                        (item) => RichText(
+                          text: TextSpan(
+                            style: DefaultTextStyle.of(context).style,
+                            children: [
+                              TextSpan(
+                                text: '• ${item['name']} ${item['option'] != null && item['option'] != '' ? '(${item['option']})' : ''} x${item['adet']}',
+                              ),
+                              if ((item['teaTickets'] ?? 0) > 0)
+                                TextSpan(
+                                  text: ' - ${(item['teaTickets'] ?? 0) * (item['adet'] ?? 1)} Fiş',
+                                  style: const TextStyle(
+                                    color: Color(0xFF1976D2),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -1389,11 +1404,25 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                                                           .spaceBetween,
                                                   children: [
                                                     Expanded(
-                                                      child: Text(
-                                                        '${item['name']} ${item['option'] != null && item['option'] != '' ? '(${item['option']})' : ''}',
-                                                        style: const TextStyle(
-                                                          fontSize: 15,
-                                                        ),
+                                                      child: Column(
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                        children: [
+                                                          Text(
+                                                            '${item['name']} ${item['option'] != null && item['option'] != '' ? '(${item['option']})' : ''}',
+                                                            style: const TextStyle(
+                                                              fontSize: 15,
+                                                            ),
+                                                          ),
+                                                          if ((item['teaTickets'] ?? 0) > 0)
+                                                            Text(
+                                                              '${(item['teaTickets'] ?? 0) * (item['adet'] ?? 1)} Fiş',
+                                                              style: const TextStyle(
+                                                                fontSize: 12,
+                                                                color: Color(0xFF1976D2),
+                                                                fontWeight: FontWeight.w500,
+                                                              ),
+                                                            ),
+                                                        ],
                                                       ),
                                                     ),
                                                     Text(
@@ -1542,7 +1571,7 @@ class _GecmisSiparislerScreenState extends State<GecmisSiparislerScreen> {
                                                           label: Text(
                                                             rating > 0
                                                                 ? 'Puanı Güncelle'
-                                                                : 'Değerlendir',
+                                                                : 'Puanla',
                                                           ),
                                                           style: ElevatedButton.styleFrom(
                                                             backgroundColor:

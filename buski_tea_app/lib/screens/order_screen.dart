@@ -145,12 +145,21 @@ class _OrderScreenState extends State<OrderScreen>
     }
   }
 
+
+
   void _addToCart(String productName, int adet, String option, int price) {
     setState(() {
       // Aynı ürün ve aynı seçenekle sepette var mı kontrol et
       int existingIndex = _cartItems.indexWhere(
         (item) => item['name'] == productName && item['option'] == option,
       );
+
+      // Menüden teaTickets bilgisini al
+      final menuItem = _menu.firstWhere(
+        (item) => item['name'] == productName,
+        orElse: () => {'teaTickets': 0},
+      );
+      final teaTickets = menuItem['teaTickets'] ?? 0;
 
       if (existingIndex != -1) {
         // Varsa adetini arttır
@@ -162,6 +171,7 @@ class _OrderScreenState extends State<OrderScreen>
           'adet': adet,
           'option': option,
           'price': price,
+          'teaTickets': teaTickets,
         });
       }
 
@@ -189,6 +199,15 @@ class _OrderScreenState extends State<OrderScreen>
       } else {
         // Adeti güncelle
         item['adet'] = newQuantity;
+        
+        // TeaTickets bilgisi yoksa menüden ekle
+        if (!item.containsKey('teaTickets')) {
+          final menuItem = _menu.firstWhere(
+            (menuItem) => menuItem['name'] == item['name'],
+            orElse: () => {'teaTickets': 0},
+          );
+          item['teaTickets'] = menuItem['teaTickets'] ?? 0;
+        }
       }
     });
   }
@@ -200,6 +219,10 @@ class _OrderScreenState extends State<OrderScreen>
     double totalPrice = _cartItems.fold(
       0,
       (sum, item) => sum + (item['price'] * item['adet']),
+    );
+    int totalTickets = _cartItems.fold<int>(
+      0,
+      (sum, item) => sum + ((item['teaTickets'] ?? 0) * item['adet'] as int),
     );
 
     try {
@@ -247,6 +270,7 @@ class _OrderScreenState extends State<OrderScreen>
         'tarih': Timestamp.now(),
         'status': 'hazırlanıyor', // Başlangıç durumu
         'toplamFiyat': totalPrice,
+        'toplamFis': totalTickets,
         'items': _cartItems,
       };
       await Future.wait([
@@ -318,6 +342,9 @@ class _OrderScreenState extends State<OrderScreen>
                           : int.tryParse(item['price'].toString()) ?? 0;
                       final options = List<String>.from(item['options']);
                       final hasOptions = options.isNotEmpty;
+                      
+                      // Çay fişi hesaplama - Firebase'den çek, yoksa 0
+                      final teaTickets = item['teaTickets'] ?? 0;
 
                       final inStock =
                           item['inStock'] != false; // Varsayılan true
@@ -383,13 +410,36 @@ class _OrderScreenState extends State<OrderScreen>
                                             6,
                                           ),
                                         ),
-                                        child: Text(
-                                          '$price TL',
-                                          style: const TextStyle(
-                                            fontSize: 18,
-                                            color: Color(0xFF1976D2),
-                                            fontWeight: FontWeight.w700,
-                                          ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              '$price TL',
+                                              style: const TextStyle(
+                                                fontSize: 18,
+                                                color: Color(0xFF1976D2),
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                            ),
+                                            if (teaTickets > 0) ...[
+                                              const Text(
+                                                ' - ',
+                                                style: TextStyle(
+                                                  fontSize: 18,
+                                                  color: Color(0xFF1976D2),
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                              ),
+                                              Text(
+                                                '${teaTickets * (_quantities[name] ?? 1)} Fiş',
+                                                style: const TextStyle(
+                                                  fontSize: 18,
+                                                  color: Color(0xFF1976D2),
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                              ),
+                                            ],
+                                          ],
                                         ),
                                       ),
                                     ],
@@ -516,6 +566,10 @@ class _OrderScreenState extends State<OrderScreen>
       0,
       (sum, item) => sum + (item['price'] * item['adet']),
     );
+    int totalTickets = _cartItems.fold<int>(
+      0,
+      (sum, item) => sum + ((item['teaTickets'] ?? 0) * item['adet'] as int),
+    );
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -532,13 +586,27 @@ class _OrderScreenState extends State<OrderScreen>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Toplam: ${totalPrice.toStringAsFixed(2)} TL',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Toplam: ${totalPrice.toStringAsFixed(2)} TL',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (totalTickets > 0)
+                      Text(
+                        'Toplam Fiş: $totalTickets',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                  ],
                 ),
                 Row(
                   children: [
@@ -618,6 +686,14 @@ class _OrderScreenState extends State<OrderScreen>
                                 fontSize: 12,
                               ),
                             ),
+                          Text(
+                            '${(entry.value['teaTickets'] ?? 0) * entry.value['adet']} Fiş',
+                            style: const TextStyle(
+                              color: Color(0xFF1976D2),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
                         ],
                       ),
                     ),

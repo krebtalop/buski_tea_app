@@ -7,7 +7,7 @@
       <link rel="icon" type="image/png" href="favicon.png?v=6">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700&family=Inter:wght@300;400;500;600;700&family=Dancing+Script:wght@400;500;600;700&family=Kalam:wght@300;400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   
   <!-- Firebase SDK -->
@@ -32,16 +32,16 @@
     
     body {
       font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
-      color: #1e293b;
-      line-height: 1.6;
+      background: linear-gradient(135deg, #143fb6 0%, #3262aa 50%, #608fdb 100%);
+      color: #ffffff;
+      line-height: 1;
       position: relative;
       min-height: 100vh;
     }
 
     @keyframes spin {
       0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+      100% { transform: rotate(180deg); }
     }
 
     @keyframes slideInRight {
@@ -71,8 +71,8 @@
     /* Menü ve sipariş sayfaları için gökyüzü temalı arka plan */
     #orderScreen,
     #profileScreen {
-      background: linear-gradient(135deg, #87CEEB 0%, #4682B4 100%);
-      position: relative;
+      background: linear-gradient(270deg, #055c7f 0%, #246295 100%);
+      position: relative; 
     }
 
     /* Buski arka plan resmi - Sadece menü ve profil sayfalarında */
@@ -168,7 +168,47 @@
     .auth-subtitle {
       color: #64748b;
       font-size: 16px;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
+    }
+
+    .typewriter-container {
+      margin: 20px 0 30px 0;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    .typewriter-text {
+      color: #000000;
+      font-size: 17px;
+      font-family: 'Dancing Script', 'Kalam', 'Comic Sans MS', 'Trebuchet MS', cursive;
+      font-style: normal;
+      margin: 0;
+      text-align: center;
+      min-height: 20px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+      line-height: 1.4;
+    }
+
+    .typewriter-cursor {
+      color: #ffffff3b;
+      font-size: 17px;
+      font-family: 'Dancing Script', 'Kalam', 'Comic Sans MS', 'Trebuchet MS', cursive;
+      animation: blink 1s infinite;
+      margin-left: 2px;
+      font-weight: 500;
+    }
+
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
     }
     
     .form-group {
@@ -1072,7 +1112,7 @@
       height: 80px;
       object-fit: cover;
       border-radius: 12px;
-      margin-bottom: 12px;
+      margin-bottom: 6px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       transition: transform 0.2s ease;
     }
@@ -1135,7 +1175,7 @@
     /* Stokta olmayan ürünler için stiller */
     .menu-item.out-of-stock {
       opacity: 0.6;
-      filter: grayscale(100%);
+      filter: redscale(100%);
       position: relative;
       background: #f8f9fa;
       border-color: #e2e8f0;
@@ -1199,7 +1239,7 @@
       font-size: 20px;
       font-weight: 700;
       color: #059669;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       position: relative;
       z-index: 1;
     }
@@ -1253,6 +1293,37 @@
       background: white;
       border-radius: 8px;
       border: 1px solid #e2e8f0;
+    }
+
+    .quantity-input {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1e293b;
+      width: 60px;
+      text-align: center;
+      padding: 8px 12px;
+      background: white;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .quantity-input:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    }
+
+    /* Remove spinner arrows from number input */
+    .quantity-input::-webkit-outer-spin-button,
+    .quantity-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .quantity-input[type=number] {
+      -moz-appearance: textfield;
+      appearance: textfield;
     }
 
     .add-to-cart-btn {
@@ -1311,32 +1382,41 @@
     }
 
     .cart-fab {
-      position: fixed;
-      bottom: 100px;
-      right: 20px;
-      width: 60px;
-      height: 60px;
-      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-      color: white;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      cursor: pointer;
-      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
-      transition: all 0.3s ease;
-      z-index: 150;
-    }
+  position: fixed;
+  bottom: 110px;
+  right: 25px;
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+  transition: all 0.3s ease;
+  z-index: 150;
+}
 
     .cart-fab:hover {
       transform: scale(1.1);
       box-shadow: 0 12px 35px rgba(59, 130, 246, 0.5);
     }
+  
 
     .cart-fab.pulse {
       animation: cartPulse 0.6s ease-in-out;
     }
+
+          .cart-fab.hover-effect {
+        transform: scale(1.1);
+      }
+      
+      .cart-fab.hover-effect .cart-icon {
+        transform: translate(-50%, -50%) scale(1.2);
+      }
 
     @keyframes cartPulse {
       0% { transform: scale(1); }
@@ -1345,7 +1425,20 @@
     }
 
     .cart-icon {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       transition: all 0.3s ease;
+      transform-origin: center center;
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .cart-fab:hover .cart-icon {
+      transform: translate(-50%, -50%);
     }
 
     .cart-count {
@@ -1382,7 +1475,7 @@
       right: 0;
       background: white;
       display: flex;
-      padding: 12px 24px;
+      padding: 3px 0px;
       box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
       border-top: 1px solid #e2e8f0;
       z-index: 50;
@@ -1408,6 +1501,11 @@
     .nav-item.active {
       color: #3b82f6;
       background: #eff6ff;
+    }
+
+    .nav-item.active:hover {
+      background: #eff6ff;
+      color: #3b82f6;
     }
 
     .nav-icon {
@@ -1496,14 +1594,19 @@
       font-size: 24px;
       color: #64748b;
       cursor: pointer;
-      padding: 4px;
-      border-radius: 8px;
+      padding: 8px;
+      border-radius: 50%;
       transition: all 0.2s ease;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .close-btn:hover {
-      background: #e2e8f0;
-      color: #1e293b;
+      color: #374151;
+      transform: scale(1.1);
     }
 
     .cart-items {
@@ -1817,6 +1920,11 @@
       font-weight: 500;
       color: #64748b;
     }
+    
+    .info-item span:last-child {
+      color: #1e293b;
+      font-weight: 500;
+    }
 
     .order-history {
       max-height: 700px;
@@ -1900,6 +2008,16 @@
       gap: 8px;
       font-size: 12px;
       color: #64748b;
+    }
+
+    .order-item-price {
+      color: #059669;
+      font-weight: 600;
+    }
+
+    .order-item-tickets {
+      color: #1976D2;
+      font-weight: 500;
     }
 
     .order-item-quantity {
@@ -2637,9 +2755,7 @@
     transform: translateX(-50%);
     background: white;
     display: flex;
-    padding: 12px 0;
     box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
-    border-top: 1px solid #e2e8f0;
     max-width: 1200px;
     width: 100%;
     height: 80px;
@@ -2692,9 +2808,14 @@
     <div class="auth-container">
       <div class="auth-card">
         <div class="logo-section">
-          <img src="../assets/images/logo1.png" alt="Buski Çay" class="logo">
+          <img src="assets/sounds/images/logo.png" alt="Buski Çay" class="logo">
           <h1 class="auth-title">Hoş Geldiniz</h1>
           <p class="auth-subtitle">Hesabınıza giriş yapın</p>
+        </div>
+        
+        <div class="typewriter-container">
+          <p class="typewriter-text" id="typewriterText"></p>
+          <span class="typewriter-cursor">|</span>
         </div>
         
         <form id="loginForm">
@@ -2707,7 +2828,7 @@
             <label for="loginPassword">Şifre</label>
             <div class="password-field">
               <input type="password" id="loginPassword" required>
-              <button type="button" class="password-toggle" onclick="togglePassword('loginPassword')">
+              <button type="button" class="password-toggle" onclick="togglePassword('loginPassword')" tabindex="-1">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
                   <line x1="1" y1="1" x2="23" y2="23"></line>
@@ -2744,7 +2865,7 @@
     <div class="auth-container">
       <div class="auth-card">
         <div class="logo-section">
-          <img src="../assets/images/logo1.png" alt="Buski Çay" class="logo">
+          <img src="assets/sounds/images/logo.png" alt="Buski Çay" class="logo">
           <h1 class="auth-title">Hesap Oluştur</h1>
           <p class="auth-subtitle">Yeni hesabınızı oluşturun</p>
         </div>
@@ -2792,7 +2913,7 @@
             <label for="registerPassword">Şifre</label>
             <div class="password-field">
               <input type="password" id="registerPassword" required>
-              <button type="button" class="password-toggle" onclick="togglePassword('registerPassword')">
+              <button type="button" class="password-toggle" onclick="togglePassword('registerPassword')" tabindex="-1">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
                   <line x1="1" y1="1" x2="23" y2="23"></line>
@@ -2805,7 +2926,7 @@
             <label for="registerPasswordRepeat">Şifre Tekrar</label>
             <div class="password-field">
               <input type="password" id="registerPasswordRepeat" required>
-              <button type="button" class="password-toggle" onclick="togglePassword('registerPasswordRepeat')">
+              <button type="button" class="password-toggle" onclick="togglePassword('registerPasswordRepeat')" tabindex="-1">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
                   <line x1="1" y1="1" x2="23" y2="23"></line>
@@ -2840,7 +2961,7 @@
     <div class="auth-container">
       <div class="auth-card">
         <div class="logo-section">
-          <img src="../assets/images/logo1.png" alt="Buski Çay" class="logo">
+          <img src="assets/sounds/images/logo.png" alt="Buski Çay" class="logo">
           <h1 class="auth-title">Şifre Sıfırlama</h1>
           <p class="auth-subtitle">E-posta adresinizi girin</p>
         </div>
@@ -2933,6 +3054,10 @@
               <span>Toplam:</span>
               <span id="cartTotal">0 ₺</span>
             </div>
+            <div class="cart-total" style="font-size: 14px; margin-top: 5px; color: #64748b;">
+              <span>Toplam Fiş:</span>
+              <span id="cartTotalTickets">0</span>
+            </div>
             <button class="place-order-btn" id="placeOrderBtn" onclick="placeOrder()">
               <span id="placeOrderText">Sipariş Ver</span>
               <div id="placeOrderSpinner" class="spinner" style="display: none;"></div>
@@ -2951,7 +3076,7 @@
       <div class="profile-header">
         <div class="profile-info">
           <div class="profile-avatar">
-            <img id="profileImagePreview" src="../assets/images/logo1.png" alt="Profil Avatar">
+            <img id="profileImagePreview" src="assets/sounds/images/logo.png" alt="Profil Avatar">
           </div>
           <div class="profile-details">
             <h2 id="profileUserName">Kullanıcı</h2>
@@ -3051,7 +3176,7 @@
                 <label for="currentPassword">Mevcut Şifre</label>
                 <div class="password-field">
                   <input type="password" id="currentPassword" required>
-                  <button type="button" class="password-toggle" onclick="togglePassword('currentPassword')">
+                  <button type="button" class="password-toggle" onclick="togglePassword('currentPassword')" tabindex="-1">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
                       <line x1="1" y1="1" x2="23" y2="23"></line>
@@ -3063,7 +3188,7 @@
                 <label for="newPassword">Yeni Şifre</label>
                 <div class="password-field">
                   <input type="password" id="newPassword" required>
-                  <button type="button" class="password-toggle" onclick="togglePassword('newPassword')">
+                  <button type="button" class="password-toggle" onclick="togglePassword('newPassword')" tabindex="-1">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
                       <line x1="1" y1="1" x2="23" y2="23"></line>
@@ -3075,7 +3200,7 @@
                 <label for="confirmPassword">Yeni Şifre Tekrar</label>
                 <div class="password-field">
                   <input type="password" id="confirmPassword" required>
-                  <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword')">
+                  <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword')" tabindex="-1">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
                       <line x1="1" y1="1" x2="23" y2="23"></line>
@@ -3097,7 +3222,7 @@
             <div class="profile-image-upload" style="text-align: center; margin: 30px 0;">
               <h4>Profil Fotoğrafı</h4>
               <div class="profile-image-preview" onclick="document.getElementById('profileImageInput').click()" style="margin: 0 auto;">
-                <img id="profileImagePreview2" src="../assets/images/logo1.png" alt="Profil Avatar">
+                <img id="profileImagePreview2" src="assets/sounds/images/logo.png" alt="Profil Avatar">
                 <div class="upload-overlay">
                   <span>📷</span>
                   <p>Fotoğraf Değiştir</p>
@@ -3162,7 +3287,7 @@
               <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
             </svg>
           </span>
-          <span class="nav-text">Sipariş Yap</span>
+          <span class="nav-text">Sipariş</span>
         </div>
         <div class="nav-item active" onclick="showProfileTab()">
           <span class="nav-icon">
@@ -3312,8 +3437,122 @@
     let userData = {};
     let orderChart = null;
     let orderHistoryData = [];
+    let quantities = {};
     let ratings = {};
     let isRegistering = false; // Kayıt işlemi flag'i
+
+    // Çay sloganları
+    const teaSlogans = [
+      'Çayınız demli mi olsun, demsiz mi?',
+      'Çalışırken bi kahve molası fena mı olur?',
+      'Yoğun tempoya küçük bir tebessüm molası.',
+      'Mesainin en güzel demlikçisi taze demlenmiş bir bardak çay.',
+      'Hayat kısa, çaylar demli!',
+      'Her yudum bir hikaye, her bardak bir anı.',
+      'Çay demlerken hayaller de demlensin.',
+      'Sıcak çaylar, soğuk günlerin dostu.',
+      'Çay saati, kalp saati.',
+      'Demli çay, demli sohbet.',
+      'Çay içerken zaman durur.',
+      'Her çay molası yeni bir başlangıç.',
+      'Çayın tadı, sevginin tadı.',
+      'Bir bardak çay, bin bir dertlerin ilacı.',
+      'Çay demlenirken sabır da demlensin.'
+    ];
+
+    // Daktilo animasyon değişkenleri
+    let typewriterTimeout = null;
+    let currentSloganIndex = 0;
+    let isTyping = false;
+
+    // Daktilo animasyon fonksiyonu
+    function typeWriter(text, elementId, speed = 100) {
+      const element = document.getElementById(elementId);
+      if (!element) return;
+      
+      isTyping = true;
+      element.textContent = '';
+      let i = 0;
+      
+      function type() {
+        if (i < text.length) {
+          element.textContent += text.charAt(i);
+          i++;
+          typewriterTimeout = setTimeout(type, speed);
+        } else {
+          isTyping = false;
+          // 3 saniye bekle, sonra sil ve yeni slogan başlat
+          typewriterTimeout = setTimeout(() => {
+            eraseText(elementId, 50);
+          }, 3000);
+        }
+      }
+      type();
+    }
+
+    // Metni silme fonksiyonu
+    function eraseText(elementId, speed = 50) {
+      const element = document.getElementById(elementId);
+      if (!element) return;
+      
+      const text = element.textContent;
+      let i = text.length;
+      
+      function erase() {
+        if (i > 0) {
+          element.textContent = text.substring(0, i - 1);
+          i--;
+          typewriterTimeout = setTimeout(erase, speed);
+        } else {
+          // 1 saniye bekle, sonra yeni slogan başlat
+          typewriterTimeout = setTimeout(() => {
+            startNextSlogan();
+          }, 1000);
+        }
+      }
+      erase();
+    }
+
+    // Sonraki sloganı başlat
+    function startNextSlogan() {
+      currentSloganIndex = (currentSloganIndex + 1) % teaSlogans.length;
+      const randomSlogan = teaSlogans[currentSloganIndex];
+      typeWriter(randomSlogan, 'typewriterText', 80);
+    }
+
+    // Daktilo animasyonunu başlat
+    function startTypewriterAnimation() {
+      console.log('🎬 Daktilo animasyonu başlatılıyor...');
+      const element = document.getElementById('typewriterText');
+      if (element) {
+        console.log('✅ Typewriter element bulundu');
+        // Random başlangıç sloganı seç
+        currentSloganIndex = Math.floor(Math.random() * teaSlogans.length);
+        const initialSlogan = teaSlogans[currentSloganIndex];
+        console.log(`📝 Seçilen slogan: "${initialSlogan}"`);
+        
+        // 1 saniye bekle, sonra animasyonu başlat
+        setTimeout(() => {
+          console.log('⏰ Animasyon başlatılıyor...');
+          typeWriter(initialSlogan, 'typewriterText', 80);
+        }, 1000);
+      } else {
+        console.error('❌ typewriterText elementi bulunamadı!');
+      }
+    }
+
+    // Daktilo animasyonunu durdur
+    function stopTypewriterAnimation() {
+      if (typewriterTimeout) {
+        clearTimeout(typewriterTimeout);
+        typewriterTimeout = null;
+      }
+      isTyping = false;
+      const element = document.getElementById('typewriterText');
+      if (element) {
+        element.textContent = '';
+      }
+    }
 
     // Fiyat formatını düzenleyen yardımcı fonksiyon
     function formatPrice(price) {
@@ -3334,6 +3573,10 @@
       initializeApp();
       checkAuth();
       
+      // Daktilo animasyonunu başlat (sadece login ekranındaysa)
+      if (document.getElementById('loginScreen') && document.getElementById('loginScreen').classList.contains('active')) {
+        startTypewriterAnimation();
+      }
 
     });
 
@@ -3387,7 +3630,7 @@
                 <div class="buski-logo-container">
                   <div class="buski-logo-outline"></div>
                   <div class="buski-logo-fill"></div>
-                  <img src="../assets/images/logo1.png" alt="Buski" class="buski-logo-image">
+                  <img src="assets/sounds/images/logo.png" alt="Buski" class="buski-logo-image">
                 </div>
                 <div class="buski-loading-text">Menü yükleniyor...</div>
               </div>
@@ -3415,7 +3658,10 @@
     }
 
     function loadUserData() {
+      console.log("=== loadUserData BAŞLADI ===");
       console.log("loadUserData çağrıldı, currentUser:", currentUser);
+      console.log("currentUser.uid:", currentUser?.uid);
+      console.log("currentUser.email:", currentUser?.email);
       
       if (!currentUser) {
         console.log("Kullanıcı yok, userData temizleniyor");
@@ -3425,40 +3671,100 @@
       }
       
       console.log("Firebase'den kullanıcı verisi çekiliyor, UID:", currentUser.uid);
+      console.log("Firebase auth durumu:", firebase.auth().currentUser);
+      console.log("Firestore instance:", firebase.firestore());
       
-      firebase.firestore().collection('users').doc(currentUser.uid).get()
-        .then((doc) => {
-          console.log("Firestore'dan gelen user data:", doc.data());
-          if (doc.exists) {
-            userData = doc.data();
-            console.log("userData başarıyla set edildi:", userData);
-            console.log("Kullanıcı bilgileri:", {
-              name: userData.name,
-              surname: userData.surname,
-              email: userData.email,
-              floor: userData.floor,
-              department: userData.department
+      try {
+        const userDocRef = firebase.firestore().collection('users').doc(currentUser.uid);
+        console.log("User document reference:", userDocRef);
+        
+        userDocRef.get()
+          .then((doc) => {
+            console.log("=== Firestore'dan veri geldi ===");
+            console.log("Firestore'dan gelen user data:", doc.data());
+            console.log("Document exists:", doc.exists);
+            console.log("Document ID:", doc.id);
+            console.log("Document path:", doc.ref.path);
+            
+            if (doc.exists) {
+              userData = doc.data();
+              console.log("=== userData başarıyla set edildi ===");
+              console.log("userData:", userData);
+              console.log("userData tipi:", typeof userData);
+              console.log("Kullanıcı bilgileri:", {
+                name: userData.name,
+                surname: userData.surname,
+                email: userData.email,
+                floor: userData.floor,
+                department: userData.department
+              });
+              console.log("updateUserInterface çağrılıyor...");
+              updateUserInterface();
+              console.log("loadMenu çağrılıyor...");
+              loadMenu();
+            } else {
+              console.log("Kullanıcı verisi Firestore'da bulunamadı, yeni kullanıcı oluşturuluyor...");
+              // Yeni kullanıcı için varsayılan veri oluştur
+              const defaultUserData = {
+                name: currentUser.displayName || currentUser.email.split('@')[0],
+                surname: 'Kullanıcı', // Varsayılan soyad
+                email: currentUser.email,
+                floor: 0,
+                department: 'Genel',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+              };
+              
+              userDocRef.set(defaultUserData)
+                .then(() => {
+                  console.log("Yeni kullanıcı verisi oluşturuldu:", defaultUserData);
+                  userData = defaultUserData;
+                  updateUserInterface();
+                  loadMenu();
+                })
+                .catch((setError) => {
+                  console.error("Yeni kullanıcı verisi oluşturulurken hata:", setError);
+                  userData = {};
+                  loadMenu();
+                });
+            }
+          })
+          .catch((error) => {
+            console.error("Firebase'den kullanıcı verisi çekilirken hata:", error);
+            console.error("Hata detayları:", {
+              code: error.code,
+              message: error.message,
+              stack: error.stack
             });
-            updateUserInterface();
-            loadMenu();
-          } else {
-            console.log("Kullanıcı verisi Firestore'da bulunamadı");
             userData = {};
             loadMenu();
-          }
-        })
-        .catch((error) => {
-          console.error("Firebase'den kullanıcı verisi çekilirken hata:", error);
-          userData = {};
-          loadMenu();
-        });
+          });
+      } catch (error) {
+        console.error("loadUserData fonksiyonunda genel hata:", error);
+        userData = {};
+        loadMenu();
+      }
     }
 
     function updateUserInterface() {
+      console.log("=== updateUserInterface BAŞLADI ===");
       console.log("updateUserInterface çağrıldı, userData:", userData);
+      console.log("userData tipi:", typeof userData);
+      console.log("userData içeriği:", JSON.stringify(userData, null, 2));
+      console.log("userData.name:", userData?.name);
+      console.log("userData.email:", userData?.email);
+      console.log("userData.floor:", userData?.floor);
+      console.log("userData.department:", userData?.department);
+      
+      // DOM'un hazır olmasını bekle
+      if (document.readyState !== 'complete') {
+        console.log("DOM henüz hazır değil, 100ms bekleniyor...");
+        setTimeout(updateUserInterface, 100);
+        return;
+      }
       
       // Update order screen
       const userNameElement = document.getElementById('userName');
+      console.log("userName element bulundu:", !!userNameElement);
       if (userNameElement) {
         userNameElement.textContent = userData.name || 'Kullanıcı';
         console.log("Order screen userName güncellendi:", userData.name || 'Kullanıcı');
@@ -3466,26 +3772,104 @@
       
       // Update profile screen data - sadece isim
       const profileUserNameElement = document.getElementById('profileUserName');
+      console.log("profileUserName element bulundu:", !!profileUserNameElement);
       if (profileUserNameElement) {
         profileUserNameElement.textContent = userData.name || 'Kullanıcı';
         console.log("Profile screen userName güncellendi:", userData.name || 'Kullanıcı');
       }
       
       // Update detailed profile info (bilgiler sekmesinde)
-      const profileFullNameElement = document.getElementById('profileFullName');
+      let profileFullNameElement = document.getElementById('profileFullName');
+      console.log("profileFullName element bulundu:", !!profileFullNameElement);
+      console.log("profileFullName element:", profileFullNameElement);
+      
+      // Eğer element bulunamazsa, querySelector ile dene
+      if (!profileFullNameElement) {
+        profileFullNameElement = document.querySelector('#profileFullName');
+        console.log("querySelector ile profileFullName element bulundu:", !!profileFullNameElement);
+      }
+      
+      // Hala bulunamazsa, tüm span elementlerini kontrol et
+      if (!profileFullNameElement) {
+        const allSpans = document.querySelectorAll('span');
+        console.log("Toplam span sayısı:", allSpans.length);
+        for (let i = 0; i < allSpans.length; i++) {
+          if (allSpans[i].id === 'profileFullName') {
+            profileFullNameElement = allSpans[i];
+            console.log("Span elementlerinde profileFullName bulundu:", profileFullNameElement);
+            break;
+          }
+        }
+      }
+      
       if (profileFullNameElement) {
         const fullName = `${userData.name || ''} ${userData.surname || ''}`.trim();
         profileFullNameElement.textContent = fullName || '-';
         console.log("Profile fullName güncellendi:", fullName || '-');
+        console.log("Element textContent:", profileFullNameElement.textContent);
+      } else {
+        console.error("profileFullName elementi bulunamadı!");
+        console.error("DOM'da profileFullName elementi aranıyor...");
+        const allElements = document.querySelectorAll('*');
+        console.log("Toplam element sayısı:", allElements.length);
+        
+        // Manuel olarak element oluştur veya güncelle
+        console.log("Manuel güncelleme deneniyor...");
+        const infoSection = document.getElementById('info-section');
+        if (infoSection) {
+          const infoItems = infoSection.querySelectorAll('.info-item');
+          console.log("Info items bulundu:", infoItems.length);
+          if (infoItems.length > 0) {
+            const nameItem = infoItems[0];
+            const nameSpan = nameItem.querySelector('span:last-child');
+            if (nameSpan) {
+              const fullName = `${userData.name || ''} ${userData.surname || ''}`.trim();
+              nameSpan.textContent = fullName || '-';
+              console.log("Manuel olarak profileFullName güncellendi:", fullName || '-');
+            }
+          }
+        }
       }
       
-      const profileEmailElement = document.getElementById('profileEmail');
+      let profileEmailElement = document.getElementById('profileEmail');
+      console.log("profileEmail element bulundu:", !!profileEmailElement);
+      console.log("profileEmail element:", profileEmailElement);
+      
+      if (!profileEmailElement) {
+        profileEmailElement = document.querySelector('#profileEmail');
+        console.log("querySelector ile profileEmail element bulundu:", !!profileEmailElement);
+      }
+      
       if (profileEmailElement) {
         profileEmailElement.textContent = userData.email || '-';
         console.log("Profile email güncellendi:", userData.email || '-');
+        console.log("Element textContent:", profileEmailElement.textContent);
+      } else {
+        console.error("profileEmail elementi bulunamadı!");
+        // Manuel güncelleme
+        const infoSection = document.getElementById('info-section');
+        if (infoSection) {
+          const infoItems = infoSection.querySelectorAll('.info-item');
+          if (infoItems.length > 1) {
+            const emailItem = infoItems[1];
+            const emailSpan = emailItem.querySelector('span:last-child');
+            if (emailSpan) {
+              emailSpan.textContent = userData.email || '-';
+              console.log("Manuel olarak profileEmail güncellendi:", userData.email || '-');
+            }
+          }
+        }
       }
       
-      const profileFloorElement = document.getElementById('profileFloor');
+      let profileFloorElement = document.getElementById('profileFloor');
+      console.log("profileFloor element bulundu:", !!profileFloorElement);
+      console.log("profileFloor element:", profileFloorElement);
+      
+      if (!profileFloorElement) {
+        profileFloorElement = document.querySelector('#profileFloor');
+        console.log("querySelector ile profileFloor element bulundu:", !!profileFloorElement);
+      }
+      
       if (profileFloorElement) {
         // Zemin katı için özel gösterim
         let floorDisplay = userData.floor || '-';
@@ -3496,12 +3880,58 @@
         }
         profileFloorElement.textContent = floorDisplay;
         console.log("Profile floor güncellendi:", floorDisplay);
+        console.log("Element textContent:", profileFloorElement.textContent);
+      } else {
+        console.error("profileFloor elementi bulunamadı!");
+        // Manuel güncelleme
+        const infoSection = document.getElementById('info-section');
+        if (infoSection) {
+          const infoItems = infoSection.querySelectorAll('.info-item');
+          if (infoItems.length > 2) {
+            const floorItem = infoItems[2];
+            const floorSpan = floorItem.querySelector('span:last-child');
+            if (floorSpan) {
+              let floorDisplay = userData.floor || '-';
+              if (userData.floor === 0) {
+                floorDisplay = 'Zemin';
+              } else if (userData.floor) {
+                floorDisplay = `Kat ${userData.floor}`;
+              }
+              floorSpan.textContent = floorDisplay;
+              console.log("Manuel olarak profileFloor güncellendi:", floorDisplay);
+            }
+          }
+        }
       }
       
-      const profileDeptElement = document.getElementById('profileDept');
+      let profileDeptElement = document.getElementById('profileDept');
+      console.log("profileDept element bulundu:", !!profileDeptElement);
+      console.log("profileDept element:", profileDeptElement);
+      
+      if (!profileDeptElement) {
+        profileDeptElement = document.querySelector('#profileDept');
+        console.log("querySelector ile profileDept element bulundu:", !!profileDeptElement);
+      }
+      
       if (profileDeptElement) {
         profileDeptElement.textContent = userData.department || '-';
         console.log("Profile department güncellendi:", userData.department || '-');
+        console.log("Element textContent:", profileDeptElement.textContent);
+      } else {
+        console.error("profileDept elementi bulunamadı!");
+        // Manuel güncelleme
+        const infoSection = document.getElementById('info-section');
+        if (infoSection) {
+          const infoItems = infoSection.querySelectorAll('.info-item');
+          if (infoItems.length > 3) {
+            const deptItem = infoItems[3];
+            const deptSpan = deptItem.querySelector('span:last-child');
+            if (deptSpan) {
+              deptSpan.textContent = userData.department || '-';
+              console.log("Manuel olarak profileDept güncellendi:", userData.department || '-');
+            }
+          }
+        }
       }
       
       // Update edit form fields
@@ -3567,7 +3997,8 @@
         console.log("Settings form editFloor güncellendi:", userData.floor || 0);
       }
       
-      console.log("updateUserInterface tamamlandı");
+      console.log("=== updateUserInterface TAMAMLANDI ===");
+      console.log("Tüm profil elementleri güncellendi");
     }
 
     // Gerçek zamanlı menü dinleyicisi
@@ -3644,18 +4075,41 @@
             console.log("Ham menü verisi:", menuData);
             
             // Menü verisi farklı formatlarda olabilir
+            let rawMenu = [];
             if (menuData.items && Array.isArray(menuData.items)) {
-              menu = menuData.items;
-              console.log("items array'den menü yüklendi, uzunluk:", menu.length);
+              rawMenu = menuData.items;
+              console.log("items array'den menü yüklendi, uzunluk:", rawMenu.length);
             } else if (menuData.menu && Array.isArray(menuData.menu)) {
-              menu = menuData.menu;
-              console.log("menu array'den menü yüklendi, uzunluk:", menu.length);
+              rawMenu = menuData.menu;
+              console.log("menu array'den menü yüklendi, uzunluk:", rawMenu.length);
             } else if (Array.isArray(menuData)) {
-              menu = menuData;
-              console.log("Direkt array olarak menü yüklendi, uzunluk:", menu.length);
+              rawMenu = menuData;
+              console.log("Direkt array olarak menü yüklendi, uzunluk:", rawMenu.length);
             } else {
               console.log("Menü verisi beklenen formatta değil, varsayılan menü kullanılıyor");
               menu = getDefaultMenu();
+            }
+            
+            // Firebase'den gelen menü öğelerine teaTickets bilgisini ekle
+            if (rawMenu.length > 0) {
+              menu = rawMenu.map(item => {
+                // Eğer teaTickets bilgisi yoksa, ürün adına göre varsayılan değer ata
+                let teaTickets = item.teaTickets;
+                if (teaTickets === undefined || teaTickets === null) {
+                  const itemName = item.name ? item.name.toLowerCase() : '';
+                  if (itemName.includes('çay') || itemName.includes('kahve') || itemName.includes('nescafe') || itemName.includes('oralet') || itemName.includes('ihlamur') || itemName.includes('kuşburnu') || itemName.includes('adaçayı')) {
+                    teaTickets = 1;
+                  } else {
+                    teaTickets = 0;
+                  }
+                }
+                
+                return {
+                  ...item,
+                  teaTickets: teaTickets
+                };
+              });
+              console.log("Menü öğelerine teaTickets bilgisi eklendi");
             }
             
             console.log("Toplam menü öğesi:", menu.length);
@@ -3694,7 +4148,8 @@
           category: 'Kahve',
           inStock: true,
           options: ['Sade', 'Şekerli'],
-          defaultOption: 'Sade'
+          defaultOption: 'Sade',
+          teaTickets: 1
         },
         {
           name: 'Nescafe',
@@ -3702,7 +4157,8 @@
           category: 'Kahve',
           inStock: true,
           options: ['Sade', 'Şekerli'],
-          defaultOption: 'Sade'
+          defaultOption: 'Sade',
+          teaTickets: 1
         },
         {
           name: 'Çay',
@@ -3710,7 +4166,8 @@
           category: 'Çay',
           inStock: true,
           options: ['Sade', 'Şekerli'],
-          defaultOption: 'Sade'
+          defaultOption: 'Sade',
+          teaTickets: 1
         },
         {
           name: 'Büyük Çay',
@@ -3718,7 +4175,8 @@
           category: 'Çay',
           inStock: true,
           options: ['Sade', 'Şekerli'],
-          defaultOption: 'Sade'
+          defaultOption: 'Sade',
+          teaTickets: 1
         },
         {
           name: 'Ihlamur',
@@ -3726,7 +4184,8 @@
           category: 'Çay',
           inStock: true,
           options: ['Sade', 'Şekerli'],
-          defaultOption: 'Sade'
+          defaultOption: 'Sade',
+          teaTickets: 1
         },
         {
           name: 'Kuşburnu',
@@ -3734,7 +4193,8 @@
           category: 'Çay',
           inStock: true,
           options: ['Sade', 'Şekerli'],
-          defaultOption: 'Sade'
+          defaultOption: 'Sade',
+          teaTickets: 1
         },
         {
           name: 'Adaçayı',
@@ -3742,7 +4202,8 @@
           category: 'Çay',
           inStock: true,
           options: ['Sade', 'Şekerli'],
-          defaultOption: 'Sade'
+          defaultOption: 'Sade',
+          teaTickets: 1
         },
         {
           name: 'Oralet',
@@ -3750,7 +4211,8 @@
           category: 'Çay',
           inStock: true,
           options: ['Sade', 'Şekerli'],
-          defaultOption: 'Sade'
+          defaultOption: 'Sade',
+          teaTickets: 1
         },
         {
           name: 'Maden Suyu',
@@ -3758,7 +4220,8 @@
           category: 'İçecek',
           inStock: true,
           options: ['Sade'],
-          defaultOption: 'Sade'
+          defaultOption: 'Sade',
+          teaTickets: 0
         },
         {
           name: 'Sade Gazoz',
@@ -3766,7 +4229,8 @@
           category: 'İçecek',
           inStock: true,
           options: ['Sade'],
-          defaultOption: 'Sade'
+          defaultOption: 'Sade',
+          teaTickets: 0
         },
         {
           name: 'Sarı Gazoz',
@@ -3774,7 +4238,8 @@
           category: 'İçecek',
           inStock: true,
           options: ['Sade'],
-          defaultOption: 'Sade'
+          defaultOption: 'Sade',
+          teaTickets: 0
         },
         {
           name: 'Limonlu Soda',
@@ -3782,7 +4247,8 @@
           category: 'İçecek',
           inStock: true,
           options: ['Sade'],
-          defaultOption: 'Sade'
+          defaultOption: 'Sade',
+          teaTickets: 0
         },
         {
           name: 'Narlı Soda',
@@ -3790,7 +4256,8 @@
           category: 'İçecek',
           inStock: true,
           options: ['Sade'],
-          defaultOption: 'Sade'
+          defaultOption: 'Sade',
+          teaTickets: 0
         },
         {
           name: 'Elmalı Soda',
@@ -3798,7 +4265,8 @@
           category: 'İçecek',
           inStock: true,
           options: ['Sade'],
-          defaultOption: 'Sade'
+          defaultOption: 'Sade',
+          teaTickets: 0
         },
         {
           name: 'Çay Fişi',
@@ -3978,7 +4446,7 @@
               <div class="buski-logo-container">
                 <div class="buski-logo-outline"></div>
                 <div class="buski-logo-fill"></div>
-                <img src="../assets/images/logo1.png" alt="Buski" class="buski-logo-image">
+                <img src="assets/sounds/images/logo.png" alt="Buski" class="buski-logo-image">
               </div>
               <div class="buski-loading-text">Menü yükleniyor...</div>
             </div>
@@ -3990,6 +4458,9 @@
         return;
       }
 
+      // Initialize quantities object
+      quantities = {};
+      
       menu.forEach((item, index) => {
         // Stok durumunu kontrol et
         const isOutOfStock = item.inStock === false;
@@ -4026,6 +4497,9 @@
           .replace(/[^a-zA-Z0-9_]/g, '');
         console.log(`🔧 Ürün: "${item.name}" -> escapedItemName: "${escapedItemName}"`);
         
+        // Initialize quantity for this item
+        quantities[escapedItemName] = 0;
+        
         // Dinamik opsiyon seçenekleri
         let optionsHtml = '';
         if (item.options && Array.isArray(item.options) && item.options.length > 0) {
@@ -4061,13 +4535,13 @@
         menuItem.innerHTML = `
           ${isOutOfStock ? '<div class="out-of-stock-banner">Elimizde Yok</div>' : ''}
           ${imageHtml}
-          <h3>${item.name}</h3>
-          <p>${item.description || 'Lezzetli içecek'}</p>
+          <h3 style="font-size: 1.2em; margin-top: 10px; margin-bottom: 15px;">${item.name}</h3>
           <div class="price">${item.price} ₺</div>
+          ${item.teaTickets ? `<div class="ticket-info" style="font-size: 0.9em; color: #000000; font-weight: normal; margin-top: -5px;">${item.teaTickets} Fiş</div>` : ''}
           <div class="controls-row">
             <div class="quantity-controls">
-              <button class="quantity-btn" onclick="changeQuantity('${escapedItemName}', -1)" ${isOutOfStock ? 'disabled' : ''}>-</button>
-              <span class="quantity-display" id="quantity-${escapedItemName}">1</span>
+              <button class="quantity-btn" onclick="changeQuantity('${escapedItemName}', -1)" ${isOutOfStock ? 'disabled' : 'disabled'}>-</button>
+              <input type="number" class="quantity-input" id="quantity-${escapedItemName}" value="0" min="0" max="99" onchange="updateQuantityFromInput('${escapedItemName}', this.value)" onkeyup="updateQuantityFromInput('${escapedItemName}', this.value)">
               <button class="quantity-btn" onclick="changeQuantity('${escapedItemName}', 1)" ${isOutOfStock ? 'disabled' : ''}>+</button>
             </div>
             ${optionsHtml}
@@ -4186,6 +4660,11 @@
       if (loginError) loginError.textContent = '';
       
       showScreen('loginScreen');
+      
+      // Daktilo animasyonunu başlat
+      setTimeout(() => {
+        startTypewriterAnimation();
+      }, 100);
     }
 
     function validateForm(email, password) {
@@ -4388,14 +4867,116 @@
         console.error(`Quantity element bulunamadı: quantity-${itemName}`);
         return;
       }
-      const currentQuantity = parseInt(quantityElement.textContent);
-      const newQuantity = Math.max(1, currentQuantity + change);
-      quantityElement.textContent = newQuantity;
+      const currentQuantity = parseInt(quantityElement.value);
+      const newQuantity = Math.max(0, currentQuantity + change);
+      quantityElement.value = newQuantity;
       
-      // Disable minus button if quantity is 1
+      // Update quantities object
+      quantities[itemName] = newQuantity;
+      
+      // Update the ticket info display with new ticket count
+      const menuItem = quantityElement.closest('.menu-item');
+      if (menuItem) {
+        // Find menu data for this item by matching the escaped name
+        let originalItemName = null;
+        for (const menuItem of menu) {
+          const escapedMenuName = menuItem.name
+            .replace(/'/g, "\\'")
+            .replace(/"/g, '\\"')
+            .replace(/ç/g, 'c')
+            .replace(/ğ/g, 'g')
+            .replace(/ı/g, 'i')
+            .replace(/ö/g, 'o')
+            .replace(/ş/g, 's')
+            .replace(/ü/g, 'u')
+            .replace(/\s+/g, '_')
+            .replace(/[^a-zA-Z0-9_]/g, '');
+          if (escapedMenuName === itemName) {
+            originalItemName = menuItem.name;
+            break;
+          }
+        }
+        
+                  if (originalItemName) {
+            const menuData = menu.find(item => item.name === originalItemName);
+            if (menuData && menuData.teaTickets) {
+              const ticketInfoElement = menuItem.querySelector('.ticket-info');
+              if (ticketInfoElement) {
+                if (newQuantity > 0) {
+                  ticketInfoElement.textContent = `${menuData.teaTickets * newQuantity} Fiş`;
+                  ticketInfoElement.style.display = 'block';
+                } else {
+                  ticketInfoElement.style.display = 'none';
+                }
+              }
+            }
+          }
+      }
+      
+      // Disable minus button if quantity is 0
       const minusBtn = quantityElement.previousElementSibling;
       if (minusBtn) {
-        minusBtn.disabled = newQuantity === 1;
+        minusBtn.disabled = newQuantity === 0;
+      }
+    }
+
+    function updateQuantityFromInput(itemName, value) {
+      console.log(`🔧 updateQuantityFromInput çağrıldı: itemName="${itemName}", value=${value}`);
+      const quantity = parseInt(value) || 0;
+      const clampedQuantity = Math.max(0, Math.min(99, quantity));
+      
+      // Update quantities object
+      quantities[itemName] = clampedQuantity;
+      
+      // Update input value if it was corrected
+      const quantityElement = document.getElementById(`quantity-${itemName}`);
+      if (quantityElement && quantityElement.value != clampedQuantity) {
+        quantityElement.value = clampedQuantity;
+      }
+      
+      // Update the ticket info display with new ticket count
+      const menuItem = quantityElement.closest('.menu-item');
+      if (menuItem) {
+        const ticketInfoElement = menuItem.querySelector('.ticket-info');
+        if (ticketInfoElement) {
+          // Find menu data for this item by matching the escaped name
+          let originalItemName = null;
+          for (const menuItem of menu) {
+            const escapedMenuName = menuItem.name
+              .replace(/'/g, "\\'")
+              .replace(/"/g, '\\"')
+              .replace(/ç/g, 'c')
+              .replace(/ğ/g, 'g')
+              .replace(/ı/g, 'i')
+              .replace(/ö/g, 'o')
+              .replace(/ş/g, 's')
+              .replace(/ü/g, 'u')
+              .replace(/\s+/g, '_')
+              .replace(/[^a-zA-Z0-9_]/g, '');
+            if (escapedMenuName === itemName) {
+              originalItemName = menuItem.name;
+              break;
+            }
+          }
+          
+          if (originalItemName) {
+            const menuItemData = menu.find(item => item.name === originalItemName);
+            if (menuItemData && menuItemData.teaTickets) {
+              if (clampedQuantity > 0) {
+                ticketInfoElement.textContent = `${menuItemData.teaTickets * clampedQuantity} Fiş`;
+                ticketInfoElement.style.display = 'block';
+              } else {
+                ticketInfoElement.style.display = 'none';
+              }
+            }
+          }
+        }
+      }
+      
+      // Disable minus button if quantity is 0
+      const minusBtn = quantityElement.previousElementSibling;
+      if (minusBtn) {
+        minusBtn.disabled = clampedQuantity === 0;
       }
     }
 
@@ -4434,7 +5015,14 @@
           console.error(`Quantity element bulunamadı: quantity-${itemName}`);
           return;
         }
-        const quantity = parseInt(quantityElement.textContent);
+        const quantity = parseInt(quantityElement.value) || 0;
+        
+        // Adet 0 ise sepete ekleme
+        if (quantity === 0) {
+          showNotification('Lütfen önce adet seçin!', 'warning');
+          return;
+        }
+        
         const menuItem = menu.find(item => item.name === originalItemName);
       
       // Stok kontrolü
@@ -4465,12 +5053,17 @@
             name: originalItemName,
             price: menuItem.price,
             quantity: quantity,
-            option: selectedOption
+            option: selectedOption,
+            teaTickets: menuItem.teaTickets || 0
           };
           cartItems.push(newItem);
         }
         
         updateCartCount();
+        
+        // Sepete eklendi bildirimi
+        const notificationMessage = `${quantity} ${originalItemName} sepete eklendi!`;
+        showNotification(notificationMessage);
         
         // Eğer sepet açıksa sepet görünümünü güncelle
         const cartDropdown = document.getElementById('cartDropdown');
@@ -4487,20 +5080,38 @@
           }, 1000);
         }
         
-        // Add pulse animation to cart FAB
+        // Add hover effect to cart FAB when item is added
         const cartFab = document.querySelector('.cart-fab');
         cartFab.classList.add('pulse');
+        cartFab.classList.add('hover-effect');
         setTimeout(() => {
           cartFab.classList.remove('pulse');
+          cartFab.classList.remove('hover-effect');
         }, 600);
         
-        // Reset quantity to 1
+        // Reset quantity to 0
         const resetQuantityElement = document.getElementById(`quantity-${itemName}`);
         if (resetQuantityElement) {
-          resetQuantityElement.textContent = '1';
+          resetQuantityElement.value = '0';
+          quantities[itemName] = 0;
+          
+          // Update minus button state
           const minusBtn = resetQuantityElement.previousElementSibling;
           if (minusBtn) {
             minusBtn.disabled = true;
+          }
+          
+          // Update ticket info display
+          const menuItem = resetQuantityElement.closest('.menu-item');
+          if (menuItem) {
+            const ticketInfoElement = menuItem.querySelector('.ticket-info');
+            if (ticketInfoElement) {
+              // Find menu data for this item
+              const menuItemData = menu.find(item => item.name.replace(/[^a-zA-Z0-9]/g, '_') === itemName);
+              if (menuItemData && menuItemData.teaTickets) {
+                ticketInfoElement.textContent = `${menuItemData.teaTickets * 0} Fiş`;
+              }
+            }
           }
         }
       } else {
@@ -4604,11 +5215,14 @@
       if (cartItems.length === 0) {
         cartItemsDiv.innerHTML = '<p style="text-align: center; color: #64748b; padding: 20px;">Sepetiniz boş</p>';
         document.getElementById('cartTotal').textContent = '0 ₺';
+        document.getElementById('cartTotalTickets').textContent = '0';
       } else {
         let total = 0;
+        let totalTickets = 0;
         cartItems.forEach((item, index) => {
           const itemTotal = item.price * item.quantity;
           total += itemTotal;
+          totalTickets += (item.teaTickets || 0) * item.quantity;
           
           const cartItem = document.createElement('div');
           cartItem.className = 'cart-item';
@@ -4619,11 +5233,11 @@
           cartItem.innerHTML = `
             <div class="cart-item-info">
               <div class="cart-item-name">${item.name}${sugarInfo}</div>
-              <div class="cart-item-price">${formatPrice(itemTotal)} ₺</div>
+              <div class="cart-item-price">${formatPrice(itemTotal)} ₺${item.teaTickets ? ` - ${item.teaTickets * item.quantity} Fiş` : ''}</div>
             </div>
             <div class="cart-item-quantity">
               <button onclick="updateCartItemQuantity(${index}, -1, event)">-</button>
-              <span>${item.quantity}</span>
+              <span style="margin: 0; font-weight: bold; min-width: 20px; text-align: center; color: #000000;">${item.quantity}</span>
               <button onclick="updateCartItemQuantity(${index}, 1, event)">+</button>
               <button onclick="removeCartItem(${index}, event)" class="remove-item-btn" title="Ürünü Sil">
                 <i class="fas fa-trash"></i>
@@ -4634,6 +5248,7 @@
         });
         
         document.getElementById('cartTotal').textContent = `${formatPrice(total)} ₺`;
+        document.getElementById('cartTotalTickets').textContent = totalTickets.toString();
       }
     }
     
@@ -4696,7 +5311,8 @@
           'name': item.name,
           'adet': item.quantity,
           'option': item.option || '',
-          'price': item.price
+          'price': item.price,
+          'teaTickets': item.teaTickets || 0
         }))
       };
       
@@ -4736,19 +5352,59 @@
     // Navigation Functions
     function showOrderTab() {
       document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-      document.querySelector('.nav-item').classList.add('active');
+      // Sipariş sayfasındaki sipariş butonunu aktif yap
+      const orderNav = document.querySelector('.bottom-nav:not(.profile-bottom-nav)');
+      if (orderNav) {
+        const orderButton = orderNav.querySelectorAll('.nav-item')[0];
+        if (orderButton) {
+          orderButton.classList.add('active');
+        }
+      }
       showScreen('orderScreen');
     }
 
     function showProfileTab() {
+      console.log("showProfileTab çağrıldı");
+      console.log("Mevcut userData:", userData);
+      console.log("currentUser:", currentUser);
+      
       document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-      document.querySelectorAll('.nav-item')[1].classList.add('active');
+      // Profil sayfasındaki profil butonunu aktif yap
+      const profileNav = document.querySelector('.profile-bottom-nav');
+      console.log("profileNav bulundu:", !!profileNav);
+      if (profileNav) {
+        const profileButton = profileNav.querySelectorAll('.nav-item')[1];
+        console.log("profileButton bulundu:", !!profileButton);
+        if (profileButton) {
+          profileButton.classList.add('active');
+          console.log("Profil butonu aktif yapıldı");
+        }
+      }
       showScreen('profileScreen');
+      console.log("profileScreen gösterildi");
+      
+      // Profil sekmesine geçildiğinde kullanıcı verilerini tekrar yükle
+      if (currentUser) {
+        console.log("Profil sekmesinde kullanıcı verileri tekrar yükleniyor...");
+        loadUserData(); // loadUserData fonksiyonunu çağır
+        
+        // Kısa bir gecikme ile updateUserInterface'i çağır
+        setTimeout(() => {
+          console.log("Profil sekmesinde updateUserInterface çağrılıyor...");
+          updateUserInterface();
+        }, 500);
+      }
+      
+      // Bilgiler sekmesini aktif yap
+      console.log("Bilgiler sekmesi aktif yapılıyor...");
+      showProfileSubTab('info');
+      
       loadOrderHistory();
     }
 
     function showProfileSubTab(tabName) {
       console.log("showProfileSubTab çağrıldı, tabName:", tabName);
+      console.log("Mevcut userData:", userData);
       
       // Hide all tab panels
       document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
@@ -4756,8 +5412,22 @@
       
       // Show selected panel
       const selectedPanel = document.getElementById(`${tabName}-section`);
-      selectedPanel.classList.add('active');
-      document.querySelector(`[onclick="showProfileSubTab('${tabName}')"]`).classList.add('active');
+      console.log("selectedPanel bulundu:", !!selectedPanel);
+      if (selectedPanel) {
+        selectedPanel.classList.add('active');
+        console.log(`${tabName}-section aktif yapıldı`);
+      } else {
+        console.error(`${tabName}-section elementi bulunamadı!`);
+      }
+      
+      const tabButton = document.querySelector(`[onclick="showProfileSubTab('${tabName}')"]`);
+      console.log("tabButton bulundu:", !!tabButton);
+      if (tabButton) {
+        tabButton.classList.add('active');
+        console.log(`${tabName} tab butonu aktif yapıldı`);
+      } else {
+        console.error(`${tabName} tab butonu bulunamadı!`);
+      }
       
       // Profil sekmesi animasyonları
       if (tabName === 'info' || tabName === 'password' || tabName === 'settings' || tabName === 'history') {
@@ -4769,6 +5439,12 @@
             card.style.animation = 'profileSlideIn 0.5s ease-out';
           }, 10);
         }
+      }
+      
+      // Bilgiler sekmesi açıldığında kullanıcı verilerini güncelle
+      if (tabName === 'info') {
+        console.log("Bilgiler sekmesi açıldı, updateUserInterface çağrılıyor...");
+        updateUserInterface();
       }
       
       if (tabName === 'history') {
@@ -4935,6 +5611,8 @@
               <div class="order-item-details">
                 ${item.option ? `<span class="order-item-option">${item.option}</span>` : ''}
                 <span class="order-item-quantity">${item.adet} adet</span>
+                <span class="order-item-price">${(item.price || 0) * item.adet} ₺</span>
+                ${item.teaTickets ? `<span class="order-item-tickets">${item.teaTickets * item.adet} Fiş</span>` : ''}
               </div>
             </div>
           `;
@@ -5212,6 +5890,8 @@
               <div class="order-item-details">
                 ${item.option ? `<span class="order-item-option">${item.option}</span>` : ''}
                 <span class="order-item-quantity">${item.adet} adet</span>
+                <span class="order-item-price">${(item.price || 0) * item.adet} ₺</span>
+                ${item.teaTickets ? `<span class="order-item-tickets">${item.teaTickets * item.adet} Fiş</span>` : ''}
               </div>
             </div>
           `;
@@ -5611,7 +6291,7 @@
         } else {
           star.classList.remove('active');
           star.textContent = '☆';
-        }
+        } 
       });
     }
 
@@ -5652,6 +6332,7 @@
             <div class="reorder-item-details">
               <div class="reorder-item-info">
                 Adet: ${item.adet} - Fiyat: ${item.price} ₺
+                ${item.teaTickets ? `<br><span style="font-size: 0.9em; color: #000000; font-weight: normal;">${item.teaTickets * item.adet} Fiş</span>` : ''}
               </div>
               ${option ? `<div class="reorder-item-option">${option}</div>` : ''}
             </div>
@@ -5709,7 +6390,8 @@
           'name': item.name,
           'adet': item.adet,
           'option': item.option || item.sugar || '',
-          'price': item.price
+          'price': item.price,
+          'teaTickets': item.teaTickets || 0
         })),
         'isReordered': true,
         'originalOrderId': orderToReorder.id || ''
@@ -5999,6 +6681,8 @@
                       <div class="order-item-details">
                         ${item.option ? `<span class="order-item-option">${item.option}</span>` : ''}
                         <span class="order-item-quantity">${item.adet} adet</span>
+                        <span class="order-item-price">${(item.price || 0) * item.adet} ₺</span>
+                        ${item.teaTickets ? `<span class="order-item-tickets">${item.teaTickets * item.adet} Fiş</span>` : ''}
                       </div>
                     </div>
                   `;
