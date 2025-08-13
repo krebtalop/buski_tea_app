@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Buski Çay Ocağı Sipariş Paneli</title>
+  <title>Buski Çay Ocağı Yönetim Paneli</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
@@ -36,8 +36,9 @@
       min-height: 100vh;
     }
     .header-gradient {
-      background: linear-gradient(90deg, var(--primary-color) 0%, #1d4ed8 100%);
-    }
+  background: linear-gradient(90deg, #ff0000 0%, #b30000 100%);
+}
+
     .tab-active {
       font-weight: 700;
       transform: translateY(-2px);
@@ -837,28 +838,38 @@
     <div class="container mx-auto">
       <h1 class="text-3xl font-bold flex items-center justify-center">
         <i class="fas fa-mug-hot mr-3"></i>
-        Çay Ocağı Sipariş Paneli
+        Buski Çay Ocağı Yönetim Paneli
       </h1>
       <p class="mt-2 opacity-90 text-center">Siparişleri takip edin ve durumlarını güncelleyin</p>
     </div>
     
     <!-- Rapor Butonları (sol üst) -->
     <div class="absolute top-4 left-4 z-50 flex flex-col gap-2">
-      <button id="open-report-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium">
-        Rapor
-      </button>
-      <button id="open-floor-report-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium">
-        Kat Raporu
+      <button id="open-report-btn" 
+      class="bg-white text-black px-4 py-2 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 font-medium">
+      Rapor
+    </button>
+    
+      <button id="open-floor-report-btn" 
+      class="bg-white text-black px-4 py-2 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 font-medium">
+      Kat Raporu
+    </button>
+    
       </button>
     </div>
     <!-- Menü ve Personel Butonları (sağ üst) -->
     <div class="absolute top-4 right-4 z-50 flex flex-col items-end gap-2">
-      <button id="open-menu-btn" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium w-24 flex items-center justify-center">
-Menü
+      <button id="open-menu-btn" 
+      class="bg-white text-black px-6 py-2 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 font-medium w-24 flex items-center justify-center">
+      Menü
+    </button>
+    
       </button>
-      <button id="open-personel-btn" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium w-24 flex items-center justify-center">
-Personel
-      </button>
+      <button id="open-personel-btn" 
+      class="bg-white text-black px-6 py-2 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 font-medium w-24 flex items-center justify-center">
+      Personel
+    </button>
+      
       <button id="delete-all-orders-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium hidden" style="margin-top: 30px;">
         <i class="fas fa-trash-alt mr-1"></i>Tüm Teslim Edilenleri Sil
       </button>
