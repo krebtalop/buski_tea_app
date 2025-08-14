@@ -266,7 +266,7 @@
     .btn {
       width: 100%;
       padding: 16px 32px;
-      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
       color: white;
       border: none;
       border-radius: 12px;
@@ -284,8 +284,9 @@
     }
     
     .btn:hover {
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 50%, #1e3a8a 100%);
       transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+      box-shadow: 0 8px 25px rgba(29, 78, 216, 0.4);
     }
     
     .btn:disabled {
@@ -2613,7 +2614,7 @@
     .danger-warning {
       text-align: center;
     }
-
+    
     .danger-warning p {
       color: #dc2626;
       margin-bottom: 16px;
@@ -2621,7 +2622,7 @@
     }
 
     .btn-danger {
-      background: #dc2626;
+      background: linear-gradient(135deg, #d22f2f 0%, #cf1a1a 50%, #d41616 100%);
       color: white;
       border: none;
       padding: 16px 32px;
@@ -2632,11 +2633,13 @@
       transition: all 0.3s ease;
       min-width: 200px;
       width: 100%;
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
     }
 
     .btn-danger:hover {
-      background: #b91c1c;
-      transform: translateY(-1px);
+        background: linear-gradient(135deg, #d22626 0%, #d81b1b 50%, #bd1818 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(185, 28, 28, 0.4);
     }
 
     .btn-danger:disabled {
@@ -2651,7 +2654,7 @@
     }
 
     .btn-secondary {
-      background: #64748b;
+      background: linear-gradient(135deg, #64748b 0%, #475569 50%, #334155 100%);
       color: white;
       border: none;
       padding: 16px 32px;
@@ -2662,6 +2665,7 @@
       transition: all 0.3s ease;
       min-width: 200px;
       width: 100%;
+      box-shadow: 0 4px 14px rgba(100, 116, 139, 0.3);
     }
 
     .modal-footer .btn-secondary {
@@ -2691,9 +2695,141 @@
     }
 
     .btn-secondary:hover {
-      background: #475569;
+      background: linear-gradient(135deg, #364a65 0%, #273955 50%, #203055 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(51, 65, 85, 0.4);
+    }
+
+    /* Settings Action Buttons Styles */
+    .settings-actions {
+      margin-top: 25px;
+      padding: 15px;
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .settings-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .settings-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .settings-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 12px 10px;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-height: 65px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .settings-btn i {
+      font-size: 18px;
+      transition: all 0.3s ease;
+    }
+
+    .settings-btn span {
+      font-size: 12px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+
+
+    .settings-btn-secondary {
+      background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+      color: white;
+      box-shadow: 0 3px 10px rgba(100, 116, 139, 0.2);
+    }
+
+    .settings-btn-secondary:hover {
+      background: linear-gradient(135deg, #475569 0%, #334155 100%);
+      transform: translateY(-2px) scale(1.01);
+      box-shadow: 0 6px 20px rgba(100, 116, 139, 0.3);
+    }
+
+    .settings-btn-secondary:hover i {
+      transform: scale(1.05);
+    }
+
+    .settings-btn-secondary:hover span {
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3);
+    }
+
+    .settings-btn-primary {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      box-shadow: 0 3px 10px rgba(16, 185, 129, 0.2);
+    }
+
+    .settings-btn-primary:hover {
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+      transform: translateY(-2px) scale(1.01);
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+    }
+
+    .settings-btn-primary:hover i {
+      transform: scale(1.05);
+    }
+
+    .settings-btn-primary:hover span {
+      transform: translateY(-1px);
+    }
+
+    .settings-btn-danger {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+    }
+
+    .settings-btn-danger:hover {
+      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+    }
+
+    .settings-btn-danger:hover i {
+      transform: scale(1.1);
+    }
+
+    .settings-btn-danger:hover span {
+      transform: translateY(-1px);
+    }
+
+    /* Responsive Design for Settings Buttons */
+    @media (max-width: 768px) {
+      .settings-row {
+        flex-direction: column;
+        gap: 12px;
+      }
+      
+      .settings-btn {
+        min-height: 70px;
+        padding: 14px 10px;
+      }
+      
+      .settings-btn i {
+        font-size: 18px;
+      }
+      
+      .settings-btn span {
+        font-size: 12px;
+      }
     }
 
 
@@ -3266,13 +3402,26 @@
                   <option value="10">10. Kat</option>
                 </select>
               </div>
-              <button type="submit" class="btn" style="margin-bottom: 20px;">Bilgileri Güncelle</button>
             </form>
 
-            <!-- Logout and Delete Account Buttons -->
-            <div style="text-align: center; margin-top: 0px; display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%;">
-              <button class="btn-secondary" onclick="logout()" style="width: 100%; margin: 0;">Çıkış Yap</button>
-              <button class="btn-danger" onclick="deleteAccount()" style="width: 100%; margin: 0;">Hesabı Sil</button>
+            <!-- Settings Action Buttons -->
+            <div class="settings-actions">
+              <div class="settings-row">
+                <button class="settings-btn settings-btn-primary" type="submit" form="editProfileForm">
+                  <i class="fas fa-save"></i>
+                  <span>Bilgileri Güncelle</span>
+                </button>
+                <button class="settings-btn settings-btn-secondary" onclick="logout()">
+                  <i class="fas fa-sign-out-alt"></i>
+                  <span>Çıkış Yap</span>
+                </button>
+              </div>
+              <div class="settings-row">
+                <button class="settings-btn settings-btn-danger" onclick="deleteAccount()">
+                  <i class="fas fa-trash-alt"></i>
+                  <span>Hesabı Sil</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

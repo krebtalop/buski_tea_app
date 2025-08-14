@@ -821,7 +821,7 @@
         <i class="fas fa-trash-alt mr-1"></i>Tüm Teslim Edilenleri Sil
       </button>
               <button id="delete-all-ratings-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium hidden" style="margin-top: 30px;">
-          <i class="fas fa-trash-alt mr-1"></i>Tüm Puanları Sil
+          <i class="fas fa-trash-alt mr-1"></i>Tüm Değerlendirmeleri Sil
         </button>
 
     </div>
@@ -843,7 +843,7 @@
         Teslim Edilenler
       </button>
       <button id="ratings-tab" class="tab-inactive px-8 py-4 text-lg font-semibold relative border-b-4 border-transparent hover:border-yellow-300 hover:bg-yellow-50">
-        Puanlama
+        Değerlendirmeler
       </button>
     </div>
     
@@ -860,14 +860,14 @@
         <!-- Ortalama Puan Kartı -->
         <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
           <div class="text-center">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Ortalama Puan</h2>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Kat Zemin-1-2-3<br>Ortalama Değerlendirmesi</h2>
             <div class="flex items-center justify-center mb-4">
               <span id="average-rating" class="text-4xl font-bold text-blue-600 mr-4">0.0</span>
               <div id="average-stars" class="flex">
                 <!-- Yıldızlar JavaScript ile doldurulacak -->
               </div>
             </div>
-            <p id="total-ratings" class="text-gray-600">0 değerlendirme</p>
+            <p id="total-ratings" class="text-gray-600">0 Değerlendirme</p>
           </div>
         </div>
         
@@ -1286,27 +1286,21 @@ async function updateReport() {
     );
     
     onSnapshot(ratingsQuery, (snapshot) => {
-      if (activeTab === 'ratings') {
-        loadRatings();
-      }
+      loadRatings();
     });
     
     // Real-time puanlama listener'ı - Ratings koleksiyonundan
     const ratingsCollectionQuery = query(collection(db, "ratings"));
     
     onSnapshot(ratingsCollectionQuery, (snapshot) => {
-      if (activeTab === 'ratings') {
-        loadRatings();
-      }
+      loadRatings();
     });
     
     // Korunan puanlamalar için de listener
     const preservedRatingsQuery = query(collection(db, "preserved_ratings"));
     
     onSnapshot(preservedRatingsQuery, (snapshot) => {
-      if (activeTab === 'ratings') {
-        loadRatings();
-      }
+      loadRatings();
     });
     
     // Tüm siparişleri sil butonu olay dinleyicisi
@@ -1658,7 +1652,7 @@ async function updateReport() {
         ratingsListDiv.innerHTML = `
           <div class="text-center py-8">
             <i class="fas fa-star text-4xl text-gray-300 mb-4"></i>
-            <p class="text-gray-500 text-lg">Henüz puanlama yapılmamış</p>
+            <p class="text-gray-500 text-lg">Henüz değerlendirme yapılmamış</p>
           </div>
         `;
         return;
@@ -1776,7 +1770,7 @@ async function updateReport() {
 
     // Puanlama silme fonksiyonu
     window.deleteRating = async function(ratingId) {
-      const confirmed = await showConfirm('Puanlamayı Sil', 'Bu puanlamayı silmek istediğinizden emin misiniz?', 'danger');
+      const confirmed = await showConfirm('Değerlendirmeyi Sil', 'Bu değerlendirmeyi silmek istediğinizden emin misiniz?', 'danger');
       if (confirmed) {
         try {
           // Önce korunan puanlamalarda ara
@@ -1808,15 +1802,15 @@ async function updateReport() {
           // Puanlamaları yeniden yükle
           loadRatings();
         } catch (error) {
-          console.error("Puanlama silinirken hata oluştu:", error);
-          await showAlert("Puanlama silinirken bir sorun oluştu.", 'error');
+          console.error("Değerlendirme silinirken hata oluştu:", error);
+          await showAlert("Değerlendirme silinirken bir sorun oluştu.", 'error');
         }
       }
     };
 
     // Tüm puanları sil
     window.deleteAllRatings = async function() {
-      const confirmed = await showConfirm('Tüm Puanları Sil', 'Tüm puanları ve yorumları kalıcı olarak silmek istediğinizden emin misiniz?', 'danger');
+      const confirmed = await showConfirm('Tüm Değerlendirmeleri Sil', 'Tüm puanları ve yorumları kalıcı olarak silmek istediğinizden emin misiniz?', 'danger');
       if (confirmed) {
         try {
           // Kat grubuna göre siparişleri filtrele
@@ -1864,7 +1858,7 @@ async function updateReport() {
           loadRatings();
           
           if (ordersWithRatings.length > 0) {
-            await showAlert(`${ordersWithRatings.length} puanlama başarıyla silindi.`, 'success');
+            await showAlert(`${ordersWithRatings.length} Değerlendirme başarıyla silindi.`, 'success');
           }
           
         } catch (error) {
@@ -2395,7 +2389,7 @@ async function updateReport() {
           
           // Eğer siparişin puanlaması varsa, puanlama verilerini koru
           if (order && (order.rating > 0 || order.comment)) {
-            console.log('Puanlama bulundu, korunuyor:', order.rating, order.comment); // Debug için
+            console.log('Değerlendirme bulundu, korunuyor:', order.rating, order.comment); // Debug için
             
             const ratingData = {
               orderId: id,
@@ -2411,13 +2405,13 @@ async function updateReport() {
               toplamFiyat: order.toplamFiyat || 0
             };
             
-            console.log('Korunan puanlama verisi:', ratingData); // Debug için
+            console.log('Korunan değerlendirme verisi:', ratingData); // Debug için
             
             // Puanlama verilerini ayrı koleksiyonda sakla
             await setDoc(doc(db, "preserved_ratings", id), ratingData);
-            console.log('Puanlama korundu'); // Debug için
+            console.log('Değerlendirme korundu'); // Debug için
           } else {
-            console.log('Puanlama bulunamadı, korunmuyor'); // Debug için
+            console.log('Değerlendirme bulunamadı, korunmuyor'); // Debug için
           }
           
           const card = btn.closest('.order-card');
@@ -2435,7 +2429,7 @@ async function updateReport() {
     
     // Tüm teslim edilmiş siparişleri panelden kaldır fonksiyonu
     async function deleteAllOrders() {
-      const confirmed = await showConfirm('Tüm Siparişleri Sil', 'Tüm teslim edilen siparişleri silmek istediğinizden emin misiniz?', 'danger');
+      const confirmed = await showConfirm('Tüm Teslim Edilenleri Sil', 'Tüm teslim edilen siparişleri silmek istediğinizden emin misiniz?', 'danger');
       if (confirmed) {
         try {
           // Panele göre siparişleri filtrele ve sadece teslim edilmiş olanları al
@@ -2484,7 +2478,7 @@ async function updateReport() {
             
             // Eğer siparişin puanlaması varsa, puanlama verilerini koru
             if (order.rating > 0 || order.comment) {
-              console.log('Toplu kaldırmada puanlama korunuyor:', order.id, order.rating, order.comment);
+              console.log('Toplu kaldırmada değerlendirme korunuyor:', order.id, order.rating, order.comment);
               
               const ratingData = {
                 orderId: order.id,
@@ -2561,7 +2555,7 @@ async function updateReport() {
     // Rapor sıfırlama fonksiyonu
     async function resetReportData() {
       try {
-        const confirmed = await showConfirm('Rapor Sıfırlama', 'Rapor verilerini sıfırlamak istediğinizden emin misiniz?', 'danger');
+        const confirmed = await showConfirm('Rapor Verilerini Sıfırla', 'Rapor verilerini sıfırlamak istediğinizden emin misiniz?', 'danger');
         if (confirmed) {
           const raporRef = doc(db, "raporlar", activeFloorGroup); 
           await setDoc(raporRef, {
@@ -2830,7 +2824,7 @@ async function updateReport() {
         
         ratingsCount += preservedRatings.length;
       } catch (error) {
-        console.error('Korunan puanlamalar sayılırken hata:', error);
+        console.error('Korunan değerlendirmeler sayılırken hata:', error);
       }
       
       // Badge elementlerinin varlığını kontrol et
@@ -3223,7 +3217,7 @@ async function updateReport() {
     // Kat raporu temizleme fonksiyonu
     async function resetFloorReport() {
       try {
-        const confirmed = await showConfirm('Kat Raporu Temizleme', 'Kat raporu verilerini sıfırlamak istediğinizden emin misiniz?', 'danger');
+        const confirmed = await showConfirm('Kat Raporunu Temizle', 'Kat raporu verilerini sıfırlamak istediğinizden emin misiniz?', 'danger');
         if (confirmed) {
           const floorReportRef = doc(db, "kat_raporlari", activeFloorGroup);
           await setDoc(floorReportRef, {

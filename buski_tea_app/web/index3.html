@@ -37,7 +37,7 @@
     }
     .header-gradient {
   background: linear-gradient(90deg, #ff0000 0%, #b30000 100%);
-}
+    }
 
 
     .tab-active {
@@ -843,8 +843,8 @@
       <p class="mt-2 opacity-90 text-center">Siparişleri takip edin ve durumlarını güncelleyin</p>
     </div>
     
-       <!-- Rapor Butonları (sol üst) -->
-       <div class="absolute top-4 left-4 z-50 flex flex-col gap-2">
+    <!-- Rapor Butonları (sol üst) -->
+    <div class="absolute top-4 left-4 z-50 flex flex-col gap-2">
         <button id="open-report-btn" 
         class="bg-white text-black px-4 py-2 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 font-medium">
         Rapor
@@ -855,29 +855,29 @@
         Kat Raporu
       </button>
       
-        </button>
-      </div>
-      <!-- Menü ve Personel Butonları (sağ üst) -->
-      <div class="absolute top-4 right-4 z-50 flex flex-col items-end gap-2">
+      </button>
+    </div>
+    <!-- Menü ve Personel Butonları (sağ üst) -->
+    <div class="absolute top-4 right-4 z-50 flex flex-col items-end gap-2">
         <button id="open-menu-btn" 
         class="bg-white text-black px-6 py-2 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 font-medium w-24 flex items-center justify-center">
-        Menü
+Menü
       </button>
       
         </button>
         <button id="open-personel-btn" 
         class="bg-white text-black px-6 py-2 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 font-medium w-24 flex items-center justify-center">
-        Personel
+Personel
       </button>
         
+      </button>
+      <button id="delete-all-orders-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium hidden" style="margin-top: 30px;">
+        <i class="fas fa-trash-alt mr-1"></i>Tüm Teslim Edilenleri Sil
+      </button>
+              <button id="delete-all-ratings-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium hidden" style="margin-top: 30px;">
+            <i class="fas fa-trash-alt mr-1"></i>Tüm Değerlendirmeleri Sil
         </button>
-        <button id="delete-all-orders-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium hidden" style="margin-top: 30px;">
-          <i class="fas fa-trash-alt mr-1"></i>Tüm Teslim Edilenleri Sil
-        </button>
-                <button id="delete-all-ratings-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 font-medium hidden" style="margin-top: 30px;">
-            <i class="fas fa-trash-alt mr-1"></i>Tüm Puanları Sil
-          </button>
-  
+
     </div>
   </header>
   <main class="container mx-auto px-4 py-6">
@@ -897,7 +897,7 @@
         Teslim Edilenler
       </button>
       <button id="ratings-tab" class="tab-inactive px-8 py-4 text-lg font-semibold relative border-b-4 border-transparent hover:border-yellow-300 hover:bg-yellow-50">
-        Puanlama
+        Değerlendirmeler
       </button>
     </div>
     
@@ -914,14 +914,14 @@
         <!-- Ortalama Puan Kartı -->
         <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
           <div class="text-center">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Ortalama Puan</h2>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Kat 7-8-9-10<br>Ortalama Değerlendirmesi</h2>
             <div class="flex items-center justify-center mb-4">
               <span id="average-rating" class="text-4xl font-bold text-blue-600 mr-4">0.0</span>
               <div id="average-stars" class="flex">
                 <!-- Yıldızlar JavaScript ile doldurulacak -->
               </div>
             </div>
-            <p id="total-ratings" class="text-gray-600">0 değerlendirme</p>
+            <p id="total-ratings" class="text-gray-600">0 Değerlendirme</p>
           </div>
         </div>
         
@@ -1364,27 +1364,21 @@ async function updateReport() {
     );
     
     onSnapshot(ratingsQuery, (snapshot) => {
-      if (activeTab === 'ratings') {
-        loadRatings();
-      }
+      loadRatings();
     });
     
     // Real-time puanlama listener'ı - Ratings koleksiyonundan
     const ratingsCollectionQuery = query(collection(db, "ratings"));
     
     onSnapshot(ratingsCollectionQuery, (snapshot) => {
-      if (activeTab === 'ratings') {
-        loadRatings();
-      }
+      loadRatings();
     });
     
     // Korunan puanlamalar için de listener
     const preservedRatingsQuery = query(collection(db, "preserved_ratings"));
     
     onSnapshot(preservedRatingsQuery, (snapshot) => {
-      if (activeTab === 'ratings') {
-        loadRatings();
-      }
+      loadRatings();
     });
     
     // Tüm siparişleri sil butonu olay dinleyicisi
@@ -1574,7 +1568,7 @@ async function updateReport() {
     }
     // Puanlama silme fonksiyonu
     window.deleteRating = async function(ratingId) {
-      const confirmed = await showConfirm('Puanlamayı Sil', 'Bu puanlamayı silmek istediğinizden emin misiniz?', 'danger');
+      const confirmed = await showConfirm('Değerlendirmeyi Sil', 'Bu değerlendirmeyi silmek istediğinizden emin misiniz?', 'danger');
       if (confirmed) {
         try {
           // Önce korunan puanlamalarda ara
@@ -1606,15 +1600,15 @@ async function updateReport() {
           // Puanlamaları yeniden yükle
           loadRatings();
         } catch (error) {
-          console.error("Puanlama silinirken hata oluştu:", error);
-          await showAlert("Puanlama silinirken bir sorun oluştu.", 'error');
+          console.error("Değerlendirme silinirken hata oluştu:", error);
+          await showAlert("Değerlendirme silinirken bir sorun oluştu.", 'error');
         }
       }
     };
 
     // Tüm puanları sil
     window.deleteAllRatings = async function() {
-      const confirmed = await showConfirm('Tüm Puanları Sil', 'Tüm puanları ve yorumları kalıcı olarak silmek istediğinizden emin misiniz?', 'danger');
+      const confirmed = await showConfirm('Tüm Değerlendirmeleri Sil', 'Tüm puanları ve yorumları kalıcı olarak silmek istediğinizden emin misiniz?', 'danger');
       if (confirmed) {
         try {
           // Kat grubuna göre siparişleri filtrele
@@ -1662,12 +1656,12 @@ async function updateReport() {
           loadRatings();
           
           if (ordersWithRatings.length > 0) {
-            await showAlert(`${ordersWithRatings.length} puanlama başarıyla silindi.`, 'success');
+            await showAlert(`${ordersWithRatings.length} Değerlendirme başarıyla silindi.`, 'success');
           }
           
         } catch (error) {
-          console.error("Tüm puanlar silinirken hata oluştu:", error);
-          await showAlert("Tüm puanlar silinirken bir sorun oluştu.", 'error');
+          console.error("Tüm değerlendirmeler silinirken hata oluştu:", error);
+          await showAlert("Tüm değerlendirmeler silinirken bir sorun oluştu.", 'error');
         }
       }
     };
@@ -2057,14 +2051,33 @@ async function updateReport() {
         const floorReportRef = doc(db, "kat_raporlari", activeFloorGroup);
         const floorReportDoc = await getDoc(floorReportRef);
         
-        let floorSales = {};
+        const now = new Date();
+        const orderAmount = order.toplamFiyat || 0;
+        const floor = order.floor || 0;
+        
+        let reportData = {
+          floorSales: {},
+          floorDailySales: {},
+          floorWeeklySales: {},
+          floorMonthlySales: {},
+          lastFloorDailyReset: Timestamp.fromDate(new Date(now.getFullYear(), now.getMonth(), now.getDate())),
+          lastFloorWeeklyReset: Timestamp.fromDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay() + 1)),
+          lastFloorMonthlyReset: Timestamp.fromDate(new Date(now.getFullYear(), now.getMonth(), 1)),
+          lastUpdated: Timestamp.now(),
+          floorGroup: activeFloorGroup
+        };
+        
         if (floorReportDoc.exists()) {
-          floorSales = floorReportDoc.data().floorSales || {};
+          const existingData = floorReportDoc.data();
+          reportData = {
+            ...reportData,
+            ...existingData
+          };
         }
         
-        const floor = order.floor || 0;
-        if (!floorSales[floor]) {
-          floorSales[floor] = {
+        // Kalıcı verileri güncelle
+        if (!reportData.floorSales[floor]) {
+          reportData.floorSales[floor] = {
             total: 0,
             count: 0,
             items: {},
@@ -2072,44 +2085,127 @@ async function updateReport() {
           };
         }
         
-        // Sipariş zaten eklenmiş mi kontrol et
-        const orderExists = floorSales[floor].orders.some(existingOrder => existingOrder.id === order.id);
+        // Günlük verileri güncelle
+        if (!reportData.floorDailySales[floor]) {
+          reportData.floorDailySales[floor] = {
+            total: 0,
+            count: 0,
+            items: {},
+            orders: []
+          };
+        }
+        
+        // Haftalık verileri güncelle
+        if (!reportData.floorWeeklySales[floor]) {
+          reportData.floorWeeklySales[floor] = {
+            total: 0,
+            count: 0,
+            items: {},
+            orders: []
+          };
+        }
+        
+        // Aylık verileri güncelle
+        if (!reportData.floorMonthlySales[floor]) {
+          reportData.floorMonthlySales[floor] = {
+            total: 0,
+            count: 0,
+            items: {},
+            orders: []
+          };
+        }
+        
+        // Sipariş zaten eklenmiş mi kontrol et (kalıcı veriler için)
+        const orderExists = reportData.floorSales[floor].orders.some(existingOrder => existingOrder.id === order.id);
         if (!orderExists) {
-          floorSales[floor].total += order.toplamFiyat || 0;
-          floorSales[floor].count += 1;
+          // Kalıcı verileri güncelle
+          reportData.floorSales[floor].total += orderAmount;
+          reportData.floorSales[floor].count += 1;
+          
+          // Günlük verileri güncelle
+          reportData.floorDailySales[floor].total += orderAmount;
+          reportData.floorDailySales[floor].count += 1;
+          
+          // Haftalık verileri güncelle
+          reportData.floorWeeklySales[floor].total += orderAmount;
+          reportData.floorWeeklySales[floor].count += 1;
+          
+          // Aylık verileri güncelle
+          reportData.floorMonthlySales[floor].total += orderAmount;
+          reportData.floorMonthlySales[floor].count += 1;
           
           // Sipariş detaylarını sakla
-          floorSales[floor].orders.push({
+          const orderDetail = {
             id: order.id,
             totalPrice: order.toplamFiyat || 0,
             items: order.items || [],
             date: order.tarih || new Date()
-          });
+          };
+          
+          // Tüm periyotlara sipariş detayını ekle
+          reportData.floorSales[floor].orders.push(orderDetail);
+          reportData.floorDailySales[floor].orders.push(orderDetail);
+          reportData.floorWeeklySales[floor].orders.push(orderDetail);
+          reportData.floorMonthlySales[floor].orders.push(orderDetail);
           
           // Ürün bazlı satışları da hesapla
           if (order.items && Array.isArray(order.items)) {
             order.items.forEach(item => {
               const itemName = item.name || 'Bilinmeyen Ürün';
-              if (!floorSales[floor].items[itemName]) {
-                floorSales[floor].items[itemName] = {
+              
+              // Kalıcı veriler için
+              if (!reportData.floorSales[floor].items[itemName]) {
+                reportData.floorSales[floor].items[itemName] = {
                   quantity: 0,
                   revenue: 0,
                   tickets: 0
                 };
               }
-              floorSales[floor].items[itemName].quantity += item.adet || 1;
-              floorSales[floor].items[itemName].revenue += (item.price || 0) * (item.adet || 1);
-              floorSales[floor].items[itemName].tickets += (item.teaTickets || 0) * (item.adet || 1);
+              reportData.floorSales[floor].items[itemName].quantity += item.adet || 1;
+              reportData.floorSales[floor].items[itemName].revenue += (item.price || 0) * (item.adet || 1);
+              reportData.floorSales[floor].items[itemName].tickets += (item.teaTickets || 0) * (item.adet || 1);
+              
+              // Günlük veriler için
+              if (!reportData.floorDailySales[floor].items[itemName]) {
+                reportData.floorDailySales[floor].items[itemName] = {
+                  quantity: 0,
+                  revenue: 0,
+                  tickets: 0
+                };
+              }
+              reportData.floorDailySales[floor].items[itemName].quantity += item.adet || 1;
+              reportData.floorDailySales[floor].items[itemName].revenue += (item.price || 0) * (item.adet || 1);
+              reportData.floorDailySales[floor].items[itemName].tickets += (item.teaTickets || 0) * (item.adet || 1);
+              
+              // Haftalık veriler için
+              if (!reportData.floorWeeklySales[floor].items[itemName]) {
+                reportData.floorWeeklySales[floor].items[itemName] = {
+                  quantity: 0,
+                  revenue: 0,
+                  tickets: 0
+                };
+              }
+              reportData.floorWeeklySales[floor].items[itemName].quantity += item.adet || 1;
+              reportData.floorWeeklySales[floor].items[itemName].revenue += (item.price || 0) * (item.adet || 1);
+              reportData.floorWeeklySales[floor].items[itemName].tickets += (item.teaTickets || 0) * (item.adet || 1);
+              
+              // Aylık veriler için
+              if (!reportData.floorMonthlySales[floor].items[itemName]) {
+                reportData.floorMonthlySales[floor].items[itemName] = {
+                  quantity: 0,
+                  revenue: 0,
+                  tickets: 0
+                };
+              }
+              reportData.floorMonthlySales[floor].items[itemName].quantity += item.adet || 1;
+              reportData.floorMonthlySales[floor].items[itemName].revenue += (item.price || 0) * (item.adet || 1);
+              reportData.floorMonthlySales[floor].items[itemName].tickets += (item.teaTickets || 0) * (item.adet || 1);
             });
+          }
           }
           
           // Firestore'a kaydet
-          await setDoc(floorReportRef, {
-            floorSales: floorSales,
-            lastUpdated: new Date(),
-            floorGroup: activeFloorGroup
-          }, { merge: true });
-        }
+        await setDoc(floorReportRef, reportData);
       } catch (error) {
         console.error('Kat raporu güncellenirken hata:', error);
       }
@@ -2129,7 +2225,7 @@ async function updateReport() {
           
           // Eğer siparişin puanlaması varsa, puanlama verilerini koru
           if (order && (order.rating > 0 || order.comment)) {
-            console.log('Puanlama bulundu, korunuyor:', order.rating, order.comment); // Debug için
+            console.log('Değerlendirme bulundu, korunuyor:', order.rating, order.comment); // Debug için
             
             const ratingData = {
               orderId: id,
@@ -2145,13 +2241,13 @@ async function updateReport() {
               toplamFiyat: order.toplamFiyat || 0
             };
             
-            console.log('Korunan puanlama verisi:', ratingData); // Debug için
+            console.log('Korunan değerlendirme verisi:', ratingData); // Debug için
             
             // Puanlama verilerini ayrı koleksiyonda sakla
             await setDoc(doc(db, "preserved_ratings", id), ratingData);
-            console.log('Puanlama korundu'); // Debug için
+            console.log('Değerlendirme korundu'); // Debug için
           } else {
-            console.log('Puanlama bulunamadı, korunmuyor'); // Debug için
+            console.log('Değerlendirme bulunamadı, korunmuyor'); // Debug için
           }
           
           const card = btn.closest('.order-card');
@@ -2169,7 +2265,7 @@ async function updateReport() {
     
     // Tüm teslim edilmiş siparişleri sil fonksiyonu
     async function deleteAllOrders() {
-      const confirmed = await showConfirm('Tüm Siparişleri Sil', 'Tüm teslim edilen siparişleri silmek istediğinizden emin misiniz?', 'danger');
+      const confirmed = await showConfirm('Tüm Teslim Edilenleri Sil', 'Tüm teslim edilen siparişleri silmek istediğinizden emin misiniz?', 'danger');
       if (confirmed) {
         try {
           // Panele göre siparişleri filtrele ve sadece teslim edilmiş olanları al
@@ -2218,7 +2314,7 @@ async function updateReport() {
             
             // Eğer siparişin puanlaması varsa, puanlama verilerini koru
             if (order.rating > 0 || order.comment) {
-              console.log('Toplu silmede puanlama korunuyor:', order.id, order.rating, order.comment);
+              console.log('Toplu silmede değerlendirme korunuyor:', order.id, order.rating, order.comment);
               
               const ratingData = {
                 orderId: order.id,
@@ -2295,7 +2391,7 @@ async function updateReport() {
     // Rapor sıfırlama fonksiyonu
     async function resetReportData() {
       try {
-        const confirmed = await showConfirm('Rapor Sıfırlama', 'Rapor verilerini sıfırlamak istediğinizden emin misiniz?', 'danger');
+        const confirmed = await showConfirm('Rapor Verilerini Sıfırla', 'Rapor verilerini sıfırlamak istediğinizden emin misiniz?', 'danger');
         if (confirmed) {
           const raporRef = doc(db, "raporlar", activeFloorGroup);
           await setDoc(raporRef, {
@@ -2677,7 +2773,7 @@ async function updateReport() {
           ratingsListDiv.innerHTML = `
             <div class="text-center py-8">
               <i class="fas fa-star text-4xl text-gray-300 mb-4"></i>
-              <p class="text-gray-500 text-lg">Henüz puanlama yapılmamış</p>
+              <p class="text-gray-500 text-lg">Henüz Değerlendirme yapılmamış</p>
             </div>
           `;
           return;
@@ -2823,7 +2919,7 @@ async function updateReport() {
         
         ratingsCount += preservedRatings.length;
       } catch (error) {
-        console.error('Korunan puanlamalar sayılırken hata:', error);
+        console.error('Korunan değerlendirmeler sayılırken hata:', error);
       }
       
       // Badge elementlerinin varlığını kontrol et
@@ -3054,9 +3150,55 @@ async function updateReport() {
 
     openFloorReportBtn.addEventListener('click', () => {
       updateFloorSalesReport();
+      updateFloorButtonStyles(); // Buton stillerini güncelle
       floorReportModal.style.display = 'flex';
       document.body.classList.add('modal-open');
     });
+    
+    // Kat raporu periyot butonları
+    const floorDailyBtn = document.getElementById('floor-daily-btn');
+    const floorWeeklyBtn = document.getElementById('floor-weekly-btn');
+    const floorMonthlyBtn = document.getElementById('floor-monthly-btn');
+    
+    floorDailyBtn.addEventListener('click', () => {
+      activeFloorReportPeriod = 'daily';
+      updateFloorButtonStyles();
+      updateFloorSalesReport();
+    });
+    
+    floorWeeklyBtn.addEventListener('click', () => {
+      activeFloorReportPeriod = 'weekly';
+      updateFloorButtonStyles();
+      updateFloorSalesReport();
+    });
+    
+    floorMonthlyBtn.addEventListener('click', () => {
+      activeFloorReportPeriod = 'monthly';
+      updateFloorButtonStyles();
+      updateFloorSalesReport();
+    });
+    
+    // Kat raporu buton stillerini güncelle
+    function updateFloorButtonStyles() {
+      // Tüm butonları varsayılan stile getir
+      floorDailyBtn.className = 'bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300';
+      floorWeeklyBtn.className = 'bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300';
+      floorMonthlyBtn.className = 'bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300';
+      
+      // Aktif butonu vurgula
+      switch (activeFloorReportPeriod) {
+        case 'daily':
+          floorDailyBtn.className = 'bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300';
+          break;
+        case 'weekly':
+          floorWeeklyBtn.className = 'bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300';
+          break;
+        case 'monthly':
+          floorMonthlyBtn.className = 'bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300';
+          break;
+      }
+    }
+    
     closeFloorReportBtn.addEventListener('click', () => {
       floorReportModal.style.display = 'none';
       document.body.classList.remove('modal-open');
@@ -3064,20 +3206,35 @@ async function updateReport() {
 
     // Kat Bazlı Satış Raporu Hesaplama
     async function updateFloorSalesReport() {
-      // Rapor kısmı gibi kalıcı toplamı kullan
       console.log('Kat bazlı satış raporu güncelleniyor...');
       
       try {
-        // Firestore'dan kalıcı kat raporu verilerini al
+        // Otomatik sıfırlama kontrolü
+        await checkFloorAutoReset();
+        
+        // Firestore'dan kat raporu verilerini al
         const floorReportRef = doc(db, "kat_raporlari", activeFloorGroup);
         const floorReportDoc = await getDoc(floorReportRef);
         
         let floorSales = {};
         if (floorReportDoc.exists()) {
-          floorSales = floorReportDoc.data().floorSales || {};
+          const data = floorReportDoc.data();
+          
+          // Aktif periyoda göre verileri seç
+          switch (activeFloorReportPeriod) {
+            case 'daily':
+              floorSales = data.floorDailySales || {};
+              break;
+            case 'weekly':
+              floorSales = data.floorWeeklySales || {};
+              break;
+            case 'monthly':
+              floorSales = data.floorMonthlySales || {};
+              break;
+            default:
+              floorSales = data.floorSales || {}; // Kalıcı veriler
+          }
         }
-        
-        // Sadece kalıcı verileri göster, mevcut siparişleri tekrar hesaplama
         
         // Tabloyu güncelle
         if (floorSalesTable) {
@@ -3093,21 +3250,31 @@ async function updateReport() {
             <tbody>
           `;
           
+          if (Object.keys(floorSales).length === 0) {
+            tableHTML += `
+              <tr class="border-b">
+                <td class="px-4 py-2 border border-gray-300 text-center text-gray-500" colspan="4">
+                  ${activeFloorReportPeriod === 'daily' ? 'Günlük' : activeFloorReportPeriod === 'weekly' ? 'Haftalık' : 'Aylık'} veri bulunamadı
+                </td>
+              </tr>
+            `;
+          } else {
           Object.keys(floorSales).sort((a, b) => Number(a) - Number(b)).forEach(floor => {
             const data = floorSales[floor];
-            const floorName = `Kat ${floor}`;
+              const floorName = floor === '0' ? 'Zemin' : `Kat ${floor}`;
             
             tableHTML += `
               <tr class="border-b hover:bg-gray-50 cursor-pointer floor-row" data-floor="${floor}" data-floor-name="${floorName}">
                 <td class="px-4 py-2 font-medium">${floorName}</td>
-                <td class="px-4 py-2">${data.count}</td>
-                <td class="px-4 py-2 font-bold text-green-600">${data.total.toFixed(2)} ₺</td>
+                  <td class="px-4 py-2">${data.count || 0}</td>
+                  <td class="px-4 py-2 font-bold text-green-600">${(data.total || 0).toFixed(2)} ₺</td>
                 <td class="px-4 py-2 text-blue-600 hover:text-blue-800">
                   <i class="fas fa-eye"></i> Detay
                 </td>
               </tr>
             `;
           });
+          }
           
           tableHTML += '</tbody>';
           floorSalesTable.innerHTML = tableHTML;
@@ -3129,7 +3296,7 @@ async function updateReport() {
     // Kat raporu temizleme fonksiyonu
     async function resetFloorReport() {
       try {
-        const confirmed = await showConfirm('Kat Raporu Temizleme', 'Kat raporu verilerini sıfırlamak istediğinizden emin misiniz?', 'danger');
+        const confirmed = await showConfirm('Kat Raporunu Temizle', 'Kat raporu verilerini sıfırlamak istediğinizden emin misiniz?', 'danger');
         if (confirmed) {
           const floorReportRef = doc(db, "kat_raporlari", activeFloorGroup);
           await setDoc(floorReportRef, {
