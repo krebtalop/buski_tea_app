@@ -2978,7 +2978,11 @@ async function updateReport() {
       
       lastOrderIds = currentOrderIds;
       lastOrderCount = currentOrderCount;
-      allOrders = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
+      
+      // Sadece bu panele ait siparişleri al
+      allOrders = panelOrders.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
+      console.log('🔍 [DEBUG] index3 - Güncellenen siparişler:', allOrders.length, 'sipariş');
+      
       renderFloors();
       updateBadges();
       

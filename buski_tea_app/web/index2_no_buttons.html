@@ -1733,27 +1733,65 @@ async function updateReport() {
     };
 
     // Rapor toplamını artıran fonksiyon
-    async function increaseReportTotal(order) {
-      try {
-        const raporRef = doc(db, "raporlar", activeFloorGroup);
-        const raporDoc = await getDoc(raporRef);
-        let total = 0;
-        if (raporDoc.exists()) {
-          total = raporDoc.data().kaliciToplam || 0;
-          // Sipariş zaten eklendiyse tekrar ekleme
-          const eklenenSiparisler = raporDoc.data().eklenenSiparisler || [];
-          if (eklenenSiparisler.includes(order.id)) return;
-          eklenenSiparisler.push(order.id);
-          await setDoc(raporRef, {
-            kaliciToplam: total + (order.toplamFiyat || 0),
-            eklenenSiparisler,
-          }, { merge: true });
-        } else {
-          await setDoc(raporRef, {
-            kaliciToplam: (order.toplamFiyat || 0),
-            eklenenSiparisler: [order.id],
-          });
-        }
+          async function increaseReportTotal(order) {
+        try {
+          console.log('increaseReportTotal çağrıldı - Sipariş ID:', order.id, 'Toplam Fiyat:', order.toplamFiyat);
+          console.log('activeFloorGroup:', activeFloorGroup);
+          
+          const raporRef = doc(db, "raporlar", activeFloorGroup);
+          const raporDoc = await getDoc(raporRef);
+          
+          const now = new Date();
+          const orderAmount = order.toplamFiyat || 0;
+          
+          let reportData = {
+            kaliciToplam: 0,
+            dailyTotal: 0,
+            weeklyTotal: 0,
+            monthlyTotal: 0,
+            eklenenSiparisler: [],
+            lastDailyReset: Timestamp.fromDate(new Date(now.getFullYear(), now.getMonth(), now.getDate())),
+            lastWeeklyReset: Timestamp.fromDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay() + 1)),
+            lastMonthlyReset: Timestamp.fromDate(new Date(now.getFullYear(), now.getMonth(), 1))
+          };
+          
+          if (raporDoc.exists()) {
+            const existingData = raporDoc.data();
+            console.log('Mevcut rapor verisi:', existingData);
+            
+            reportData = {
+              ...reportData,
+              ...existingData
+            };
+            
+            // Sipariş zaten eklendiyse tekrar ekleme
+            const eklenenSiparisler = existingData.eklenenSiparisler || [];
+            if (eklenenSiparisler.includes(order.id)) {
+              console.log('Sipariş zaten eklenmiş, işlem atlanıyor');
+              return;
+            }
+            
+            eklenenSiparisler.push(order.id);
+            reportData.eklenenSiparisler = eklenenSiparisler;
+            reportData.kaliciToplam = (existingData.kaliciToplam || 0) + orderAmount;
+            
+            // Günlük, haftalık ve aylık toplamları güncelle
+            reportData.dailyTotal = (existingData.dailyTotal || 0) + orderAmount;
+            reportData.weeklyTotal = (existingData.weeklyTotal || 0) + orderAmount;
+            reportData.monthlyTotal = (existingData.monthlyTotal || 0) + orderAmount;
+            
+            console.log('Güncellenmiş rapor verisi:', reportData);
+          } else {
+            console.log('Rapor dokümanı bulunamadı, yeni oluşturuluyor');
+            reportData.kaliciToplam = orderAmount;
+            reportData.dailyTotal = orderAmount;
+            reportData.weeklyTotal = orderAmount;
+            reportData.monthlyTotal = orderAmount;
+            reportData.eklenenSiparisler = [order.id];
+          }
+          
+          await setDoc(raporRef, reportData);
+          console.log('Rapor verisi Firestore\'a kaydedildi');
         
         // Kat raporunu da güncelle
         await updateFloorReportData(order);
@@ -1807,68 +1845,206 @@ async function updateReport() {
     }
     
     // Kat raporu verilerini güncelleyen fonksiyon
-    async function updateFloorReportData(order) {
-      try {
-        const floorReportRef = doc(db, "kat_raporlari", activeFloorGroup);
-        const floorReportDoc = await getDoc(floorReportRef);
-        
-        let floorSales = {};
-        if (floorReportDoc.exists()) {
-          floorSales = floorReportDoc.data().floorSales || {};
-        }
-        
-        const floor = order.floor || 0;
-        if (!floorSales[floor]) {
-          floorSales[floor] = {
-            total: 0,
-            count: 0,
-            items: {},
-            orders: []
+          async function updateFloorReportData(order) {
+        try {
+          console.log('🔍 [DEBUG] updateFloorReportData çağrıldı - index2_no_buttons.html');
+          console.log('🔍 [DEBUG] Sipariş:', order);
+          
+          const floorReportRef = doc(db, "kat_raporlari", activeFloorGroup);
+          const floorReportDoc = await getDoc(floorReportRef);
+          
+          const now = new Date();
+          const orderAmount = order.toplamFiyat || 0;
+          const floor = order.floor || 0;
+          
+          let reportData = {
+            floorSales: {},
+            floorDailySales: {},
+            floorWeeklySales: {},
+            floorMonthlySales: {},
+            lastFloorDailyReset: Timestamp.fromDate(new Date(now.getFullYear(), now.getMonth(), now.getDate())),
+            lastFloorWeeklyReset: Timestamp.fromDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay() + 1)),
+            lastFloorMonthlyReset: Timestamp.fromDate(new Date(now.getFullYear(), now.getMonth(), 1)),
+            lastUpdated: Timestamp.now(),
+            floorGroup: activeFloorGroup
           };
-        }
-        
-        // Sipariş zaten eklenmiş mi kontrol et
-        const orderExists = floorSales[floor].orders.some(existingOrder => existingOrder.id === order.id);
-        if (!orderExists) {
-          floorSales[floor].total += order.toplamFiyat || 0;
-          floorSales[floor].count += 1;
           
-          // Sipariş detaylarını sakla
-          floorSales[floor].orders.push({
-            id: order.id,
-            totalPrice: order.toplamFiyat || 0,
-            items: order.items || [],
-            date: order.tarih || new Date()
-          });
-          
-          // Ürün bazlı satışları da hesapla
-          if (order.items && Array.isArray(order.items)) {
-            order.items.forEach(item => {
-              const itemName = item.name || 'Bilinmeyen Ürün';
-              if (!floorSales[floor].items[itemName]) {
-                floorSales[floor].items[itemName] = {
-                  quantity: 0,
-                  revenue: 0,
-                  tickets: 0
-                };
-              }
-              floorSales[floor].items[itemName].quantity += item.adet || 1;
-              floorSales[floor].items[itemName].revenue += (item.price || 0) * (item.adet || 1);
-              floorSales[floor].items[itemName].tickets += (item.teaTickets || 0) * (item.adet || 1);
-            });
+          if (floorReportDoc.exists()) {
+            const existingData = floorReportDoc.data();
+            console.log('🔍 [DEBUG] Mevcut kat raporu verileri:', existingData);
+            reportData = {
+              ...reportData,
+              ...existingData
+            };
           }
           
-          // Firestore'a kaydet
-          await setDoc(floorReportRef, {
-            floorSales: floorSales,
-            lastUpdated: new Date(),
-            floorGroup: activeFloorGroup
-          }, { merge: true });
+          // Kalıcı verileri güncelle
+          if (!reportData.floorSales[floor]) {
+            reportData.floorSales[floor] = {
+              total: 0,
+              count: 0,
+              items: {},
+              orders: []
+            };
+          }
+          
+          // Günlük verileri güncelle
+          if (!reportData.floorDailySales[floor]) {
+            reportData.floorDailySales[floor] = {
+              total: 0,
+              count: 0,
+              items: {},
+              orders: []
+            };
+          }
+          
+          // Haftalık verileri güncelle
+          if (!reportData.floorWeeklySales[floor]) {
+            reportData.floorWeeklySales[floor] = {
+              total: 0,
+              count: 0,
+              items: {},
+              orders: []
+            };
+          }
+          
+          // Aylık verileri güncelle
+          if (!reportData.floorMonthlySales[floor]) {
+            reportData.floorMonthlySales[floor] = {
+              total: 0,
+              count: 0,
+              items: {},
+              orders: []
+            };
+          }
+          
+          // Günlük, haftalık ve aylık reset kontrolü
+          const today = new Date();
+          const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+          const weekStart = new Date(today.getFullYear(), today.getMonth(), today.getDate() - today.getDay() + 1);
+          const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+          
+          // Günlük reset kontrolü
+          if (reportData.lastFloorDailyReset && reportData.lastFloorDailyReset.toDate().getTime() < todayStart.getTime()) {
+            console.log('🔍 [DEBUG] Günlük veriler sıfırlanıyor');
+            reportData.floorDailySales = {};
+            reportData.lastFloorDailyReset = Timestamp.fromDate(todayStart);
+          }
+          
+          // Haftalık reset kontrolü
+          if (reportData.lastFloorWeeklyReset && reportData.lastFloorWeeklyReset.toDate().getTime() < weekStart.getTime()) {
+            console.log('🔍 [DEBUG] Haftalık veriler sıfırlanıyor');
+            reportData.floorWeeklySales = {};
+            reportData.lastFloorWeeklyReset = Timestamp.fromDate(weekStart);
+          }
+          
+          // Aylık reset kontrolü
+          if (reportData.lastFloorMonthlyReset && reportData.lastFloorMonthlyReset.toDate().getTime() < monthStart.getTime()) {
+            console.log('🔍 [DEBUG] Aylık veriler sıfırlanıyor');
+            reportData.floorMonthlySales = {};
+            reportData.lastFloorMonthlyReset = Timestamp.fromDate(monthStart);
+          }
+          
+          // Sipariş zaten eklenmiş mi kontrol et (kalıcı veriler için)
+          const orderExists = reportData.floorSales[floor].orders.some(existingOrder => existingOrder.id === order.id);
+          if (!orderExists) {
+            // Kalıcı verileri güncelle
+            reportData.floorSales[floor].total += orderAmount;
+            reportData.floorSales[floor].count += 1;
+            
+            // Günlük verileri güncelle
+            reportData.floorDailySales[floor].total += orderAmount;
+            reportData.floorDailySales[floor].count += 1;
+            
+            // Haftalık verileri güncelle
+            reportData.floorWeeklySales[floor].total += orderAmount;
+            reportData.floorWeeklySales[floor].count += 1;
+            
+            // Aylık verileri güncelle
+            reportData.floorMonthlySales[floor].total += orderAmount;
+            reportData.floorMonthlySales[floor].count += 1;
+            
+            // Sipariş detaylarını sakla
+            const orderDetail = {
+              id: order.id,
+              totalPrice: order.toplamFiyat || 0,
+              items: order.items || [],
+              date: order.tarih || new Date()
+            };
+            
+            // Tüm periyotlara sipariş detayını ekle
+            reportData.floorSales[floor].orders.push(orderDetail);
+            reportData.floorDailySales[floor].orders.push(orderDetail);
+            reportData.floorWeeklySales[floor].orders.push(orderDetail);
+            reportData.floorMonthlySales[floor].orders.push(orderDetail);
+            
+            // Ürün bazlı satışları da hesapla
+            if (order.items && Array.isArray(order.items)) {
+              order.items.forEach(item => {
+                const itemName = item.name || 'Bilinmeyen Ürün';
+                
+                // Kalıcı veriler için
+                if (!reportData.floorSales[floor].items[itemName]) {
+                  reportData.floorSales[floor].items[itemName] = {
+                    quantity: 0,
+                    revenue: 0,
+                    tickets: 0
+                  };
+                }
+                reportData.floorSales[floor].items[itemName].quantity += item.adet || 1;
+                reportData.floorSales[floor].items[itemName].revenue += (item.price || 0) * (item.adet || 1);
+                reportData.floorSales[floor].items[itemName].tickets += (item.teaTickets || 0) * (item.adet || 1);
+                
+                // Günlük veriler için
+                if (!reportData.floorDailySales[floor].items[itemName]) {
+                  reportData.floorDailySales[floor].items[itemName] = {
+                    quantity: 0,
+                    revenue: 0,
+                    tickets: 0
+                  };
+                }
+                reportData.floorDailySales[floor].items[itemName].quantity += item.adet || 1;
+                reportData.floorDailySales[floor].items[itemName].revenue += (item.price || 0) * (item.adet || 1);
+                reportData.floorDailySales[floor].items[itemName].tickets += (item.teaTickets || 0) * (item.adet || 1);
+                
+                // Haftalık veriler için
+                if (!reportData.floorWeeklySales[floor].items[itemName]) {
+                  reportData.floorWeeklySales[floor].items[itemName] = {
+                    quantity: 0,
+                    revenue: 0,
+                    tickets: 0
+                  };
+                }
+                reportData.floorWeeklySales[floor].items[itemName].quantity += item.adet || 1;
+                reportData.floorWeeklySales[floor].items[itemName].revenue += (item.price || 0) * (item.adet || 1);
+                reportData.floorWeeklySales[floor].items[itemName].tickets += (item.teaTickets || 0) * (item.adet || 1);
+                
+                // Aylık veriler için
+                if (!reportData.floorMonthlySales[floor].items[itemName]) {
+                  reportData.floorMonthlySales[floor].items[itemName] = {
+                    quantity: 0,
+                    revenue: 0,
+                    tickets: 0
+                  };
+                }
+                reportData.floorMonthlySales[floor].items[itemName].quantity += item.adet || 1;
+                reportData.floorMonthlySales[floor].items[itemName].revenue += (item.price || 0) * (item.adet || 1);
+                reportData.floorMonthlySales[floor].items[itemName].tickets += (item.teaTickets || 0) * (item.adet || 1);
+              });
+            }
+            
+            console.log('🔍 [DEBUG] Kat raporu verileri güncelleniyor:', reportData);
+            
+            // Firestore'a kaydet
+            await setDoc(floorReportRef, reportData);
+            console.log('✅ [DEBUG] Kat raporu verileri Firestore\'a başarıyla kaydedildi');
+          } else {
+            console.log('🔍 [DEBUG] Sipariş zaten kat raporuna eklenmiş, işlem atlanıyor');
+          }
+        } catch (error) {
+          console.error('❌ [DEBUG] Kat raporu güncellenirken hata:', error);
         }
-      } catch (error) {
-        console.error('Kat raporu güncellenirken hata:', error);
       }
-    }
     // Siparişi sil (geçmiş siparişler için korunur)
     window.deleteOrder = async function(id, btn) {
       const confirmed = await showConfirm('Siparişi Sil', 'Bu siparişi silmek istediğinizden emin misiniz?', 'danger');
@@ -2668,7 +2844,11 @@ async function updateReport() {
       
       lastOrderIds = currentOrderIds;
       lastOrderCount = currentOrderCount;
-      allOrders = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
+      
+      // Sadece bu panele ait siparişleri al
+      allOrders = panelOrders.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
+      console.log('🔍 [DEBUG] index2_no_buttons - Güncellenen siparişler:', allOrders.length, 'sipariş');
+      
       renderFloors();
       updateBadges();
       
